@@ -82,6 +82,7 @@ h1 {
 }
 
 .board-frame {
+  position: relative;
   width: 100%;
 }
 
@@ -94,6 +95,24 @@ h1 {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+}
+
+.banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--head);
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 0 6px var(--board);
+  pointer-events: none;
+}
+
+.banner[hidden] {
+  display: none;
 }
 
 .status {
