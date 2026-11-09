@@ -337,8 +337,9 @@ export function specialInfo(
 }
 
 /**
- * A turn from a key or a swipe (docs/SPEC.md 2.1 (3), 2.4). In `ready`, any turn but the one
- * opposite to the heading starts the game with that heading. In `running`, a turn is checked
+ * A turn from a key or a swipe (docs/SPEC.md 2.1 (3), 2.4). In `ready`, a turn starts the game
+ * with that heading, unless it is opposite to the heading or its next cell from the head is off the
+ * board or on an obstacle. In `running`, a turn is checked
  * against the last queued turn, or the heading when none is queued: the same or the opposite
  * direction is ignored, and so is any turn while the queue is full. Elsewhere a turn is ignored. A
  * value that is not one of the four directions (possible only past the type checker) is ignored in
@@ -349,6 +350,13 @@ export function turn(state: GameState, direction: Direction): GameState {
   if (!Object.hasOwn(STEP, direction)) return state;
   if (state.status === "ready") {
     if (direction === OPPOSITE[state.heading]) return state;
+    const head = state.snake[0];
+    if (head !== undefined) {
+      const next = ahead(head, direction, 1);
+      if (!onBoard(next, state.size) || state.obstacles.some((cell) => sameCell(cell, next))) {
+        return state;
+      }
+    }
     return { ...state, heading: direction, status: "running" };
   }
   if (state.status !== "running") return state;

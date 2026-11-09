@@ -6,6 +6,8 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- A first turn into a wall or an obstacle no longer starts a level; the game waits for a turn it can take (#30).
+  Specified in #29.
 - Special levels: every 5th level runs at half the delay of the level before it, with a 3-layer shield against walls and
   obstacles, at most 20 turns and 30 seconds (or the snake is blown up), obstacles that jump every 3 seconds, and points
   only for the turns and seconds left when it is cleared; normal levels now speed up by normal levels only (#27).
