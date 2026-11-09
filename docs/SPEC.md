@@ -43,10 +43,16 @@ wall: in `ready`, a turn whose next cell is outside the board or on an
 obstacle is ignored (2.1 (3)); recorded in the product office
 (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-09 23:59, in chat: after a shielded crash on a
+special level, the page says that a shield was lost, how many remain and
+what to do to go on (2.12 (10)). The wording is Clead's, sent to him at
+2026-11-10 00:00; he accepted it at 00:03 ("apyr") (`DECISIONS.md`,
+PO-171).
 Approved: Adam, 2026-11-10 00:03, in chat: on entering a special level,
 a blinking "Special Level" text over the board for 3 seconds; at 00:04
-("apyr") he accepted Clead's option 1 of 00:03, that the text goes when
-the level starts if that is sooner and takes no input (2.12 (11))
+("apyr") he accepted Clead's option 1 of 00:03, that the text blinks
+twice a second from when the level is laid out, goes when the level
+starts if that is sooner, and takes no input (2.12 (11))
 (`DECISIONS.md`, PO-171).
 
 ---
@@ -335,13 +341,24 @@ cleared, no queued turns, and no obstacles or dot.
     left, the seconds left (8) and the shield layers left. They are
     hidden on a normal level. The status line in `ready` says it is a
     special level and names its limits ("Level 5, special: 20 turns,
-    30 seconds, shield of 3. …"); while the snake waits after a crash it
-    says to turn to go on; when the game is `blown` it says "Blown up".
+    30 seconds, shield of 3. …"); when the game is `blown` it says
+    "Blown up". In `running`, while the snake waits after a crash (5),
+    the status line says
+    that a shield layer was lost, how many are left, and which turns go
+    on: the two directions at right angles to the heading (up or down for
+    a heading left or right; left or right for a heading up or down).
+    **[Clead]** The wording: "Shield lost, N left. Turn D to go on.",
+    where N is the number of layers left as a numeral (2 or 1 with a
+    shield of 3), and with no layer left "Shield lost, none left. Turn D
+    to go on. The next crash ends the game."; D is "up or down" for a
+    heading left or right, and "left or right" for a heading up or down.
     The obstacles look the same as on a normal level.
 11. When a special level is laid out and waits in `ready`, the text
-    "Special Level" blinks over the board: shown for 250 ms, hidden for
-    250 ms, and so on. It goes when 3 seconds have passed since the
-    level was laid out, or as soon as the level starts (a turn or the
+    "Special Level" blinks over the board, twice a second: **[Clead]**
+    shown first for 250 ms, then hidden for 250 ms, and so on. It goes
+    when 3 seconds of real time have passed since the level was laid out
+    (the page's clock, which runs on while the page is hidden; not the
+    level's time of 2.12 (3), which does not run in `ready`), or as soon as the level starts (a turn or the
     Start button, 2.1 (3)), or with a new game, whichever comes first.
     It takes no input: keys, swipes and buttons work as they do without
     it. **[Clead]** The look: large bold text centred on the board, in
@@ -356,7 +373,8 @@ cleared, no queued turns, and no obstacles or dot.
   125 ms, the delay step 5 ms, the shortest delay 50 ms, the 8 clear
   cells ahead of a start, and the special levels' values of 2.12: every
   5th level, 3 shield layers, 20 turns, 30 seconds, a jump every
-  3 seconds and 2 cells kept free ahead of the head. The best score's
+  3 seconds and 2 cells kept free ahead of the head; and the "Special
+  Level" text's blink of 250 ms and its 3000 ms (2.12 (11)). The best score's
   bound of 2.9 (3) is not a value of its own: `main.ts` works it out
   from these, as (20 × 20 / 5) × the larger of 5 and 20 + 30. No other
   module writes these numbers
@@ -375,7 +393,8 @@ cleared, no queued turns, and no obstacles or dot.
   function passed in that returns the store and may throw. Covered by
   Jest with fake stores, also ones that throw.
 - `src/main.ts`: draws the board, the obstacles and the level on a
-  canvas, shows a special level's turns, seconds and shield (2.12 (10)), runs the tick timer with the delay of the current level, and
+  canvas, shows a special level's turns, seconds and shield (2.12 (10)),
+  shows the "Special Level" text (2.12 (11)), runs the tick timer with the delay of the current level, and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
   Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
