@@ -10,6 +10,15 @@ product office (`DECISIONS.md`, PO-164). The detail added after Crog's
 review of #4 (2.1 to 2.9 made exact, 3.1) is Clead's technical detail
 within that intent.
 
+Approved: Adam, 2026-11-09 21:16 to 21:20, in chat ("apyr for what was
+specced now"), levels, obstacles and the rising speed: his own rules and
+Clead's recommendations of 21:18 and 21:19 he accepted; recorded in the
+product office (`DECISIONS.md`, PO-170). Sections 2.10 and 2.11, and the
+changes to 2.1, 2.2, 2.3, 2.5, 2.8, 2.9, 3, 3.1 and 5 that follow from them,
+are Clead's exact wording of that decision. At 21:24 Adam lowered the
+clear cells ahead of a start from 10 to 8, and at 21:29 he chose a random
+start for every level, level 1 included (`DECISIONS.md`, PO-170).
+
 ---
 
 ## 1. System overview
@@ -28,38 +37,42 @@ branding or look is used.
 
 1. The board is a square grid of 20 × 20 cells. A cell is `(x, y)`, with
    `x` from 0 (left) to 19 (right) and `y` from 0 (top) to 19 (bottom).
-2. A new game starts in the state `ready`: the snake is 3 cells long,
-   head at `(10, 10)`, body `(9, 10)` and `(8, 10)`, heading right; one
-   piece of food is placed (2.3); the score is 0. Nothing moves.
-3. In `ready`, a turn up, down or right starts the game: the snake's
-   heading becomes that direction and the state becomes `running`. A turn
-   left, straight back into the neck, is ignored and the game stays
-   `ready`. The on-screen Start button starts the game heading right.
+2. A new game starts at level 1 with the score 0 and a snake of 3
+   segments, laid out as 2.11 says, in the state `ready`, with the status
+   line naming level 1 (2.10 (3)). Nothing moves.
+3. In `ready`, a turn starts the game: the snake's heading becomes that
+   direction and the state becomes `running`. A turn opposite to the
+   heading is ignored and the game stays `ready`. The on-screen Start
+   button starts the game in the heading it has.
 
 ### 2.2 One tick
 
-The snake moves one cell per tick, 8 ticks a second, at a constant speed,
-while the state is `running`. A tick does these steps in this order:
+The snake moves one cell per tick while the state is `running`, with the
+delay between ticks of its level (2.10). A tick does these steps in this order:
 
 1. If a turn is queued (2.4), the first one is taken from the queue and
    becomes the heading.
 2. The new head is the cell next to the head in the heading's direction.
 3. If the new head is outside the board, the game is `over`.
 4. The snake eats if the new head is the food's cell.
-5. If the new head is on the snake's body, the game is `over`. When the
-   snake does not eat, its tail cell does not count, since the tail
-   leaves it in the same tick; when it eats, every cell counts.
+5. If the new head is on an obstacle, or on the snake's body, the game is
+   `over`. The body is the snake's segments; when the snake does not eat,
+   its last segment does not count, since it leaves in the same tick, but
+   other segments on the same cell do (2.11 (3)); when it eats, every
+   segment counts.
 6. The snake moves: the new head is added; when it does not eat, the
-   tail cell is removed.
-7. When it eats, the score goes up by one. If the snake now fills all
-   400 cells, the game is `won` and no food is placed. Otherwise new food
-   is placed (2.3).
+   last segment is removed.
+7. When it eats, the score and the dots eaten on this level go up by one.
+   If that makes 5 dots on this level, the level is cleared (2.10 (3)).
+   Otherwise, if no free cell is left, the game is `won` and no food is
+   placed; otherwise new food is placed (2.3).
 
 A game that is `over` or `won` keeps its last board and score on show.
 
 ### 2.3 Food
 
-Food is placed on a free cell, a cell the snake is not on. The free cells
+Food (the dot) is placed on a free cell, a cell with no snake segment and
+no obstacle on it. The free cells
 are listed row by row (`y` from 0, and within a row `x` from 0), and the
 food goes on the cell at the index a chooser returns. The chooser is
 given the number of free cells and returns an index from 0 to that
@@ -83,9 +96,9 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | Command | `ready` | `running` | `paused` | `over` or `won` |
 |---|---|---|---|---|
 | Turn (key or swipe) | 2.1 (3) | 2.4 | ignored | ignored |
-| Start button | starts heading right | ignored | ignored | ignored |
+| Start button | starts in the heading it has | ignored | ignored | ignored |
 | Pause (Space, P, Pause button) | ignored | `paused` | `running` | ignored |
-| New game (Enter, New game button) | new game (2.1 (2)) | new game | new game | new game |
+| New game (Enter, New game button) | new game, level 1 (2.1 (2)) | new game | new game | new game |
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused.
@@ -116,13 +129,14 @@ buttons Start, Pause and New game do what 2.5 says.
 
 ### 2.8 Win and loss
 
-Hitting a wall or the snake's own body ends the game (`over`); filling
-the board wins it (`won`). Both show the final score and a way to start a
+Hitting a wall, an obstacle or the snake's own body ends the game
+(`over`); leaving no free cell for the next dot wins it (`won`). Both show the final score and a way to start a
 new game.
 
 ### 2.9 Score and best score
 
-1. The page shows the score and the best score.
+1. The page shows the level, the score and the best score. The score
+   counts on across levels; the best score is the best such total.
 2. When a game ends (`over` or `won`) with a score above the best score,
    that score becomes the best score and is saved.
 3. The best score is kept in the browser's local storage under the key
@@ -133,41 +147,87 @@ new game.
    is closed. Every access to the storage, including getting hold of it,
    happens inside the best-score module's error handling.
 
+### 2.10 Levels
+
+1. A game starts at level 1. A level is cleared by eating 5 dots on it.
+2. The delay between ticks on level N is 125 − 5 × (N − 1) milliseconds,
+   and never less than 50: 125 ms on level 1, 120 ms on level 2, and
+   50 ms from level 16 on.
+3. When a level is cleared, the game goes to the next level: the level
+   goes up by one, the dots eaten on it start at 0, the queued turns are
+   cleared, and the board is laid out anew (2.11) with the snake as long
+   as it was when the level was cleared, the growth from the 5th dot
+   included. The state is `ready` until a turn or the Start button
+   starts the level (2.1 (3)); while `ready`, the page's status line says
+   which level is about to start.
+4. Level N has N − 1 obstacles: none on level 1, one on level 2, and so
+   on. An obstacle is a cell the snake must not enter.
+
+### 2.11 Laying out a level
+
+For a new game and for each new level, in this order:
+
+1. The board is emptied: no snake, no obstacles, no dot.
+2. The start: the possible starts are every cell and heading from which
+   the 8 cells straight ahead lie on the board. They are listed row by
+   row (as in 2.3), and for each cell in the order up, right, down, left;
+   the chooser picks one. One chooser, the one of 2.3, picks the start,
+   each obstacle and the dot; the game picks at random, and tests pass
+   fixed answers.
+3. The snake: all its segments are put on the start cell, with the start
+   heading. The head moves on from there and the rest follow, so the
+   snake unrolls behind the head and has its full length on the board
+   after as many ticks as it is long. While the snake is on one cell, the
+   page marks its heading on the head.
+4. The obstacles: one at a time, each picked at random by the chooser
+   from the free cells that are not the start cell and not one of the 8
+   cells ahead of it, listed row by row.
+5. The dot: placed as 2.3 says. It may land on one of the 8 cells ahead
+   of the start; those are kept free of obstacles only.
+
+The board must be at least 9 × 9 so that a start exists; `newGame`
+rejects a smaller one. If there are not enough cells for the obstacles,
+the dot and the snake's length, the game is `won`, with the level, the
+score and the snake as they were when the last level was cleared, and no
+obstacles or dot.
+
 ---
 
 ## 3. Architecture
 
-- `src/config.ts`: the named values: grid size 20, start length 3, ticks
-  per second 8, shortest swipe 30, the storage key. No other module
-  writes these numbers (product-office Process P-11 § 5 (2)): `game.ts`,
-  `input.ts` and `storage.ts` take the values they need as parameters,
-  and `main.ts` passes them from here. The start cells of 2.1 (2) follow
-  from the grid size and the start length: the head at the cell
-  `(size / 2, size / 2)` (rounded down), the body to its left.
+- `src/config.ts`: the named values: grid size 20, start length 3,
+  shortest swipe 30, the storage key, dots per level 5, the first delay
+  125 ms, the delay step 5 ms, the shortest delay 50 ms, and the 8 clear
+  cells ahead of a start. No other module writes these numbers
+  (product-office Process P-11 § 5 (2)): `game.ts`, `input.ts` and
+  `storage.ts` take the values they need as parameters, and `main.ts`
+  passes them from here.
 - `src/game.ts`: the game rules as pure functions over a game state (no
-  DOM, no timers): a new game, a turn, a tick, pause, and the commands of
-  2.5. The food chooser of 2.3 is passed in, so tests are deterministic.
-  Covered by Jest.
+  DOM, no timers): a new game, a turn, a tick, pause, the commands of
+  2.5, levels and laying out a level (2.10, 2.11), and the delay of a
+  level. The choosers of 2.3 and 2.11 are passed in, so tests are
+  deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,
   covered by Jest.
 - `src/storage.ts`: reads and writes the best score (2.9) through a
   function passed in that returns the store and may throw. Covered by
   Jest with fake stores, also ones that throw.
-- `src/main.ts`: draws the board on a canvas, runs the tick timer, and
+- `src/main.ts`: draws the board, the obstacles and the level on a
+  canvas, runs the tick timer with the delay of the current level, and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
-  Playwright tests (web pack rule). The rate of 8 ticks a second is set
-  here from `src/config.ts`; the browser tests check that the snake moves.
+  Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
   for a 375 px wide phone first, with no sideways scrolling.
 - The build is one self-contained `dist/index.html` (web pack rule).
 
 ### 3.1 Game state
 
-The game state holds at least: the snake's cells (head first), the
-heading, the queued turns (at most two), the food's cell (none when
-`won`), the score and the state (`ready`, `running`, `paused`, `over`,
-`won`). Directions are the strings `"up"`, `"down"`, `"left"` and
+The game state holds at least: the snake's segments (head first; several
+may share a cell), the heading, the queued turns (at most two), the
+food's cell (none when `won`), the obstacles' cells, the level, the dots
+eaten on it, the score and the state (`ready`, `running`, `paused`,
+`over`, `won`). Directions are the strings `"up"`, `"down"`, `"left"` and
 `"right"`.
 
 ---
@@ -183,7 +243,8 @@ Pages source to "GitHub Actions" once (a repository setting).
 
 ## 5. Out of scope
 
-Levels, rising speed, sound, obstacles, several players, online scores.
+Sound, several players, online scores. Power-ups: Adam, 2026-11-09,
+"will be added later"; not specified yet.
 
 ---
 
