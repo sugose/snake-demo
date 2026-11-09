@@ -187,8 +187,8 @@ For a new game and for each new level, in this order:
    of the start; those are kept free of obstacles only.
 
 The board must be at least 9 × 9 so that a start exists; `newGame`
-rejects a smaller one, and a start length that leaves no free cell for
-the dot. When a level is cleared, the next one cannot be laid out if the
+rejects a smaller one, and a start length of `size × size` or more
+(the same count as below, with no obstacles on level 1). When a level is cleared, the next one cannot be laid out if the
 obstacles, the dot and the snake's segments together are more than the
 board's cells, or if there are more obstacles than cells outside the
 start and the cells kept free ahead of it; then the game is `won`, with
