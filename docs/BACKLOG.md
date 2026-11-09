@@ -56,7 +56,7 @@ one list he reads (product-office Process P-9 § 3 (1)), not here.
 - **[NEXT] PBI-2.6** (from Crog's review of #19) — Loose ends in `src/game.ts` and its tests: a test that the shortfall `won` of 2.11 clears the queued turns (none fails without it today); the test name "as many ticks as it is long" says L − 1 ticks; the doc comment and `RangeError` message of `newGame` say "a start length of size × size or more", as 2.11 now does.
 - **[NEXT] PBI-2.5** — Adam plays the levels from the game's link.
 - **[LATER] PBI-2.3** — Power-ups: Adam, 2026-11-09, "power ups will be added later". Not specified; Adam describes them first.
-- **[LATER] PBI-2.7** — Special levels: Adam, 2026-11-09 22:20, "more features to add to backlog... special levels * no more than X turns on the special level before you blow up". Not specified; open: which levels are special, X, what counts as a turn, and what "blow up" does. Adam describes them first.
+- **[LATER] PBI-2.7** — Special levels: Adam, 2026-11-09 22:20, "more features to add to backlog... special levels * no more than X turns on the special level before you blow up". Adam, 22:21, another requirement: "duration cannot exceed X seconds before comlpeting level". Not specified; open: which levels are special, whether a special level has one of the two limits or both, each X, what counts as a turn, when the time starts and stops (pause included or not), and what "blow up" does. Adam describes them first.
 
 ---
 
