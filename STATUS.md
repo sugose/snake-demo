@@ -10,10 +10,10 @@ Last update: 2026-11-09
 Running: levels are published at https://sugose.github.io/snake-demo/ (Phase 2, [`docs/BACKLOG.md`](docs/BACKLOG.md)).
 
 ## Current focus
-Adam playing the levels ([PBI-2.5](docs/BACKLOG.md)).
+The special levels ([PBI-2.7](docs/BACKLOG.md)), decided 2026-11-09; Adam playing the levels ([PBI-2.5](docs/BACKLOG.md)).
 
 ## Next step
-Adam: playing the levels ([PBI-2.5](docs/BACKLOG.md)), and describing the special levels ([PBI-2.7](docs/BACKLOG.md)).
+Clead: the special levels' spec section, then the build, unattended ([PBI-2.7](docs/BACKLOG.md)). Adam: playing the levels ([PBI-2.5](docs/BACKLOG.md)).
 
 ## Blockers
 None.
