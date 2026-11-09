@@ -7,13 +7,13 @@ How to keep this file: product-office Process P-9 § 6.
 Last update: 2026-11-09
 
 ## Phase
-Build: Phase 2, levels ([`docs/BACKLOG.md`](docs/BACKLOG.md)). Phase 1 is published at https://sugose.github.io/snake-demo/.
+Running: levels are published at https://sugose.github.io/snake-demo/ (Phase 2, [`docs/BACKLOG.md`](docs/BACKLOG.md)).
 
 ## Current focus
-The levels specification ([`docs/SPEC.md`](docs/SPEC.md) 2.10, 2.11).
+Adam playing the levels ([PBI-2.5](docs/BACKLOG.md)).
 
 ## Next step
-Crog: levels in the game and on the page ([PBI-2.1](docs/BACKLOG.md)), unattended.
+Clead: the spec wording of [PBI-2.4](docs/BACKLOG.md).
 
 ## Blockers
 None.
