@@ -6,6 +6,10 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- Special levels: every 5th level runs at half the delay of the level before it, with a 3-layer shield against walls and
+  obstacles, at most 20 turns and 30 seconds (or the snake is blown up), obstacles that jump every 3 seconds, and points
+  only for the turns and seconds left when it is cleared; normal levels now speed up by normal levels only (#27).
+  Specified in #26.
 - Levels: 5 dots clear a level; each level is laid out anew with a random start, the snake unrolling from
   one cell, and one more obstacle; 5 ms less between moves per level, down to 50 ms (#17). Specified in #16.
 - A test that a game won because the next level does not fit keeps no queued turns, and clearer test names and
