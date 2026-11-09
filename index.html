@@ -7,7 +7,22 @@
     <title>Snake demo</title>
   </head>
   <body>
-    <main id="app"></main>
+    <main id="game" class="game">
+      <h1>Snake</h1>
+      <p class="scores">
+        <span>Score <strong id="score">0</strong></span>
+        <span>Best <strong id="best">0</strong></span>
+      </p>
+      <div class="board-frame">
+        <canvas id="board" role="img" aria-label="Snake board"></canvas>
+      </div>
+      <p id="status" class="status" role="status"></p>
+      <div class="controls">
+        <button type="button" id="start">Start</button>
+        <button type="button" id="pause">Pause</button>
+        <button type="button" id="new-game">New game</button>
+      </div>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

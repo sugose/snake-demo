@@ -1,4 +1,5 @@
-import { type Command, type Direction, keyToCommand, swipeToDirection } from "./input";
+import type { Direction } from "./game";
+import { type Command, keyToCommand, swipeToDirection } from "./input";
 
 const none = { ctrl: false, meta: false, alt: false };
 

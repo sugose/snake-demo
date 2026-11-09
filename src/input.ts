@@ -3,8 +3,7 @@
  * Pure: no DOM, no state; every result is a new value and no argument is changed.
  */
 
-/** A direction of movement; the same strings the game state uses (docs/SPEC.md 3.1). */
-export type Direction = "up" | "down" | "left" | "right";
+import type { Direction } from "./game";
 
 /** What a key asks the game to do (docs/SPEC.md 2.5). */
 export type Command =
