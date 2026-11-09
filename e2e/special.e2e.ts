@@ -98,7 +98,9 @@ test("a wall on level 5 takes a shield layer; the snake waits, then a turn moves
   await expectGame(game, "running", "10,0");
   await expect(game).toHaveAttribute("data-waiting", "true");
   await expect(page.locator("#shield-left")).toHaveText("2");
-  await expect(page.locator("#status")).toContainText("Turn to go on");
+  await expect(page.locator("#status")).toHaveText(
+    "Shield lost, 2 left. Turn left or right to go on.",
+  );
 
   // While it waits, nothing moves.
   await runTicks(page, 20, LEVEL_5_DELAY);
@@ -158,4 +160,37 @@ test.describe("the best score's bound of 4000 (docs/SPEC.md 2.9 (3))", () => {
       await expect(page.locator("#best")).toHaveText(shown);
     });
   }
+});
+
+test("each shielded crash says the layers left and which turns go on, and warns at none left", async ({
+  page,
+}) => {
+  // Level 5 from (10,10) heading up, its 4 obstacles on (0,0) to (3,0), the dot on (19,19).
+  const game = await openToLevel5(page, "10,10", "up", 394);
+  const status = page.locator("#status");
+  await page.keyboard.press("ArrowUp");
+  await runTicks(page, 11, LEVEL_5_DELAY);
+  await expectGame(game, "running", "10,0");
+  await expect(status).toHaveText("Shield lost, 2 left. Turn left or right to go on.");
+
+  // Left along row 0 into the obstacle on (3,0).
+  await page.keyboard.press("ArrowLeft");
+  await runTicks(page, 7, LEVEL_5_DELAY);
+  await expectGame(game, "running", "4,0");
+  await expect(status).toHaveText("Shield lost, 1 left. Turn up or down to go on.");
+
+  // Down column 4 into the bottom wall.
+  await page.keyboard.press("ArrowDown");
+  await runTicks(page, 20, LEVEL_5_DELAY);
+  await expectGame(game, "running", "4,19");
+  await expect(page.locator("#shield-left")).toHaveText("0");
+  await expect(status).toHaveText(
+    "Shield lost, none left. Turn left or right to go on. The next crash ends the game.",
+  );
+
+  // Moving on, the status line is the usual one again.
+  await page.keyboard.press("ArrowRight");
+  await runTicks(page, 1, LEVEL_5_DELAY);
+  await expectGame(game, "running", "5,19");
+  await expect(status).toHaveText("Space or P to pause");
 });
