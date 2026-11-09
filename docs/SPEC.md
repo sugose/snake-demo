@@ -177,7 +177,8 @@ For a new game and for each new level, in this order:
 3. The snake: all its segments are put on the start cell, with the start
    heading. The head moves on from there and the rest follow, so the
    snake unrolls behind the head and has its full length on the board
-   after as many ticks as it is long. While the snake is on one cell, the
+   after one tick less than it has segments (L − 1 ticks for L segments).
+   While the snake is on one cell, the
    page marks its heading on the head.
 4. The obstacles: one at a time, each picked at random by the chooser
    from the free cells that are not the start cell and not one of the 8
@@ -186,10 +187,13 @@ For a new game and for each new level, in this order:
    of the start; those are kept free of obstacles only.
 
 The board must be at least 9 × 9 so that a start exists; `newGame`
-rejects a smaller one. If there are not enough cells for the obstacles,
-the dot and the snake's length, the game is `won`, with the level, the
-score and the snake as they were when the last level was cleared, and no
-obstacles or dot.
+rejects a smaller one, and a start length that leaves no free cell for
+the dot. When a level is cleared, the next one cannot be laid out if the
+obstacles, the dot and the snake's segments together are more than the
+board's cells, or if there are more obstacles than cells outside the
+start and the cells kept free ahead of it; then the game is `won`, with
+the level, the score and the snake as they were when the last level was
+cleared, no queued turns, and no obstacles or dot.
 
 ---
 
