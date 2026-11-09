@@ -7,6 +7,8 @@
   --snake: #2f6f4f;
   --head: #1b4a33;
   --food: #c2410c;
+  --obstacle: #5b4a8a;
+  --mark: #ffffff;
   --button-bg: #e4e7e2;
   --button-fg: #111111;
   --button-border: #b9beb6;
@@ -22,6 +24,8 @@
     --snake: #6fbf8f;
     --head: #a8e0bd;
     --food: #f59e57;
+    --obstacle: #a99be0;
+    --mark: #111111;
     --button-bg: #262b28;
     --button-fg: #f2f2f2;
     --button-border: #454b47;
