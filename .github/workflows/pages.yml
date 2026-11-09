@@ -1,0 +1,63 @@
+name: Pages
+
+# Publishes the built page at https://sugose.github.io/snake-demo/ on every push to main,
+# and on demand. Needs the repo's Pages source set to "GitHub Actions" (Settings, Pages); until
+# then the deploy job fails. It runs only on main, so it can never turn a pull request's
+# required `build` check red.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time; a running deploy is allowed to finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # Not named `build`: that name belongs to the required check in ci.yml.
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The same script ci.yml reaches through `npm run test:e2e`.
+      - name: Build the single file
+        run: npm run build
+
+      - name: Upload the page
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: site
+    # Also stops a manual run started from another branch.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
