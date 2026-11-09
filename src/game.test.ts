@@ -172,7 +172,7 @@ describe("newGame", () => {
     expect(newGame({ ...RULES, choose: answers(0, 0) }).food).toEqual({ x: 1, y: 0 });
   });
 
-  it("accepts the longest snake that leaves a cell for the dot", () => {
+  it("accepts a start length of size x size - 1: 399 on a 20 x 20 board", () => {
     const state = newGame({ ...RULES, startLength: 399, choose: answers(CENTRE_RIGHT, 0) });
     expect(state.snake).toEqual(stacked(CENTRE, 399));
   });
