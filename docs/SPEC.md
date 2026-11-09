@@ -37,6 +37,12 @@ think it is unfair, then you make it not free)", and Clead made it count
 that reaches 30 seconds and on a level cleared with all layers used are
 Clead's, and are put to Adam in the product office's "Waiting for Adam".
 
+Approved: Adam, 2026-11-09 23:55, in chat ("apyr"), Clead's option 1 of
+23:54 after Adam found he could not start a level laid out against the
+wall: in `ready`, a turn whose next cell is outside the board or on an
+obstacle is ignored (2.1 (3)); recorded in the product office
+(`DECISIONS.md`, PO-171).
+
 ---
 
 ## 1. System overview
@@ -60,8 +66,9 @@ branding or look is used.
    line naming level 1 (2.10 (3)). Nothing moves.
 3. In `ready`, a turn starts the game: the snake's heading becomes that
    direction and the state becomes `running`. A turn opposite to the
-   heading is ignored and the game stays `ready`. The on-screen Start
-   button starts the game in the heading it has.
+   heading is ignored and the game stays `ready`, and so is a turn whose
+   next cell from the head is outside the board or on an obstacle. The
+   on-screen Start button starts the game in the heading it has.
 
 ### 2.2 One tick
 
