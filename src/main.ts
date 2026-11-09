@@ -40,6 +40,8 @@ const {
   specialSeconds,
   jumpSeconds,
   clearAheadOfHead,
+  bannerBlinkMs,
+  bannerMs,
 } = config;
 /**
  * The best score's bound (docs/SPEC.md 2.9 (3)): at most one level per 5 cells of the board can be
@@ -62,11 +64,6 @@ const delayOfLevel = (level: number): number =>
   levelDelay(level, { ...delays, every: specialEvery });
 
 const PLAY = "Arrow keys, W A S D, a swipe or Start to play";
-
-/** The "Special Level" text blinks this long on and this long off, in ms (docs/SPEC.md 2.12 (11)). */
-const BANNER_BLINK_MS = 250;
-/** The "Special Level" text goes this long after a special level is laid out, in ms. */
-const BANNER_MS = 3000;
 
 /**
  * The status line while the snake waits after a shielded crash (docs/SPEC.md 2.12 (10)): the layers
@@ -148,8 +145,8 @@ function showBanner(): void {
   banner.hidden = false;
   const blink = window.setInterval(() => {
     banner.hidden = !banner.hidden;
-  }, BANNER_BLINK_MS);
-  const end = window.setTimeout(hideBanner, BANNER_MS);
+  }, bannerBlinkMs);
+  const end = window.setTimeout(hideBanner, bannerMs);
   bannerTimers = { blink, end };
 }
 

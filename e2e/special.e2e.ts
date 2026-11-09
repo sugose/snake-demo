@@ -230,6 +230,12 @@ test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () =
     const banner = page.locator("#banner");
     const game = await openToLevel5(page, "10,10", "up", 394);
     await expect(banner).toBeVisible();
+    // Swipes on the board go through it.
+    await expect(banner).toHaveCSS("pointer-events", "none");
+    // A turn that is ignored (straight back) leaves it.
+    await page.keyboard.press("ArrowDown");
+    await expect(game).toHaveAttribute("data-status", "ready");
+    await expect(banner).toBeVisible();
     await page.keyboard.press("ArrowUp");
     await expect(game).toHaveAttribute("data-status", "running");
     await expect(banner).toBeHidden();
