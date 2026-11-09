@@ -1,6 +1,6 @@
-# [PROJECT NAME] — Technical Specification
+# Snake demo — Technical Specification
 
-**Date:** [DATE]
+**Date:** 2026-11-09
 **Status:** Draft
 **Owner:** Clead (technical correctness) / Adam (intent)
 

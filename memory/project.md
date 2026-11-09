@@ -1,9 +1,8 @@
 # Project
 
-**Name:** [PROJECT NAME]
-**Repo:** [OWNER/REPO]
-**Description:** [What the project is, who it is for, and what problem
-it solves.]
+**Name:** Snake demo
+**Repo:** sugose/snake-demo
+**Description:** Show a friend what the bootstrapper sets up, with a browser Snake game as the example
 
 **Goals:**
 - [Goal]
