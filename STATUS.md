@@ -13,7 +13,7 @@ Running: levels and special levels are published at https://sugose.github.io/sna
 Adam playing the special levels ([PBI-2.7](docs/BACKLOG.md), [`docs/SPEC.md`](docs/SPEC.md) 2.12) and the levels ([PBI-2.5](docs/BACKLOG.md)).
 
 ## Next step
-Adam: playing the levels and the special levels ([PBI-2.5](docs/BACKLOG.md), [PBI-2.7](docs/BACKLOG.md)), and two choices on the special levels in the product office's "Waiting for Adam".
+Clead: a first turn into a wall or an obstacle ignored in `ready` ([PBI-2.11](docs/BACKLOG.md)). Adam: playing the levels and the special levels ([PBI-2.5](docs/BACKLOG.md), [PBI-2.7](docs/BACKLOG.md)), and two choices on the special levels in the product office's "Waiting for Adam".
 
 ## Blockers
 None.
