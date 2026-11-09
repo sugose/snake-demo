@@ -126,15 +126,36 @@ test("the 21st turn on level 5 blows the snake up, and the best score is saved",
   }
   await expectGame(game, "running", "10,8");
   await expect(page.locator("#turns-left")).toHaveText("0");
+  // 21 moves of 55 ms: 1155 ms of the level's 30 s, so 29 whole seconds are left (rounded up).
+  await expect(page.locator("#seconds-left")).toHaveText("29");
 
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 1, LEVEL_5_DELAY);
   await expectGame(game, "blown", "10,8");
   await expect(page.locator("#status")).toContainText("Blown up");
+  await expect(page.locator("#seconds-left")).toHaveText("29");
   await expect(game).toHaveAttribute("data-best", "20");
   expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBe("20");
 
   await page.keyboard.press("Enter");
   await expect(game).toHaveAttribute("data-status", "ready");
   await expect(game).toHaveAttribute("data-level", "1");
+});
+
+test.describe("the best score's bound of 4000 (docs/SPEC.md 2.9 (3))", () => {
+  for (const [stored, shown] of [
+    ["401", "401"],
+    ["4000", "4000"],
+    ["4001", "0"],
+  ] as const) {
+    test(`a stored "${stored}" reads as ${shown}`, async ({ page }) => {
+      await page.addInitScript(([key, value]) => window.localStorage.setItem(key, value), [
+        STORAGE_KEY,
+        stored,
+      ] as const);
+      const game = await openGame(page);
+      await expect(game).toHaveAttribute("data-best", shown);
+      await expect(page.locator("#best")).toHaveText(shown);
+    });
+  }
 });

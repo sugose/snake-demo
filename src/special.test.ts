@@ -315,6 +315,15 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
     expect(next.run?.waiting).toBe(true);
   });
 
+  it("a wall with one layer left uses the last one: the snake waits with no shield left", () => {
+    const next = tick(special({ shieldUsed: 2 }, { snake: atWall }), answers(0));
+    expect(next.status).toBe("running");
+    expect(next.snake).toEqual(atWall);
+    expect(next.run?.shieldUsed).toBe(3);
+    expect(next.run?.waiting).toBe(true);
+    expect(specialInfo(next)?.shieldLeft).toBe(0);
+  });
+
   it("a wall with no layer left ends the game", () => {
     const state = special({ shieldUsed: 3 }, { snake: atWall });
     expect(tick(state, answers(0))).toEqual({ ...state, status: "over" });
@@ -412,6 +421,51 @@ describe("the obstacles' jumps (docs/SPEC.md 2.12 (9))", () => {
       expect(choose.counts).toEqual([]);
     },
   );
+
+  it("they do not jump in the tick that blows the snake up at 30 s (a multiple of 3 s)", () => {
+    const choose = answers(0);
+    const next = tick(special({ timeMs: 30000 - LEVEL_5_DELAY }, { obstacles: two }), choose);
+    expect(next.status).toBe("blown");
+    expect(next.obstacles).toEqual(two);
+    expect(choose.counts).toEqual([]);
+  });
+
+  it("cells ahead of the head that lie off the board leave no cell out", () => {
+    // The head moves onto (19,10): the 2 cells ahead are off the board. Index 216 of the 396 cells
+    // left (400, less the 3 snake cells and the dot) is (0,11), and then (1,11) of the 395.
+    const choose = answers(216, 216);
+    const next = tick(special({ timeMs: 2999 }, { snake: shifted(8), obstacles: two }), choose);
+    expect(next.snake[0]).toEqual({ x: 19, y: 10 });
+    expect(choose.counts).toEqual([396, 395]);
+    expect(next.obstacles).toEqual([
+      { x: 0, y: 11 },
+      { x: 1, y: 11 },
+    ]);
+  });
+
+  it("they jump when exactly as many cells are left as there are obstacles", () => {
+    // A 4 x 4 board: the snake on (0,0) heading right, the dot on (3,3), obstacles on every cell
+    // but (0,0), (1,0), (3,2) and (3,3): 12 of them. After the move, 16 - 1 - 1 - 2 = 12 cells.
+    const obstacles: Cell[] = [];
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        if (!(y === 0 && x <= 1) && !(x === 3 && y >= 2)) obstacles.push({ x, y });
+      }
+    }
+    const state = special(
+      { timeMs: 2999 },
+      { size: 4, snake: [{ x: 0, y: 0 }], food: { x: 3, y: 3 }, obstacles },
+    );
+    const choose = answers(0);
+    const next = tick(state, choose);
+    expect(choose.counts).toEqual([12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+    expect(next.obstacles).toEqual([
+      { x: 0, y: 0 },
+      ...[0, 1, 2, 3].map((x) => ({ x, y: 1 })),
+      ...[0, 1, 2, 3].map((x) => ({ x, y: 2 })),
+      ...[0, 1, 2].map((x) => ({ x, y: 3 })),
+    ]);
+  });
 
   it("they stay where they are when fewer cells are left than obstacles", () => {
     // A 4 x 4 board: the snake on (0,0) heading right, the dot on (3,3), obstacles everywhere else
