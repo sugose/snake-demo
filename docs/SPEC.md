@@ -15,7 +15,8 @@ specced now"), levels, obstacles and the rising speed: his own rules and
 Clead's recommendations of 21:18 and 21:19 he accepted; recorded in the
 product office (`DECISIONS.md`, PO-170). Sections 2.10 and 2.11, and the
 changes to 2.1, 2.2, 2.3, 2.5, 2.8, 3, 3.1 and 5 that follow from them,
-are Clead's exact wording of that decision.
+are Clead's exact wording of that decision. At 21:24 Adam lowered the
+clear cells ahead of a start from 10 to 8 (`DECISIONS.md`, PO-170).
 
 ---
 
@@ -164,7 +165,7 @@ For a new game and for each new level, in this order:
 
 1. The board is emptied: no snake, no obstacles, no dot.
 2. The start: the possible starts are every cell and heading from which
-   the 10 cells straight ahead lie on the board. They are listed row by
+   the 8 cells straight ahead lie on the board. They are listed row by
    row (as in 2.3), and for each cell in the order up, right, down, left;
    a chooser like the one in 2.3 picks one. The game picks at random.
 3. The snake: all its segments are put on the start cell, with the start
@@ -172,7 +173,7 @@ For a new game and for each new level, in this order:
    snake unrolls behind the head and has its full length on the board
    after as many ticks as it is long.
 4. The obstacles: one at a time, each on a free cell that is not the
-   start cell and not one of the 10 cells ahead of it, picked by the
+   start cell and not one of the 8 cells ahead of it, picked by the
    chooser from those cells listed row by row.
 5. The dot: placed as 2.3 says.
 
@@ -185,7 +186,7 @@ is `won`.
 
 - `src/config.ts`: the named values: grid size 20, start length 3,
   shortest swipe 30, the storage key, dots per level 5, the first delay
-  125 ms, the delay step 5 ms, the shortest delay 50 ms, and the 10 clear
+  125 ms, the delay step 5 ms, the shortest delay 50 ms, and the 8 clear
   cells ahead of a start. No other module writes these numbers
   (product-office Process P-11 § 5 (2)): `game.ts`, `input.ts` and
   `storage.ts` take the values they need as parameters, and `main.ts`
