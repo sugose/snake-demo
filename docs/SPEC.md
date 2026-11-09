@@ -43,6 +43,12 @@ wall: in `ready`, a turn whose next cell is outside the board or on an
 obstacle is ignored (2.1 (3)); recorded in the product office
 (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-09 23:59, in chat: after a shielded crash on a
+special level, the page says that a shield was lost, how many remain and
+what to do to go on (2.12 (10)). The wording is Clead's, sent to him at
+2026-11-10 00:00; he accepted it at 00:03 ("apyr") (`DECISIONS.md`,
+PO-171).
+
 ---
 
 ## 1. System overview
@@ -329,8 +335,17 @@ cleared, no queued turns, and no obstacles or dot.
     left, the seconds left (8) and the shield layers left. They are
     hidden on a normal level. The status line in `ready` says it is a
     special level and names its limits ("Level 5, special: 20 turns,
-    30 seconds, shield of 3. …"); while the snake waits after a crash it
-    says to turn to go on; when the game is `blown` it says "Blown up".
+    30 seconds, shield of 3. …"); when the game is `blown` it says
+    "Blown up". In `running`, while the snake waits after a crash (5),
+    the status line says
+    that a shield layer was lost, how many are left, and which turns go
+    on: the two directions at right angles to the heading (up or down for
+    a heading left or right; left or right for a heading up or down).
+    **[Clead]** The wording: "Shield lost, N left. Turn D to go on.",
+    where N is the number of layers left as a numeral (2 or 1 with a
+    shield of 3), and with no layer left "Shield lost, none left. Turn D
+    to go on. The next crash ends the game."; D is "up or down" for a
+    heading left or right, and "left or right" for a heading up or down.
     The obstacles look the same as on a normal level.
 
 ---
