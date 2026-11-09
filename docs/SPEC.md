@@ -273,14 +273,16 @@ cleared, no queued turns, and no obstacles or dot.
    or opposite to it is ignored; any other turn becomes the heading at
    once (not queued), is counted (6), and ends the wait, so the snake
    moves that way on the next tick. **[Clead]** That turn counts as a
-   turn, since it changes the snake's direction. A crash with no layer
+   turn: a free one would give a player who crashes an advantage over
+   one who does not, since with all 20 turns used a deliberate crash
+   would buy up to 3 more turns. A crash with no layer
    left ends the game (`over`).
 6. A turn counts when it becomes the heading: when a tick takes it from
    the queue (step 1), or when it ends a wait (5). The turn that starts
    the level from `ready` (2.1 (3)), and the Start button, are not
-   turns. At most 20 turns are allowed; the 21st turn ends the game
-   as `blown` at the moment it would become the heading, before the
-   snake moves. Only the state changes: the turns counted stay 20 (so
+   turns. At most 20 turns are allowed; **[Clead]** the 21st turn ends
+   the game as `blown` at the moment it would become the heading,
+   before the snake moves. Only the state changes: the turns counted stay 20 (so
    the page shows 0 turns left), the heading stays as it was, and the
    snake, the queued turns, the obstacles, the dot, the time and the
    shield stay as they were; a snake that was waiting (5) still counts
@@ -293,8 +295,9 @@ cleared, no queued turns, and no obstacles or dot.
 8. When the 5th dot clears a special level, the level gives
    (T + S) × (3 − U) / 3 points, rounded to the nearest whole number,
    where T is the turns left (20 minus the turns counted), S the seconds
-   left and U the shield layers used. The multiplier is 1, 2/3 or 1/3;
-   the product never ends in exactly .5, so the rounding has no tie.
+   left and U the shield layers used. The multiplier is 1, 2/3, 1/3 or,
+   with all 3 layers used, 0; the product never ends in exactly .5, so
+   the rounding has no tie.
    **[Clead]** A level cleared with all 3 layers used (the snake
    survives its third crash, (5)) gives 0 points, as the formula says.
    **[Clead]** The seconds left are counted in whole seconds, rounded
