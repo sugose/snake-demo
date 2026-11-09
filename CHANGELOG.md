@@ -8,6 +8,8 @@ All notable changes to Snake demo are documented here.
 
 - Levels: 5 dots clear a level; each level is laid out anew with a random start, the snake unrolling from
   one cell, and one more obstacle; 5 ms less between moves per level, down to 50 ms (#17). Specified in #16.
+- A test that a game won because the next level does not fit keeps no queued turns, and clearer test names and
+  error message for the start length (#20).
 
 - The game page: canvas, timer, keys, swipes, buttons, score and best
   score, with browser tests (#10).
@@ -27,6 +29,8 @@ All notable changes to Snake demo are documented here.
 - The specification states the key and swipe details the code follows:
   modifier keys, held keys, keys while a button has the focus, and mouse
   drags (#14).
+- The published levels recorded (#18); the specification states the layout shortfalls and the unrolling
+  exactly (#19); the special levels idea in the backlog (#21, #22).
 
 ### Removed
 
