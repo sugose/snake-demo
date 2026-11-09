@@ -19,7 +19,11 @@ All notable changes to Snake demo are documented here.
 
 - The project signs off to factoincognito's product office and cites its
   Rules; the shipped copy of the Rules and its check are removed (#2).
-- Phase 1 progress recorded in the backlog and status (#9).
+- Phase 1 progress recorded in the backlog and status (#9), the
+  published game and its changelog (#12), and Adam's phone test (#13).
+- The specification states the key and swipe details the code follows:
+  modifier keys, held keys, keys while a button has the focus, and mouse
+  drags (#14).
 
 ### Removed
 
