@@ -172,7 +172,7 @@ describe("newGame", () => {
     expect(newGame({ ...RULES, choose: answers(0, 0) }).food).toEqual({ x: 1, y: 0 });
   });
 
-  it("accepts the longest snake that leaves a cell for the dot", () => {
+  it("accepts a start length of size x size - 1: 399 on a 20 x 20 board", () => {
     const state = newGame({ ...RULES, startLength: 399, choose: answers(CENTRE_RIGHT, 0) });
     expect(state.snake).toEqual(stacked(CENTRE, 399));
   });
@@ -467,7 +467,7 @@ describe("tick", () => {
   });
 
   describe("a snake whose segments share a cell (docs/SPEC.md 2.11 (3))", () => {
-    it("unrolls behind the head, reaching its full length after as many ticks as it is long", () => {
+    it("unrolls behind the head, reaching its full length after one tick less than it has segments: 2 for 3", () => {
       let state = running({ snake: stacked(CENTRE, 3), heading: "right" });
       state = tick(state, answers(0));
       expect(state.snake).toEqual([{ x: 11, y: 10 }, CENTRE, CENTRE]);
@@ -782,6 +782,15 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         status: "won",
       });
       expect(choose.counts).toEqual([]);
+    });
+
+    it("wins with no queued turns, though a turn is still queued when the last dot is eaten", () => {
+      // Heading left with up and right queued: the tick takes up into the dot at (0,0), leaving
+      // right in the queue of the eaten state.
+      const before = frozen({ ...smallBoard(6), heading: "left", queue: ["up", "right"] });
+      const after = tick(before, answers(0));
+      expect(after).toMatchObject({ status: "won", heading: "up", level: 2, score: 10 });
+      expect(after.queue).toEqual([]);
     });
 
     /** A 9 x 9 board (the smallest with 8 cells ahead) about to clear `level`, snake of 3. */

@@ -170,8 +170,8 @@ function layOut(
  * queued turns, the snake's `startLength` segments all on a start the chooser picks, then the dot.
  * Throws a RangeError if `size`, `startLength` or `dotsPerLevel` is not a whole number of at least
  * 1, if `clearAhead` is not a whole number of at least 0, if the board is too small for a start
- * (fewer than `clearAhead + 1` cells a side), if the snake leaves no free cell for the dot, or if
- * the chooser returns an index out of range.
+ * (fewer than `clearAhead + 1` cells a side), if `startLength` is `size × size` or more, or if the
+ * chooser returns an index out of range.
  */
 export function newGame(options: {
   size: number;
@@ -200,7 +200,9 @@ export function newGame(options: {
   }
   const layout = layOut(size, clearAhead, 1, startLength, choose);
   if (layout === null) {
-    throw new RangeError(`a snake of ${startLength} leaves no free cell on a board of ${size}`);
+    throw new RangeError(
+      `start length ${startLength}; expected less than ${size * size}, the cells of a board of ${size}`,
+    );
   }
   return {
     size,
