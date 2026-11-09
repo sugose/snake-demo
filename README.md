@@ -116,10 +116,9 @@ With Claude, the Clead and Crog workflow comes on top of it.
   (`memory/decisions.md`, and `docs/decisions/` for longer ones), the
   status (`STATUS.md`), the change history (`CHANGELOG.md`), the pull
   request template, and the language pack's code standards.
-- The two workflows that post comments, `review.yml` (a hidden marker
-  on pull requests that change `src/`) and `changelog.yml` (a reminder
-  after a merge that did not change `CHANGELOG.md`), run on GitHub alone.
-  The comments are addressed to Clead and Crog.
+- The workflow that posts comments, `changelog.yml` (a reminder after a
+  merge that did not change `CHANGELOG.md`), runs on GitHub alone. Its
+  comments are addressed to Clead and Crog.
 
 **What does not work without Claude.**
 
@@ -154,8 +153,8 @@ written for Clead and Crog, as they apply to a team of people only:
 - Merge once `build` is green and the review has passed.
 - Fill in the texts the setup left for Clead (listed above) yourself,
   and keep `STATUS.md` up to date by hand.
-- The comments from `review.yml` and `changelog.yml` can be ignored, or
-  the two workflows deleted.
+- The comments from `changelog.yml` can be ignored, or the workflow
+  deleted.
 
 ## Branch protection
 
