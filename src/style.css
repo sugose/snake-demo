@@ -2,13 +2,37 @@
   color-scheme: light dark;
   --bg: #ffffff;
   --fg: #111111;
+  --muted: #555555;
+  --board: #eef1ec;
+  --snake: #2f6f4f;
+  --head: #1b4a33;
+  --food: #c2410c;
+  --button-bg: #e4e7e2;
+  --button-fg: #111111;
+  --button-border: #b9beb6;
+  --focus: #2563eb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #111111;
     --fg: #f2f2f2;
+    --muted: #b4b4b4;
+    --board: #1d221f;
+    --snake: #6fbf8f;
+    --head: #a8e0bd;
+    --food: #f59e57;
+    --button-bg: #262b28;
+    --button-fg: #f2f2f2;
+    --button-border: #454b47;
+    --focus: #7aa7ff;
   }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
@@ -17,4 +41,67 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: system-ui, sans-serif;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.scores {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-frame {
+  width: 100%;
+}
+
+#board {
+  display: block;
+  margin: 0 auto;
+  background: var(--board);
+  border-radius: 4px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.status {
+  margin: 0;
+  min-height: 1.5em;
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.controls button {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--button-border);
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.controls button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
