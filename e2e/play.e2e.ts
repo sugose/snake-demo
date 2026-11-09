@@ -48,14 +48,24 @@ test.describe("ready", () => {
     await expect(game).toHaveAttribute("data-head", "11,10");
   });
 
-  test("W, A, S, D turn as the arrows do", async ({ page }) => {
+  test("W, A, S, D turn as the arrows do, in either case", async ({ page }) => {
     const game = await openGame(page);
-    await page.keyboard.press("s");
-    await runTicks(page, 1);
-    await expectGame(game, "running", "10,11");
-    await page.keyboard.press("D");
-    await runTicks(page, 1);
-    await expect(game).toHaveAttribute("data-head", "11,11");
+    // Two small squares, one in each case: up, left, down, right, ending each where it began.
+    const steps: Array<[string, string]> = [
+      ["w", "10,9"],
+      ["a", "9,9"],
+      ["s", "9,10"],
+      ["d", "10,10"],
+      ["W", "10,9"],
+      ["A", "9,9"],
+      ["S", "9,10"],
+      ["D", "10,10"],
+    ];
+    for (const [key, head] of steps) {
+      await page.keyboard.press(key);
+      await runTicks(page, 1);
+      await expectGame(game, "running", head);
+    }
   });
 });
 
@@ -129,16 +139,6 @@ test.describe("pause", () => {
     await expect(game).toHaveAttribute("data-head", "10,11");
   });
 
-  test("Space on the focused Pause button acts once, through the button", async ({ page }) => {
-    const game = await openGame(page);
-    await page.keyboard.press("ArrowUp");
-    await page.locator("#pause").focus();
-    await page.keyboard.press("Space");
-    await expect(game).toHaveAttribute("data-status", "paused");
-    await page.keyboard.press("Space");
-    await expect(game).toHaveAttribute("data-status", "running");
-  });
-
   test("Pause does nothing in ready", async ({ page }) => {
     const game = await openGame(page);
     await page.keyboard.press("Space");
@@ -159,6 +159,63 @@ test.describe("pause", () => {
     await expect(game).toHaveAttribute("data-status", "paused");
     await runTicks(page, 4);
     await expect(game).toHaveAttribute("data-head", "10,10");
+  });
+});
+
+// Chromium focuses a button when it is clicked. Space and Enter then still do what docs/SPEC.md
+// 2.5 and 2.6 say, whichever button has the focus, and act exactly once.
+test.describe("keys while a button has the focus", () => {
+  test("after clicking Start, Space pauses", async ({ page }) => {
+    const game = await openGame(page);
+    await page.getByRole("button", { name: "Start", exact: true }).click();
+    await page.keyboard.press("Space");
+    await expect(game).toHaveAttribute("data-status", "paused");
+  });
+
+  test("after clicking Start and losing, Enter starts a new game", async ({ page }) => {
+    const game = await openGame(page);
+    await page.getByRole("button", { name: "Start", exact: true }).click();
+    await runTicks(page, 10);
+    await expect(game).toHaveAttribute("data-status", "over");
+    await page.keyboard.press("Enter");
+    await expectGame(game, "ready", "10,10");
+  });
+
+  test("after clicking New game and turning, Space pauses rather than resetting", async ({
+    page,
+  }) => {
+    const game = await openGame(page);
+    await page.getByRole("button", { name: "New game", exact: true }).click();
+    await page.keyboard.press("ArrowUp");
+    await runTicks(page, 2);
+    await page.keyboard.press("Space");
+    await expectGame(game, "paused", "10,8");
+  });
+
+  test("after clicking Pause twice, Enter starts a new game", async ({ page }) => {
+    const game = await openGame(page);
+    await page.keyboard.press("ArrowUp");
+    await page.locator("#pause").click();
+    await page.locator("#pause").click();
+    await runTicks(page, 2);
+    await expect(game).toHaveAttribute("data-head", "10,8");
+    await page.keyboard.press("Enter");
+    await expectGame(game, "ready", "10,10");
+  });
+
+  test("Space on the focused Pause button acts exactly once", async ({ page }) => {
+    // Twice would pause and resume at once, leaving the game running.
+    const game = await openGame(page);
+    await page.keyboard.press("ArrowUp");
+    await page.locator("#pause").focus();
+    await page.keyboard.press("Space");
+    await expect(game).toHaveAttribute("data-status", "paused");
+    await runTicks(page, 2);
+    await expect(game).toHaveAttribute("data-head", "10,10");
+    await page.keyboard.press("Space");
+    await expect(game).toHaveAttribute("data-status", "running");
+    await runTicks(page, 1);
+    await expect(game).toHaveAttribute("data-head", "10,9");
   });
 });
 
@@ -269,5 +326,40 @@ test.describe("best score", () => {
     await expect(game).toHaveAttribute("data-status", "over");
     await expect(game).toHaveAttribute("data-best", "5");
     expect(await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY)).toBe("5");
+  });
+
+  test("without local storage the game goes on, keeping the best score for the session", async ({
+    page,
+  }) => {
+    // docs/SPEC.md 2.9 (4): a browser that does not allow local storage. Any access to
+    // window.localStorage throws, as it does when storage is blocked.
+    await page.addInitScript(() => {
+      Object.defineProperty(window, "localStorage", {
+        configurable: true,
+        get() {
+          throw new DOMException("local storage is not allowed", "SecurityError");
+        },
+      });
+    });
+    // As in the test above: one food eaten, then the wall.
+    const game = await openGame(page, 208.5 / 397);
+    const blocked = await page.evaluate(() => {
+      try {
+        return window.localStorage === undefined;
+      } catch {
+        return true;
+      }
+    });
+    expect(blocked, "local storage is blocked in the page").toBe(true);
+    await expect(game).toHaveAttribute("data-best", "0");
+    await page.keyboard.press("ArrowRight");
+    await runTicks(page, 10);
+    await expect(game).toHaveAttribute("data-status", "over");
+    await expect(game).toHaveAttribute("data-score", "1");
+    await expect(game).toHaveAttribute("data-best", "1");
+    await expect(page.locator("#best")).toHaveText("1");
+    await page.keyboard.press("Enter");
+    await expectGame(game, "ready", "10,10");
+    await expect(page.locator("#best")).toHaveText("1");
   });
 });

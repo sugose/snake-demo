@@ -144,19 +144,16 @@ function sizeBoard(container: HTMLElement): void {
   draw();
 }
 
-// Keys (docs/SPEC.md 2.6).
+// Keys (docs/SPEC.md 2.5, 2.6), whichever button has the focus.
 document.addEventListener("keydown", (event) => {
-  // Space and Enter on a focused button are the button's own (a click), so they act once.
-  if (event.target instanceof HTMLButtonElement && (event.key === " " || event.key === "Enter")) {
-    return;
-  }
   const command = keyToCommand(event.key, {
     ctrl: event.ctrlKey,
     meta: event.metaKey,
     alt: event.altKey,
   });
   if (command === null) return;
-  // Keeps the arrows and Space from scrolling the page.
+  // Keeps the arrows and Space from scrolling the page, and keeps a focused button from also
+  // acting on Space or Enter (its click), so each key acts once.
   event.preventDefault();
   if (command.type === "turn") {
     apply(turn(state, command.direction));
