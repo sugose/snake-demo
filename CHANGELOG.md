@@ -6,6 +6,8 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- After a shielded crash, the status line says how many shield layers are left and which turns go on (#32).
+  Specified in #31.
 - A first turn into a wall or an obstacle no longer starts a level; the game waits for a turn it can take (#30).
   Specified in #29.
 - Special levels: every 5th level runs at half the delay of the level before it, with a 3-layer shield against walls and
