@@ -13,7 +13,9 @@ import {
   levelDelay,
   newGame,
   pauseIfRunning,
+  type SpecialRules,
   type Status,
+  specialInfo,
   start,
   tick,
   togglePause,
@@ -32,16 +34,45 @@ const {
   delayStep,
   shortestDelay,
   clearAhead,
+  specialEvery,
+  shieldLayers,
+  maxTurns,
+  specialSeconds,
+  jumpSeconds,
+  clearAheadOfHead,
 } = config;
-const maxScore = gridSize * gridSize;
+/**
+ * The best score's bound (docs/SPEC.md 2.9 (3)): at most one level per 5 cells of the board can be
+ * cleared, and no level gives more than the dots of a normal level or the turns and seconds of a
+ * special one.
+ */
+const maxScore =
+  ((gridSize * gridSize) / dotsPerLevel) * Math.max(dotsPerLevel, maxTurns + specialSeconds);
 const delays = { first: firstDelay, step: delayStep, shortest: shortestDelay };
+const special: SpecialRules = {
+  every: specialEvery,
+  shieldLayers,
+  maxTurns,
+  seconds: specialSeconds,
+  jumpSeconds,
+  clearAheadOfHead,
+  delays,
+};
+const delayOfLevel = (level: number): number =>
+  levelDelay(level, { ...delays, every: specialEvery });
 
-/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3)). */
-const STATUS_TEXT: Readonly<Record<Status, (level: number) => string>> = {
-  ready: (level) => `Level ${level}. Arrow keys, W A S D, a swipe or Start to play`,
-  running: () => "Space or P to pause",
+const PLAY = "Arrow keys, W A S D, a swipe or Start to play";
+
+/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3), 2.12 (10)). */
+const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {
+  ready: ({ level, run }) =>
+    run === null
+      ? `Level ${level}. ${PLAY}`
+      : `Level ${level}, special: ${maxTurns} turns, ${specialSeconds} seconds, shield of ${shieldLayers}. ${PLAY}`,
+  running: ({ run }) => (run?.waiting ? "Shield hit. Turn to go on" : "Space or P to pause"),
   paused: () => "Paused. Space, P or Resume to go on",
   over: () => "Game over. Enter or New game to play again",
+  blown: () => "Blown up! Enter or New game to play again",
   won: () => "You won! Enter or New game to play again",
 };
 
@@ -69,6 +100,10 @@ const canvas = element("board", HTMLCanvasElement);
 const levelText = element("level", HTMLElement);
 const scoreText = element("score", HTMLElement);
 const bestText = element("best", HTMLElement);
+const specialRow = element("special", HTMLElement);
+const turnsText = element("turns-left", HTMLElement);
+const secondsText = element("seconds-left", HTMLElement);
+const shieldText = element("shield-left", HTMLElement);
 const statusText = element("status", HTMLElement);
 const startButton = element("start", HTMLButtonElement);
 const pauseButton = element("pause", HTMLButtonElement);
@@ -82,7 +117,7 @@ const context: CanvasRenderingContext2D = drawing;
 /** The one chooser of docs/SPEC.md 2.3 and 2.11: the start, each obstacle and the dot. */
 const choose: Chooser = (count) => Math.floor(Math.random() * count);
 const freshGame = (): GameState =>
-  newGame({ size: gridSize, startLength, clearAhead, dotsPerLevel, choose });
+  newGame({ size: gridSize, startLength, clearAhead, dotsPerLevel, special, choose });
 const getStore = (): Storage => window.localStorage;
 
 let state = freshGame();
@@ -91,7 +126,9 @@ let timer: { id: number; delay: number } | undefined;
 
 /** Makes `next` the game state: saves a new best score, starts or stops the timer, redraws. */
 function apply(next: GameState): void {
-  const ended = next.status !== state.status && (next.status === "over" || next.status === "won");
+  const ended =
+    next.status !== state.status &&
+    (next.status === "over" || next.status === "blown" || next.status === "won");
   state = next;
   if (ended && state.score > best) {
     best = state.score;
@@ -103,10 +140,10 @@ function apply(next: GameState): void {
 
 /**
  * The tick timer runs only while the game is `running`, with the delay of the current level
- * (docs/SPEC.md 2.2, 2.10 (2)); a timer with another level's delay is replaced.
+ * (docs/SPEC.md 2.2, 2.10 (2), 2.12 (2)); a timer with another level's delay is replaced.
  */
 function syncTimer(): void {
-  const delay = levelDelay(state.level, delays);
+  const delay = delayOfLevel(state.level);
   if (timer !== undefined && (state.status !== "running" || timer.delay !== delay)) {
     window.clearInterval(timer.id);
     timer = undefined;
@@ -128,7 +165,10 @@ function render(): void {
   const head = state.snake[0];
   root.dataset.status = state.status;
   root.dataset.level = String(state.level);
-  root.dataset.delay = String(levelDelay(state.level, delays));
+  root.dataset.delay = String(delayOfLevel(state.level));
+  const info = specialInfo(state);
+  root.dataset.special = String(info !== null);
+  root.dataset.waiting = String(state.run?.waiting ?? false);
   root.dataset.score = String(state.score);
   root.dataset.best = String(best);
   root.dataset.head = head === undefined ? "" : cellText(head);
@@ -139,7 +179,13 @@ function render(): void {
   levelText.textContent = String(state.level);
   scoreText.textContent = String(state.score);
   bestText.textContent = String(best);
-  statusText.textContent = STATUS_TEXT[state.status](state.level);
+  statusText.textContent = STATUS_TEXT[state.status](state);
+  specialRow.hidden = info === null;
+  if (info !== null) {
+    turnsText.textContent = String(info.turnsLeft);
+    secondsText.textContent = String(info.secondsLeft);
+    shieldText.textContent = String(info.shieldLeft);
+  }
   pauseButton.textContent = state.status === "paused" ? "Resume" : "Pause";
   draw();
 }

@@ -95,6 +95,8 @@ describe("newGame", () => {
       dotsEaten: 0,
       score: 0,
       status: "ready",
+      special: null,
+      run: null,
     });
   });
 

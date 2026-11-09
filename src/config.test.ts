@@ -12,6 +12,12 @@ describe("config (docs/SPEC.md 3)", () => {
       delayStep: 5,
       shortestDelay: 50,
       clearAhead: 8,
+      specialEvery: 5,
+      shieldLayers: 3,
+      maxTurns: 20,
+      specialSeconds: 30,
+      jumpSeconds: 3,
+      clearAheadOfHead: 2,
     });
   });
 
