@@ -26,8 +26,16 @@ recorded in the product office (`DECISIONS.md`, the row "Snake demo,
 special levels", PO-171). Section 2.12, and the changes to 2.2, 2.4, 2.5,
 2.8, 2.9, 2.10, 3 and 3.1 that follow from it, are Clead's exact wording
 of that decision. Details the decision does not settle are marked
-**[Clead]**: they are Clead's choices, not Adam's, and are put to him in
-the product office's "Waiting for Adam" list.
+**[Clead]**. Adam accepted those of 2.9 (3), 2.12 (3), (5) (the queued
+turns cleared), (6) (the 21st turn), (8) (whole seconds, rounded up),
+(9) and (10), and the slower levels 16 to 18 of 2.10 (2), in chat on
+2026-11-09 at 23:02 and 23:04; at 23:02 he left whether the turn that
+restarts the snake after a crash is free to Clead, with "restart free
+(unless that gives unfair advantage to someone who didn't crash. if you
+think it is unfair, then you make it not free)", and Clead made it count
+(2.12 (5)). The marks of 2.12 (7) and (8) on a level cleared in the tick
+that reaches 30 seconds and on a level cleared with all layers used are
+Clead's, and are put to Adam in the product office's "Waiting for Adam".
 
 ---
 
@@ -235,17 +243,17 @@ cleared, no queued turns, and no obstacles or dot.
    110, 90, 70 and 50).
 3. At its start (when it is laid out), a special level has a shield of
    3 layers, 20 turns and 30 seconds. **[Clead]** Each special level
-   starts with a full shield, all 20 turns and all 30 seconds; nothing
-   carries over from an earlier special level. Its time is the sum of
-   the delays of the ticks in which the snake moved (step 6 of 2.2);
+   starts with a full shield; no layer carries over from an earlier
+   special level. Its time is the sum of the delays of the ticks in
+   which the snake moved (step 6 of 2.2), kept in whole milliseconds;
    so the time runs only while the snake moves, and not in `ready`, in
    `paused`, while the snake waits after a shielded crash (5), or in the
    tick of the crash itself.
 4. A tick on a special level is 2.2 with these changes:
    - If the snake is waiting (5), the tick does nothing.
-   - Step 1: a turn taken from the queue is counted (6). If that makes
-     21 turns on this level, the game is `blown` (6) and the tick ends,
-     with everything else as it was.
+   - Step 1: a turn taken from the queue is counted (6). If that would
+     make 21 turns on this level, the game is `blown` (6) and the tick
+     ends.
    - Steps 3 and 5: a new head outside the board or on an obstacle is a
      crash, which (5) handles. A new head on the snake's own body ends
      the game (`over`), shield or not.
@@ -254,8 +262,9 @@ cleared, no queued turns, and no obstacles or dot.
      (8) are added to the score before the next level is laid out.
    - After step 7, if the level was not cleared and the game was not
      won: if the level's time is now 30 seconds or more, the game is
-     `blown` (7); otherwise, if the time has passed a whole multiple of
-     3 seconds in this tick, the obstacles jump (9).
+     `blown` (7); otherwise, if this tick took the time from below
+     k × 3000 ms to k × 3000 ms or more, for a whole number k, the
+     obstacles jump (9).
 5. A crash with at least one shield layer left uses one layer. The
    snake does not move: its segments stay where they were, the heading
    stays the one of this tick (a turn taken in step 1 included), and the
@@ -271,26 +280,38 @@ cleared, no queued turns, and no obstacles or dot.
    the level from `ready` (2.1 (3)), and the Start button, are not
    turns. At most 20 turns are allowed; the 21st turn ends the game
    as `blown` at the moment it would become the heading, before the
-   snake moves, with the board as it was.
+   snake moves. Only the state changes: the turns counted stay 20 (so
+   the page shows 0 turns left), the heading stays as it was, and the
+   snake, the queued turns, the obstacles, the dot, the time and the
+   shield stay as they were; a snake that was waiting (5) still counts
+   as waiting.
 7. The level must be cleared within 30 seconds of its time (3). A tick
    after which the time is 30 seconds or more and the level is not
    cleared ends the game as `blown`, with the board as that tick left it.
+   **[Clead]** A level cleared by the tick that brings its time to
+   30 seconds or more counts as cleared, with 0 seconds left (8).
 8. When the 5th dot clears a special level, the level gives
    (T + S) × (3 − U) / 3 points, rounded to the nearest whole number,
    where T is the turns left (20 minus the turns counted), S the seconds
    left and U the shield layers used. The multiplier is 1, 2/3 or 1/3;
    the product never ends in exactly .5, so the rounding has no tie.
+   **[Clead]** A level cleared with all 3 layers used (the snake
+   survives its third crash, (5)) gives 0 points, as the formula says.
    **[Clead]** The seconds left are counted in whole seconds, rounded
    up: 30 minus the time in seconds, rounded up to a whole number (a
    second that has begun counts as left). The page's countdown shows the
    same number.
-9. The obstacles jump: all of them at once, each picked anew at random,
-   one at a time, by the chooser of 2.3 from the free cells listed row
-   by row, leaving out the snake's cells, the dot's cell, the cells of
-   the obstacles already picked in this jump, and the 2 cells straight
-   ahead of the head in its heading that lie on the board. If there are
-   fewer such cells than obstacles, the obstacles stay where they are
-   (this cannot happen on the 20 × 20 board). **[Clead]** The obstacles
+9. The obstacles jump: all of them at once. They are lifted off the
+   board, so their old cells may be picked again, and each is picked
+   anew at random, one at a time, by the chooser of 2.3 from the board's
+   cells listed row by row (as in 2.3), leaving out the snake's cells,
+   the dot's cell, the cells of the obstacles already picked in this
+   jump, and the 2 cells straight ahead of the head in its heading that
+   lie on the board. If there are fewer such cells than obstacles, the
+   obstacles stay where they are and the chooser is asked nothing (this
+   cannot happen on the 20 × 20 board: on level 65, the last special
+   level that can be laid out, the snake of at most 327 segments, the
+   dot, 2 cells and 64 obstacles take at most 394 cells). **[Clead]** The obstacles
    follow the level's time (3): they first jump 3 seconds into it, and
    do not jump while the snake waits after a crash.
 10. **[Clead]** What the page shows on a special level: next to the
@@ -311,8 +332,10 @@ cleared, no queued turns, and no obstacles or dot.
   125 ms, the delay step 5 ms, the shortest delay 50 ms, the 8 clear
   cells ahead of a start, and the special levels' values of 2.12: every
   5th level, 3 shield layers, 20 turns, 30 seconds, a jump every
-  3 seconds and 2 cells kept free ahead of the head. No other module
-  writes these numbers
+  3 seconds and 2 cells kept free ahead of the head. The best score's
+  bound of 2.9 (3) is not a value of its own: `main.ts` works it out
+  from these, as (20 × 20 / 5) × the larger of 5 and 20 + 30. No other
+  module writes these numbers
   (product-office Process P-11 § 5 (2)): `game.ts`, `input.ts` and
   `storage.ts` take the values they need as parameters, and `main.ts`
   passes them from here.
