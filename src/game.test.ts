@@ -238,6 +238,34 @@ describe("turn", () => {
       expect(turn(before, "down")).toBe(before);
       expect(turn(before, "left")).toEqual({ ...before, heading: "left", status: "running" });
     });
+
+    describe("a turn whose next cell is a wall or an obstacle is ignored (docs/SPEC.md 2.1 (3))", () => {
+      it.each<[string, Cell, Direction, Direction, Direction]>([
+        ["the right wall", { x: 19, y: 10 }, "up", "right", "left"],
+        ["the left wall", { x: 0, y: 10 }, "down", "left", "right"],
+        ["the top wall", { x: 10, y: 0 }, "left", "up", "down"],
+        ["the bottom wall", { x: 10, y: 19 }, "right", "down", "up"],
+      ])(
+        "on %s, a turn into it is ignored and the other side starts",
+        (_, cell, heading, into, away) => {
+          const before = game({ snake: stacked(cell, 3), heading });
+          expect(turn(before, into)).toBe(before);
+          expect(turn(before, away)).toEqual({ ...before, heading: away, status: "running" });
+          expect(turn(before, heading)).toEqual({ ...before, status: "running" });
+        },
+      );
+
+      it("a turn onto an obstacle is ignored; the dot does not count as one", () => {
+        const before = game({ obstacles: [{ x: 10, y: 9 }], food: { x: 10, y: 11 } });
+        expect(turn(before, "up")).toBe(before);
+        expect(turn(before, "down")).toEqual({ ...before, heading: "down", status: "running" });
+      });
+
+      it("the Start button still starts in the heading it has", () => {
+        const before = game({ snake: stacked({ x: 19, y: 10 }, 3), heading: "up" });
+        expect(start(before)).toEqual({ ...before, status: "running" });
+      });
+    });
   });
 
   describe("in running", () => {

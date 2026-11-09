@@ -181,3 +181,31 @@ test("New game returns to level 1 with the score 0", async ({ page }) => {
   await runTicks(page, 1);
   await expect(game).toHaveAttribute("data-head", "11,10");
 });
+
+test.describe("a first turn into a wall or an obstacle (docs/SPEC.md 2.1 (3))", () => {
+  test("on a start against the right wall, Right is ignored and Left starts the game", async ({
+    page,
+  }) => {
+    const game = await openGame(page, [answer(startIndex("19,10", "up"), STARTS), answer(0, 399)]);
+    await expectGame(game, "ready", "19,10");
+    await page.keyboard.press("ArrowRight");
+    await runTicks(page, 3);
+    await expectGame(game, "ready", "19,10");
+    await expect(game).toHaveAttribute("data-heading", "up");
+    await page.keyboard.press("ArrowLeft");
+    await runTicks(page, 1);
+    await expectGame(game, "running", "18,10");
+  });
+
+  test("on level 2, a turn onto the obstacle next to the start is ignored", async ({ page }) => {
+    const game = await openGame(page, [...LEVEL_1, ...level2("11,10", "0,0")]);
+    await clearLevel1(page, game);
+    await expect(game).toHaveAttribute("data-obstacles", "11,10");
+    await page.keyboard.press("ArrowRight");
+    await runTicks(page, 2, LEVEL_2_TICK_MS);
+    await expectGame(game, "ready", "10,10");
+    await page.keyboard.press("ArrowUp");
+    await runTicks(page, 1, LEVEL_2_TICK_MS);
+    await expectGame(game, "running", "10,9");
+  });
+});
