@@ -41,7 +41,7 @@ one list he reads (product-office Process P-9 § 3 (1)), not here.
 - **[DONE] PBI-1.4** (done 2026-11-09 in #10, `e3648c2`) — The page: `src/config.ts`, canvas, tick timer, keys, swipes and buttons, page visibility, score and best score, in `src/main.ts`, `src/style.css` and `index.html`; the starter example removed; browser tests for a game played to its end, pause, restart, light and dark, 375 px and 1280 px with no sideways scrolling, and a clean console (`docs/SPEC.md` 2, 3, web pack rules).
 - **[DONE] PBI-1.5** (done 2026-11-09 in #11, `656fc6b`; first deploy run 42645192262 succeeded) — Publishing: a workflow that builds `dist/index.html` on every merge to `main` and publishes it to GitHub Pages (`docs/SPEC.md` 4). Adam switches the Pages source to "GitHub Actions" (product office "Waiting for Adam").
 - **[DONE] PBI-1.7** (done 2026-11-09: Adam, in chat, 18:17, "tested, swipe was good") — Adam plays the game on his phone from its link; his finding on how the swipes feel settles `docs/SPEC.md` 6.1.
-- **[NEXT] PBI-1.8** (from the reviewer's optional notes 1 and 2 on #7) — `docs/SPEC.md` 2.6 says what `src/input.ts` and the page already do: a key pressed with Ctrl, Meta or Alt is not a command, and a held key's repeats do not pause or start a new game again. The same PR marks `docs/SPEC.md` 6.1 settled by PBI-1.7. A spec wording change: Crog reviews it.
+- **[DONE] PBI-1.8** (done 2026-11-09 in #14; from the reviewer's optional notes 1 and 2 on #7) — `docs/SPEC.md` 2.6 says what `src/input.ts` and the page already do: a key pressed with Ctrl, Meta or Alt is not a command, and a held key's repeats do not pause or start a new game again. The same PR marks `docs/SPEC.md` 6.1 settled by PBI-1.7. A spec wording change: Crog reviews it.
 
 ---
 
