@@ -1,9 +1,9 @@
 /**
- * The game rules of docs/SPEC.md 2.1 to 2.5, 2.8, 2.10, 2.11, 3 and 3.1, as pure functions over a
+ * The game rules of docs/SPEC.md 2.1 to 2.5, 2.8, 2.10 to 2.12, 3 and 3.1, as pure functions over a
  * game state. No DOM and no timers. Every function returns a new state and never changes its
  * arguments; a command that the spec ignores returns the state it was given, unchanged.
- * The board size, start length, clear cells ahead, dots per level, delays and the chooser are
- * passed in (docs/SPEC.md 3).
+ * The board size, start length, clear cells ahead, dots per level, delays, the special levels'
+ * values and the chooser are passed in (docs/SPEC.md 3).
  */
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -11,7 +11,42 @@ export type Direction = "up" | "down" | "left" | "right";
 /** A cell of the board: `x` from 0 (left), `y` from 0 (top). */
 export type Cell = { readonly x: number; readonly y: number };
 
-export type Status = "ready" | "running" | "paused" | "over" | "won";
+export type Status = "ready" | "running" | "paused" | "over" | "blown" | "won";
+
+/** The delays between ticks, in milliseconds (docs/SPEC.md 2.10 (2)). */
+export interface Delays {
+  readonly first: number;
+  readonly step: number;
+  readonly shortest: number;
+}
+
+/** The values of the special levels (docs/SPEC.md 2.12). */
+export interface SpecialRules {
+  /** Every level whose number this divides is special. */
+  readonly every: number;
+  readonly shieldLayers: number;
+  /** Turns allowed on a special level; one more blows the snake up. */
+  readonly maxTurns: number;
+  /** The time a special level must be cleared in, in seconds. */
+  readonly seconds: number;
+  /** The obstacles jump each time the level's time passes a multiple of this, in seconds. */
+  readonly jumpSeconds: number;
+  /** Cells straight ahead of the head that a jumping obstacle never lands on. */
+  readonly clearAheadOfHead: number;
+  /** The delays, so that a tick knows how much time it takes. */
+  readonly delays: Delays;
+}
+
+/** Where a special level stands (docs/SPEC.md 2.12 (3), 3.1). */
+export interface SpecialRun {
+  /** Turns counted on this level (2.12 (6)). */
+  readonly turns: number;
+  /** The level's time so far, in milliseconds: the delays of the ticks in which the snake moved. */
+  readonly timeMs: number;
+  readonly shieldUsed: number;
+  /** True while the snake waits for a turn after a shielded crash (2.12 (5)). */
+  readonly waiting: boolean;
+}
 
 /**
  * Given how many things there are to choose from, returns the index of the one to take. One
@@ -42,6 +77,10 @@ export interface GameState {
   /** Dots eaten in the whole game. */
   readonly score: number;
   readonly status: Status;
+  /** The special levels' values; `null` in a game without special levels. */
+  readonly special: SpecialRules | null;
+  /** Where the current special level stands; `null` on a normal level. */
+  readonly run: SpecialRun | null;
 }
 
 /** At most two turns wait in the queue (docs/SPEC.md 2.4 (2), 3.1). */
@@ -84,6 +123,37 @@ function ahead(cell: Cell, heading: Direction, distance: number): Cell {
 
 function isWholeNumber(value: number, least: number): boolean {
   return Number.isInteger(value) && value >= least;
+}
+
+const FRESH_RUN: SpecialRun = Object.freeze({ turns: 0, timeMs: 0, shieldUsed: 0, waiting: false });
+
+/** True if `level` is special under `rules` (docs/SPEC.md 2.12 (1)). */
+function isSpecial(level: number, rules: SpecialRules | null): boolean {
+  return rules !== null && level % rules.every === 0;
+}
+
+/** The run a level starts with: a fresh one on a special level, none on a normal one. */
+function runFor(level: number, rules: SpecialRules | null): SpecialRun | null {
+  return isSpecial(level, rules) ? FRESH_RUN : null;
+}
+
+/** Throws a RangeError if the special levels' values cannot make a game (docs/SPEC.md 2.12). */
+function checkSpecial(rules: SpecialRules): void {
+  const checks: Array<[string, number, boolean]> = [
+    ["every", rules.every, isWholeNumber(rules.every, 2)],
+    ["shield layers", rules.shieldLayers, isWholeNumber(rules.shieldLayers, 1)],
+    ["turns allowed", rules.maxTurns, isWholeNumber(rules.maxTurns, 0)],
+    ["seconds", rules.seconds, rules.seconds > 0],
+    ["jump seconds", rules.jumpSeconds, rules.jumpSeconds > 0],
+    [
+      "clear cells ahead of the head",
+      rules.clearAheadOfHead,
+      isWholeNumber(rules.clearAheadOfHead, 0),
+    ],
+  ];
+  for (const [name, value, ok] of checks) {
+    if (!ok) throw new RangeError(`special levels: ${name} ${value} is out of range`);
+  }
 }
 
 /**
@@ -170,17 +240,22 @@ function layOut(
  * queued turns, the snake's `startLength` segments all on a start the chooser picks, then the dot.
  * Throws a RangeError if `size`, `startLength` or `dotsPerLevel` is not a whole number of at least
  * 1, if `clearAhead` is not a whole number of at least 0, if the board is too small for a start
- * (fewer than `clearAhead + 1` cells a side), if `startLength` is `size × size` or more, or if the
- * chooser returns an index out of range.
+ * (fewer than `clearAhead + 1` cells a side), if `startLength` is `size × size` or more, if a
+ * special levels' value is out of range (docs/SPEC.md 2.12), or if the chooser returns an index out
+ * of range.
  */
 export function newGame(options: {
   size: number;
   startLength: number;
   clearAhead: number;
   dotsPerLevel: number;
+  /** The special levels' values (docs/SPEC.md 2.12); without them no level is special. */
+  special?: SpecialRules;
   choose: Chooser;
 }): GameState {
   const { size, startLength, clearAhead, dotsPerLevel, choose } = options;
+  const special = options.special ?? null;
+  if (special !== null) checkSpecial(special);
   if (!isWholeNumber(size, 1)) {
     throw new RangeError(`board size ${size}; expected a whole number of at least 1`);
   }
@@ -214,22 +289,51 @@ export function newGame(options: {
     dotsEaten: 0,
     score: 0,
     status: "ready",
+    special,
+    run: runFor(1, special),
   };
 }
 
 /**
- * The delay between ticks on `level`, in milliseconds (docs/SPEC.md 2.10 (2)): `first` on level 1,
- * `step` shorter on each next level, and never shorter than `shortest`. Throws a RangeError if
- * `level` is not a whole number of at least 1.
+ * The delay between ticks on `level`, in milliseconds (docs/SPEC.md 2.10 (2), 2.12 (2)). Without
+ * `every`, no level is special: `first` on level 1, `step` shorter on each next level, and never
+ * shorter than `shortest`. With `every`, a level whose number it divides is special and has half
+ * the delay of the level before it, with no floor; a normal level is `step` shorter for each normal
+ * level before it, and never shorter than `shortest`. Throws a RangeError if `level` is not a whole
+ * number of at least 1, or `every` one of at least 2.
  */
-export function levelDelay(
-  level: number,
-  delays: { first: number; step: number; shortest: number },
-): number {
+export function levelDelay(level: number, delays: Delays & { every?: number }): number {
   if (!isWholeNumber(level, 1)) {
     throw new RangeError(`level ${level}; expected a whole number of at least 1`);
   }
-  return Math.max(delays.shortest, delays.first - delays.step * (level - 1));
+  const { every } = delays;
+  if (every !== undefined && !isWholeNumber(every, 2)) {
+    throw new RangeError(`special every ${every} levels; expected a whole number of at least 2`);
+  }
+  const normalDelay = (normal: number): number => {
+    const specialsBefore = every === undefined ? 0 : Math.floor((normal - 1) / every);
+    return Math.max(delays.shortest, delays.first - delays.step * (normal - 1 - specialsBefore));
+  };
+  if (every !== undefined && level % every === 0) return normalDelay(level - 1) / 2;
+  return normalDelay(level);
+}
+
+/** The delay of the state's level, counting its special levels (docs/SPEC.md 2.10 (2), 2.12 (2)). */
+function delayOf(state: GameState, rules: SpecialRules): number {
+  return levelDelay(state.level, { ...rules.delays, every: rules.every });
+}
+
+/** What the page shows on a special level (docs/SPEC.md 2.12 (8), (10)); `null` on a normal one. */
+export function specialInfo(
+  state: GameState,
+): { turnsLeft: number; secondsLeft: number; shieldLeft: number } | null {
+  const { run, special } = state;
+  if (run === null || special === null) return null;
+  return {
+    turnsLeft: Math.max(0, special.maxTurns - run.turns),
+    secondsLeft: Math.max(0, Math.ceil((special.seconds * 1000 - run.timeMs) / 1000)),
+    shieldLeft: special.shieldLayers - run.shieldUsed,
+  };
 }
 
 /**
@@ -238,7 +342,8 @@ export function levelDelay(
  * against the last queued turn, or the heading when none is queued: the same or the opposite
  * direction is ignored, and so is any turn while the queue is full. Elsewhere a turn is ignored. A
  * value that is not one of the four directions (possible only past the type checker) is ignored in
- * every state.
+ * every state. On a special level a snake waiting after a shielded crash takes a turn at once,
+ * and counts it (docs/SPEC.md 2.12 (5), (6)); its 21st turn blows it up.
  */
 export function turn(state: GameState, direction: Direction): GameState {
   if (!Object.hasOwn(STEP, direction)) return state;
@@ -247,10 +352,27 @@ export function turn(state: GameState, direction: Direction): GameState {
     return { ...state, heading: direction, status: "running" };
   }
   if (state.status !== "running") return state;
+  if (state.run?.waiting) {
+    // A snake waiting after a shielded crash takes its turn at once (docs/SPEC.md 2.12 (5), (6)).
+    if (direction === state.heading || direction === OPPOSITE[state.heading]) return state;
+    const counted = countTurn(state, state.run);
+    if (counted === null) return { ...state, status: "blown" };
+    return { ...state, heading: direction, run: { ...counted, waiting: false } };
+  }
   const last = state.queue[state.queue.length - 1] ?? state.heading;
   if (direction === last || direction === OPPOSITE[last]) return state;
   if (state.queue.length >= MAX_QUEUED_TURNS) return state;
   return { ...state, queue: [...state.queue, direction] };
+}
+
+/**
+ * Counts one turn on a special level (docs/SPEC.md 2.12 (6)): the run with it counted, or `null`
+ * when it is one more than the turns allowed.
+ */
+function countTurn(state: GameState, run: SpecialRun): SpecialRun | null {
+  const turns = run.turns + 1;
+  if (state.special === null || turns > state.special.maxTurns) return null;
+  return { ...run, turns };
 }
 
 /** The Start button (docs/SPEC.md 2.5): starts a `ready` game in the heading it has; otherwise ignored. */
@@ -283,7 +405,63 @@ function nextLevel(cleared: GameState, choose: Chooser): GameState {
   if (layout === null) {
     return { ...cleared, queue: [], obstacles: [], food: null, status: "won" };
   }
-  return { ...cleared, ...layout, queue: [], level, dotsEaten: 0, status: "ready" };
+  return {
+    ...cleared,
+    ...layout,
+    queue: [],
+    level,
+    dotsEaten: 0,
+    status: "ready",
+    run: runFor(level, cleared.special),
+  };
+}
+
+/**
+ * The points a cleared special level gives (docs/SPEC.md 2.12 (8)): the turns and the whole seconds
+ * left (a begun second counts), times the share of the shield not used, rounded.
+ */
+function levelPoints(state: GameState): number {
+  const info = specialInfo(state);
+  if (info === null || state.special === null) return 0;
+  const layers = state.special.shieldLayers;
+  return Math.round(((info.turnsLeft + info.secondsLeft) * info.shieldLeft) / layers);
+}
+
+/**
+ * The obstacles jump (docs/SPEC.md 2.12 (9)): each picked anew by the chooser, one at a time, from
+ * the cells with no snake segment, no dot and no obstacle already picked in this jump, and not one
+ * of the cells straight ahead of the head kept clear. When there are fewer such cells than
+ * obstacles, they stay where they are and the chooser is asked nothing.
+ */
+function jump(state: GameState, rules: SpecialRules, choose: Chooser): readonly Cell[] {
+  const head = state.snake[0];
+  if (head === undefined) return state.obstacles;
+  const kept: Cell[] = [...state.snake];
+  if (state.food !== null) kept.push(state.food);
+  for (let distance = 1; distance <= rules.clearAheadOfHead; distance++) {
+    const cell = ahead(head, state.heading, distance);
+    if (onBoard(cell, state.size)) kept.push(cell);
+  }
+  if (freeCells(state.size, kept).length < state.obstacles.length) return state.obstacles;
+  const obstacles: Cell[] = [];
+  for (let i = 0; i < state.obstacles.length; i++) {
+    obstacles.push(pick(freeCells(state.size, [...kept, ...obstacles]), choose, "an obstacle"));
+  }
+  return obstacles;
+}
+
+/**
+ * The end of a tick on a special level in which the snake moved and the level was neither cleared
+ * nor won (docs/SPEC.md 2.12 (4), (7), (9)): blown when the level's time is up, otherwise the
+ * obstacles jump when the time passed a multiple of the jump interval.
+ */
+function afterMove(state: GameState, timeBefore: number, choose: Chooser): GameState {
+  const { run, special } = state;
+  if (run === null || special === null) return state;
+  if (run.timeMs >= special.seconds * 1000) return { ...state, status: "blown" };
+  const interval = special.jumpSeconds * 1000;
+  if (Math.floor(run.timeMs / interval) <= Math.floor(timeBefore / interval)) return state;
+  return { ...state, obstacles: jump(state, special, choose) };
 }
 
 /**
@@ -292,37 +470,62 @@ function nextLevel(cleared: GameState, choose: Chooser): GameState {
  * is counted by segments: when the snake does not eat, its last segment does not count, but other
  * segments on the same cell do. The last dot of a level clears it and lays out the next one in the
  * same tick, with the same chooser; otherwise, leaving no free cell wins the game, with no dot
- * placed. Throws a RangeError if the chooser returns an index out of range, or if the state has a
- * snake with no segments (no game made by `newGame` has one).
+ * placed. On a special level (docs/SPEC.md 2.12 (4)): a waiting snake does nothing; a turn taken
+ * from the queue is counted, and the 21st blows the snake up; a wall or an obstacle with a shield
+ * layer left uses it and makes the snake wait; a dot scores nothing, and the 5th adds the level's
+ * points; the time runs and may blow the snake up; and the obstacles jump. Throws a RangeError if
+ * the chooser returns an index out of range, or if the state has a snake with no segments (no game
+ * made by `newGame` has one).
  */
 export function tick(state: GameState, choose: Chooser): GameState {
   if (state.status !== "running") return state;
+  const { special } = state;
+  let run = state.run;
+  if (run?.waiting) return state;
   const [nextTurn, ...queue] = state.queue;
   const heading = nextTurn ?? state.heading;
+  if (run !== null && nextTurn !== undefined) {
+    run = countTurn(state, run);
+    if (run === null) return { ...state, status: "blown" };
+  }
   const head = state.snake[0];
   if (head === undefined) throw new RangeError("the snake has no segments");
   const newHead = ahead(head, heading, 1);
 
-  if (!onBoard(newHead, state.size)) return { ...state, status: "over" };
+  const crash = (): GameState => {
+    if (run === null || special === null || run.shieldUsed >= special.shieldLayers) {
+      return { ...state, status: "over" };
+    }
+    return {
+      ...state,
+      heading,
+      queue: [],
+      run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: true },
+    };
+  };
+  if (!onBoard(newHead, state.size)) return crash();
   const eats = state.food !== null && sameCell(newHead, state.food);
   const body = eats ? state.snake : state.snake.slice(0, -1);
-  if ([...state.obstacles, ...body].some((cell) => sameCell(cell, newHead))) {
-    return { ...state, status: "over" };
-  }
+  if (state.obstacles.some((cell) => sameCell(cell, newHead))) return crash();
+  if (body.some((cell) => sameCell(cell, newHead))) return { ...state, status: "over" };
 
   const snake = eats ? [newHead, ...state.snake] : [newHead, ...state.snake.slice(0, -1)];
-  if (!eats) return { ...state, snake, heading, queue };
+  const timeBefore = run?.timeMs ?? 0;
+  if (run !== null && special !== null) {
+    run = { ...run, timeMs: run.timeMs + delayOf(state, special) };
+  }
+  const moved = { ...state, snake, heading, queue, run };
+  if (!eats) return afterMove(moved, timeBefore, choose);
 
   const eaten = {
-    ...state,
-    snake,
-    heading,
-    queue,
-    score: state.score + 1,
+    ...moved,
+    score: state.score + (run === null ? 1 : 0),
     dotsEaten: state.dotsEaten + 1,
   };
-  if (eaten.dotsEaten >= state.dotsPerLevel) return nextLevel(eaten, choose);
+  if (eaten.dotsEaten >= state.dotsPerLevel) {
+    return nextLevel({ ...eaten, score: eaten.score + levelPoints(eaten) }, choose);
+  }
   const free = freeCells(state.size, [...snake, ...state.obstacles]);
   if (free.length === 0) return { ...eaten, food: null, status: "won" };
-  return { ...eaten, food: pick(free, choose, "the dot") };
+  return afterMove({ ...eaten, food: pick(free, choose, "the dot") }, timeBefore, choose);
 }

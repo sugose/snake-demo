@@ -22,4 +22,16 @@ export const config = Object.freeze({
   shortestDelay: 50,
   /** Cells straight ahead of a start that lie on the board, free of obstacles (docs/SPEC.md 2.11). */
   clearAhead: 8,
+  /** Every level whose number this divides is special (docs/SPEC.md 2.12 (1)). */
+  specialEvery: 5,
+  /** Shield layers at the start of a special level (docs/SPEC.md 2.12 (3)). */
+  shieldLayers: 3,
+  /** Turns allowed on a special level (docs/SPEC.md 2.12 (6)). */
+  maxTurns: 20,
+  /** Seconds to clear a special level in (docs/SPEC.md 2.12 (7)). */
+  specialSeconds: 30,
+  /** The obstacles of a special level jump each time this many seconds pass (docs/SPEC.md 2.12 (9)). */
+  jumpSeconds: 3,
+  /** Cells straight ahead of the head that a jumping obstacle never lands on (docs/SPEC.md 2.12 (9)). */
+  clearAheadOfHead: 2,
 });
