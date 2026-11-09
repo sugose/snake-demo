@@ -119,9 +119,11 @@ export function newGame(options: {
  * A turn from a key or a swipe (docs/SPEC.md 2.1 (3), 2.4). In `ready`, any turn but the one
  * back into the neck starts the game with that heading. In `running`, a turn is checked against
  * the last queued turn, or the heading when none is queued: the same or the opposite direction is
- * ignored, and so is any turn while the queue is full. Elsewhere a turn is ignored.
+ * ignored, and so is any turn while the queue is full. Elsewhere a turn is ignored. A value that
+ * is not one of the four directions (possible only past the type checker) is ignored in every state.
  */
 export function turn(state: GameState, direction: Direction): GameState {
+  if (!Object.hasOwn(STEP, direction)) return state;
   if (state.status === "ready") {
     if (direction === OPPOSITE[state.heading]) return state;
     return { ...state, heading: direction, status: "running" };

@@ -183,6 +183,17 @@ describe("turn", () => {
     const before = game({ status, heading: "right" });
     expect(turn(before, "up")).toBe(before);
   });
+
+  it.each<[Status, string]>([
+    ["ready", "north"],
+    ["ready", "toString"],
+    ["running", "north"],
+    ["running", "toString"],
+    ["running", ""],
+  ])("in %s ignores %p, which is not one of the four directions", (status, value) => {
+    const before = game({ status });
+    expect(turn(before, value as Direction)).toBe(before);
+  });
 });
 
 describe("start (the Start button)", () => {
