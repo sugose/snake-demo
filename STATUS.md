@@ -13,7 +13,7 @@ Running: levels are published at https://sugose.github.io/snake-demo/ (Phase 2, 
 Adam playing the levels ([PBI-2.5](docs/BACKLOG.md)).
 
 ## Next step
-Crog: the test and wording loose ends of [PBI-2.6](docs/BACKLOG.md); Adam: playing the levels ([PBI-2.5](docs/BACKLOG.md)).
+Adam: playing the levels ([PBI-2.5](docs/BACKLOG.md)), and describing the special levels ([PBI-2.7](docs/BACKLOG.md)).
 
 ## Blockers
 None.
