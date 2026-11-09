@@ -7,13 +7,13 @@ How to keep this file: product-office Process P-9 § 6.
 Last update: 2026-11-09
 
 ## Phase
-Build: Phase 1, the game playable from its link ([`docs/BACKLOG.md`](docs/BACKLOG.md)).
+Running: the game is published at https://sugose.github.io/snake-demo/ (Phase 1, [`docs/BACKLOG.md`](docs/BACKLOG.md)).
 
 ## Current focus
-The page: canvas, timer, controls and browser tests (PBI-1.4); the game rules, input and best score are merged ([#8](https://github.com/sugose/snake-demo/pull/8), [#7](https://github.com/sugose/snake-demo/pull/7), [#6](https://github.com/sugose/snake-demo/pull/6)).
+Adam playing the game on his phone (PBI-1.7).
 
 ## Next step
-Crog: PBI-1.4, then publishing (PBI-1.5), unattended ([PO-164](https://github.com/factoincognito/product-office/blob/32f16638f7ec3fb1b7ce90cbdf14f446525c9348/BACKLOG.md?plain=1#L416) in the product office).
+Adam: play it on his phone and say how the swipes feel (PBI-1.7). Clead: the spec wording of PBI-1.8.
 
 ## Blockers
 None.

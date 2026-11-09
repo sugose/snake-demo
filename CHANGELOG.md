@@ -4,6 +4,27 @@ All notable changes to Snake demo are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- The game page: canvas, timer, keys, swipes, buttons, score and best
+  score, with browser tests (#10).
+- Publishing on GitHub Pages at https://sugose.github.io/snake-demo/ on
+  every merge to `main` (#11).
+- The game rules (#8), input mapping for keys and swipes (#7) and the
+  best score kept in the browser (#6).
+- The specification and the Phase 1 plan (#4), and the project's purpose
+  and goal (#3).
+
+### Changed
+
+- The project signs off to factoincognito's product office and cites its
+  Rules; the shipped copy of the Rules and its check are removed (#2).
+- Phase 1 progress recorded in the backlog and status (#9).
+
+### Removed
+
+- The review-ready workflow, `review.yml` (#5).
+
 ## Project created
 
 - Bootstrapped from the Clead + Crog project template
