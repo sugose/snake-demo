@@ -6,6 +6,9 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- Levels: 5 dots clear a level; each level is laid out anew with a random start, the snake unrolling from
+  one cell, and one more obstacle; 5 ms less between moves per level, down to 50 ms (#17). Specified in #16.
+
 - The game page: canvas, timer, keys, swipes, buttons, score and best
   score, with browser tests (#10).
 - Publishing on GitHub Pages at https://sugose.github.io/snake-demo/ on
