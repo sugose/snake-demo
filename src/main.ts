@@ -6,8 +6,11 @@
 import "./style.css";
 import { config } from "./config";
 import {
-  type FoodChooser,
+  type Cell,
+  type Chooser,
+  type Direction,
   type GameState,
+  levelDelay,
   newGame,
   pauseIfRunning,
   type Status,
@@ -19,21 +22,41 @@ import {
 import { keyToCommand, type Point, swipeToDirection } from "./input";
 import { readBest, writeBest } from "./storage";
 
-const { gridSize, startLength, ticksPerSecond, minSwipe, storageKey } = config;
+const {
+  gridSize,
+  startLength,
+  minSwipe,
+  storageKey,
+  dotsPerLevel,
+  firstDelay,
+  delayStep,
+  shortestDelay,
+  clearAhead,
+} = config;
 const maxScore = gridSize * gridSize;
-const tickMilliseconds = 1000 / ticksPerSecond;
+const delays = { first: firstDelay, step: delayStep, shortest: shortestDelay };
 
-/** The one-line status for each state (docs/SPEC.md 2.5, 2.8). */
-const STATUS_TEXT: Readonly<Record<Status, string>> = {
-  ready: "Arrow keys, W A S D, a swipe or Start to play",
-  running: "Space or P to pause",
-  paused: "Paused. Space, P or Resume to go on",
-  over: "Game over. Enter or New game to play again",
-  won: "You won! Enter or New game to play again",
+/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3)). */
+const STATUS_TEXT: Readonly<Record<Status, (level: number) => string>> = {
+  ready: (level) => `Level ${level}. Arrow keys, W A S D, a swipe or Start to play`,
+  running: () => "Space or P to pause",
+  paused: () => "Paused. Space, P or Resume to go on",
+  over: () => "Game over. Enter or New game to play again",
+  won: () => "You won! Enter or New game to play again",
 };
 
-/** The gap around a snake cell, as a share of the cell, so the cells read as separate. */
+/** The gap around a snake or obstacle cell, as a share of the cell, so the cells read as separate. */
 const CELL_GAP = 0.08;
+
+/** The heading mark on the head (docs/SPEC.md 2.11 (3)): a triangle pointing the way it will go. */
+const MARK_LENGTH = 0.4;
+const MARK_HALF_WIDTH = 0.3;
+const MARK_AXIS: Readonly<Record<Direction, Point>> = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
 
 function element<T extends HTMLElement>(id: string, type: { new (): T; name: string }): T {
   const found = document.getElementById(id);
@@ -43,6 +66,7 @@ function element<T extends HTMLElement>(id: string, type: { new (): T; name: str
 
 const root = element("game", HTMLElement);
 const canvas = element("board", HTMLCanvasElement);
+const levelText = element("level", HTMLElement);
 const scoreText = element("score", HTMLElement);
 const bestText = element("best", HTMLElement);
 const statusText = element("status", HTMLElement);
@@ -55,13 +79,15 @@ const drawing = canvas.getContext("2d");
 if (drawing === null) throw new Error("the browser gives no 2D canvas");
 const context: CanvasRenderingContext2D = drawing;
 
-const chooseFood: FoodChooser = (freeCount) => Math.floor(Math.random() * freeCount);
-const freshGame = (): GameState => newGame({ size: gridSize, startLength, choose: chooseFood });
+/** The one chooser of docs/SPEC.md 2.3 and 2.11: the start, each obstacle and the dot. */
+const choose: Chooser = (count) => Math.floor(Math.random() * count);
+const freshGame = (): GameState =>
+  newGame({ size: gridSize, startLength, clearAhead, dotsPerLevel, choose });
 const getStore = (): Storage => window.localStorage;
 
 let state = freshGame();
 let best = readBest(getStore, storageKey, maxScore);
-let timer: number | undefined;
+let timer: { id: number; delay: number } | undefined;
 
 /** Makes `next` the game state: saves a new best score, starts or stops the timer, redraws. */
 function apply(next: GameState): void {
@@ -75,26 +101,45 @@ function apply(next: GameState): void {
   render();
 }
 
-/** The tick timer runs only while the game is `running` (docs/SPEC.md 2.2). */
+/**
+ * The tick timer runs only while the game is `running`, with the delay of the current level
+ * (docs/SPEC.md 2.2, 2.10 (2)); a timer with another level's delay is replaced.
+ */
 function syncTimer(): void {
-  if (state.status === "running" && timer === undefined) {
-    timer = window.setInterval(() => apply(tick(state, chooseFood)), tickMilliseconds);
-  } else if (state.status !== "running" && timer !== undefined) {
-    window.clearInterval(timer);
+  const delay = levelDelay(state.level, delays);
+  if (timer !== undefined && (state.status !== "running" || timer.delay !== delay)) {
+    window.clearInterval(timer.id);
     timer = undefined;
   }
+  if (state.status === "running" && timer === undefined) {
+    timer = { id: window.setInterval(() => apply(tick(state, choose)), delay), delay };
+  }
+}
+
+const cellText = (cell: Cell): string => `${cell.x},${cell.y}`;
+
+/** True while all the snake's segments share one cell, as on a freshly laid-out level. */
+function onOneCell(snake: readonly Cell[]): boolean {
+  const head = snake[0];
+  return head !== undefined && snake.every((part) => part.x === head.x && part.y === head.y);
 }
 
 function render(): void {
   const head = state.snake[0];
   root.dataset.status = state.status;
+  root.dataset.level = String(state.level);
+  root.dataset.delay = String(levelDelay(state.level, delays));
   root.dataset.score = String(state.score);
   root.dataset.best = String(best);
-  root.dataset.head = head === undefined ? "" : `${head.x},${head.y}`;
+  root.dataset.head = head === undefined ? "" : cellText(head);
+  root.dataset.heading = state.heading;
   root.dataset.length = String(state.snake.length);
+  root.dataset.snake = state.snake.map(cellText).join(";");
+  root.dataset.obstacles = state.obstacles.map(cellText).join(";");
+  levelText.textContent = String(state.level);
   scoreText.textContent = String(state.score);
   bestText.textContent = String(best);
-  statusText.textContent = STATUS_TEXT[state.status];
+  statusText.textContent = STATUS_TEXT[state.status](state.level);
   pauseButton.textContent = state.status === "paused" ? "Resume" : "Pause";
   draw();
 }
@@ -104,6 +149,10 @@ function draw(): void {
   const cell = side / gridSize;
   const style = getComputedStyle(canvas);
   const colour = (name: string): string => style.getPropertyValue(name).trim();
+  const gap = Math.max(1, Math.round(cell * CELL_GAP));
+  const square = (at: Cell): void => {
+    context.fillRect(at.x * cell + gap, at.y * cell + gap, cell - 2 * gap, cell - 2 * gap);
+  };
   context.clearRect(0, 0, side, side);
 
   if (state.food !== null) {
@@ -119,11 +168,31 @@ function draw(): void {
     context.fill();
   }
 
-  const gap = Math.max(1, Math.round(cell * CELL_GAP));
-  state.snake.forEach((part, index) => {
+  context.fillStyle = colour("--obstacle");
+  for (const obstacle of state.obstacles) square(obstacle);
+
+  // Tail first, so the head is drawn on top where segments share a cell.
+  for (let index = state.snake.length - 1; index >= 0; index--) {
+    const part = state.snake[index];
+    if (part === undefined) continue;
     context.fillStyle = colour(index === 0 ? "--head" : "--snake");
-    context.fillRect(part.x * cell + gap, part.y * cell + gap, cell - 2 * gap, cell - 2 * gap);
-  });
+    square(part);
+  }
+
+  const head = state.snake[0];
+  if (head !== undefined && onOneCell(state.snake)) {
+    const axis = MARK_AXIS[state.heading];
+    const centreX = (head.x + 0.5) * cell;
+    const centreY = (head.y + 0.5) * cell;
+    const across = { x: -axis.y * MARK_HALF_WIDTH * cell, y: axis.x * MARK_HALF_WIDTH * cell };
+    context.fillStyle = colour("--mark");
+    context.beginPath();
+    context.moveTo(centreX + axis.x * MARK_LENGTH * cell, centreY + axis.y * MARK_LENGTH * cell);
+    context.lineTo(centreX + across.x, centreY + across.y);
+    context.lineTo(centreX - across.x, centreY - across.y);
+    context.closePath();
+    context.fill();
+  }
 }
 
 /**

@@ -28,17 +28,21 @@ test("loads clean, as one self-contained file, with no sideways scrolling", asyn
   expect(requested, "page loaded more than its own document").toEqual([`${baseURL}/`]);
 });
 
-test("shows the board, the score, the best score, the status and the three buttons", async ({
+test("shows the board, the level, the score, the best score, the status and the three buttons", async ({
   page,
 }) => {
   const game = await openGame(page);
   await expect(page.locator("#board")).toBeVisible();
+  await expect(page.locator(".scores")).toContainText("Level 1");
+  await expect(page.locator("#level")).toHaveText("1");
+  await expect(game).toHaveAttribute("data-level", "1");
   await expect(page.locator("#score")).toHaveText("0");
   await expect(page.locator("#best")).toHaveText("0");
   await expect(game).toHaveAttribute("data-score", "0");
   await expect(game).toHaveAttribute("data-best", "0");
   await expect(game).toHaveAttribute("data-head", "10,10");
   await expect(game).toHaveAttribute("data-length", "3");
+  await expect(page.locator("#status")).toContainText("Level 1");
   await expect(page.locator("#status")).toContainText("Start");
   for (const name of ["Start", "Pause", "New game"]) {
     await expect(page.getByRole("button", { name, exact: true })).toBeVisible();

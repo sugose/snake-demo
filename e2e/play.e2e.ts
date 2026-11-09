@@ -1,17 +1,33 @@
 import {
+  answer,
+  centreStart,
   expect,
   expectGame,
+  freeIndex,
   gameOf,
   openGame,
   runTicks,
+  STARTS,
   STORAGE_KEY,
+  startIndex,
   swipe,
   TICK_MS,
   test,
 } from "./helpers";
 
 // Playing the game in the browser (docs/SPEC.md 2). The clock is fake and paused (helpers.ts), so
-// a tick happens only when a test runs the clock.
+// a tick happens only when a test runs the clock. Unless a test says otherwise, the page's random
+// answers start the snake at (10,10) heading right, with the dot at (0,0) (helpers.ts).
+
+/**
+ * Answers that start at (10,10) heading right with the first dot right in front of the head, at
+ * (11,10), and the next at (0,0): heading right eats once and then hits the wall.
+ */
+const ONE_DOT_THEN_THE_WALL = [
+  answer(startIndex("10,10", "right"), STARTS),
+  answer(freeIndex("11,10", ["10,10"]), 399),
+  answer(0, 398),
+];
 
 test.describe("ready", () => {
   test("nothing moves until a turn", async ({ page }) => {
@@ -20,15 +36,18 @@ test.describe("ready", () => {
     await expectGame(game, "ready", "10,10");
   });
 
-  test("Left, back into the neck, does nothing", async ({ page }) => {
-    const game = await openGame(page);
-    await page.keyboard.press("ArrowLeft");
+  test("a turn opposite to the heading does nothing", async ({ page }) => {
+    const game = await openGame(page, centreStart("up"));
+    await expect(game).toHaveAttribute("data-heading", "up");
+    await page.keyboard.press("ArrowDown");
     await runTicks(page, 4);
     await expectGame(game, "ready", "10,10");
+    await expect(game).toHaveAttribute("data-heading", "up");
   });
 
   test("a turn starts the game, and the head moves one cell per 125 ms", async ({ page }) => {
     const game = await openGame(page);
+    await expect(game).toHaveAttribute("data-delay", "125");
     await page.keyboard.press("ArrowUp");
     await expectGame(game, "running", "10,10");
     await page.clock.runFor(TICK_MS);
@@ -40,12 +59,13 @@ test.describe("ready", () => {
     await expect(game).toHaveAttribute("data-length", "3");
   });
 
-  test("the Start button starts the game heading right", async ({ page }) => {
-    const game = await openGame(page);
+  test("the Start button starts the game in the heading it has", async ({ page }) => {
+    const game = await openGame(page, centreStart("up"));
     await page.getByRole("button", { name: "Start", exact: true }).click();
     await expectGame(game, "running", "10,10");
+    await expect(game).toHaveAttribute("data-heading", "up");
     await runTicks(page, 1);
-    await expect(game).toHaveAttribute("data-head", "11,10");
+    await expect(game).toHaveAttribute("data-head", "10,9");
   });
 
   test("W, A, S, D turn as the arrows do, in either case", async ({ page }) => {
@@ -297,10 +317,7 @@ test.describe("best score", () => {
   });
 
   test("a game that ends above the best score saves it as the best", async ({ page }) => {
-    // This random number puts the first food right in front of the head, at (11,10) (index 208 of
-    // 397 free cells), and the next one behind the snake, at (7,10) (index 207 of 396), so heading
-    // right eats once and then hits the wall.
-    const game = await openGame(page, 208.5 / 397);
+    const game = await openGame(page, ONE_DOT_THEN_THE_WALL);
     await page.keyboard.press("ArrowRight");
     await runTicks(page, 1);
     await expect(game).toHaveAttribute("data-score", "1");
@@ -341,8 +358,9 @@ test.describe("best score", () => {
         },
       });
     });
-    // As in the test above: one food eaten, then the wall.
-    const game = await openGame(page, 208.5 / 397);
+    // As in the test above: one dot eaten, then the wall. The new game after it draws the same
+    // start again: the answers come round once more.
+    const game = await openGame(page, ONE_DOT_THEN_THE_WALL);
     const blocked = await page.evaluate(() => {
       try {
         return window.localStorage === undefined;
