@@ -34,4 +34,8 @@ export const config = Object.freeze({
   jumpSeconds: 3,
   /** Cells straight ahead of the head that a jumping obstacle never lands on (docs/SPEC.md 2.12 (9)). */
   clearAheadOfHead: 2,
+  /** The "Special Level" text is shown, then hidden, this long each, in ms (docs/SPEC.md 2.12 (11)). */
+  bannerBlinkMs: 250,
+  /** The "Special Level" text goes this long after a special level is laid out, in ms (docs/SPEC.md 2.12 (11)). */
+  bannerMs: 3000,
 });

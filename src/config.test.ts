@@ -18,6 +18,8 @@ describe("config (docs/SPEC.md 3)", () => {
       specialSeconds: 30,
       jumpSeconds: 3,
       clearAheadOfHead: 2,
+      bannerBlinkMs: 250,
+      bannerMs: 3000,
     });
   });
 

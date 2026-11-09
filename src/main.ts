@@ -40,6 +40,8 @@ const {
   specialSeconds,
   jumpSeconds,
   clearAheadOfHead,
+  bannerBlinkMs,
+  bannerMs,
 } = config;
 /**
  * The best score's bound (docs/SPEC.md 2.9 (3)): at most one level per 5 cells of the board can be
@@ -116,6 +118,7 @@ const turnsText = element("turns-left", HTMLElement);
 const secondsText = element("seconds-left", HTMLElement);
 const shieldText = element("shield-left", HTMLElement);
 const statusText = element("status", HTMLElement);
+const banner = element("banner", HTMLElement);
 const startButton = element("start", HTMLButtonElement);
 const pauseButton = element("pause", HTMLButtonElement);
 const newGameButton = element("new-game", HTMLButtonElement);
@@ -134,13 +137,37 @@ const getStore = (): Storage => window.localStorage;
 let state = freshGame();
 let best = readBest(getStore, storageKey, maxScore);
 let timer: { id: number; delay: number } | undefined;
+let bannerTimers: { blink: number; end: number } | undefined;
+
+/** Starts the blinking "Special Level" text (docs/SPEC.md 2.12 (11)). */
+function showBanner(): void {
+  hideBanner();
+  banner.hidden = false;
+  const blink = window.setInterval(() => {
+    banner.hidden = !banner.hidden;
+  }, bannerBlinkMs);
+  const end = window.setTimeout(hideBanner, bannerMs);
+  bannerTimers = { blink, end };
+}
+
+function hideBanner(): void {
+  if (bannerTimers !== undefined) {
+    window.clearInterval(bannerTimers.blink);
+    window.clearTimeout(bannerTimers.end);
+    bannerTimers = undefined;
+  }
+  banner.hidden = true;
+}
 
 /** Makes `next` the game state: saves a new best score, starts or stops the timer, redraws. */
 function apply(next: GameState): void {
   const ended =
     next.status !== state.status &&
     (next.status === "over" || next.status === "blown" || next.status === "won");
+  const enteredSpecial = next.run !== null && next.status === "ready" && next.level !== state.level;
   state = next;
+  if (enteredSpecial) showBanner();
+  else if (state.status !== "ready" || state.run === null) hideBanner();
   if (ended && state.score > best) {
     best = state.score;
     writeBest(getStore, storageKey, best, maxScore);

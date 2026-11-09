@@ -225,3 +225,76 @@ test("a 21st turn that ends a wait blows the snake up and shows only Blown up", 
   await expect(game).toHaveAttribute("data-waiting", "true");
   await expect(page.locator("#status")).toHaveText("Blown up! Enter or New game to play again");
 });
+
+test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () => {
+  test("blinks twice a second over the board for 3 seconds from the level's layout, then goes", async ({
+    page,
+  }) => {
+    const banner = page.locator("#banner");
+    const random = [1, 2, 3, 4].flatMap(straightLevel).concat(level5("10,10", "up", 394));
+    const game = await openGame(page, random);
+    await expect(banner).toBeHidden();
+    // Levels 1 to 4 are normal: no text when they are laid out.
+    for (const [index, delay] of DELAYS.entries()) {
+      await expect(game).toHaveAttribute("data-level", String(index + 1));
+      await expect(banner).toBeHidden();
+      await page.keyboard.press("ArrowRight");
+      await runTicks(page, 5, delay);
+    }
+    await expect(game).toHaveAttribute("data-level", "5");
+    await expect(banner).toBeVisible();
+    await expect(banner).toHaveText("Special Level");
+    for (let step = 1; step < 12; step++) {
+      await page.clock.runFor(250);
+      if (step % 2 === 1) await expect(banner).toBeHidden();
+      else await expect(banner).toBeVisible();
+    }
+    // 2750 ms: shown; at 3000 ms it goes for good.
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    // One blink step later it does not come back.
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(750);
+    await expect(banner).toBeHidden();
+    await expect(game).toHaveAttribute("data-status", "ready");
+  });
+
+  test("goes as soon as the level starts, and does not block the turn", async ({ page }) => {
+    const banner = page.locator("#banner");
+    const game = await openToLevel5(page, "10,10", "up", 394);
+    await expect(banner).toBeVisible();
+    // Swipes on the board go through it.
+    await expect(banner).toHaveCSS("pointer-events", "none");
+    // A turn that is ignored (straight back) leaves it.
+    await page.keyboard.press("ArrowDown");
+    await expect(game).toHaveAttribute("data-status", "ready");
+    await expect(banner).toBeVisible();
+    // An ignored turn while it is hidden does not start it again: it keeps its blink.
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.keyboard.press("ArrowDown");
+    await expect(game).toHaveAttribute("data-status", "ready");
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(250);
+    await expect(banner).toBeVisible();
+    await page.keyboard.press("ArrowUp");
+    await expect(game).toHaveAttribute("data-status", "running");
+    await expect(banner).toBeHidden();
+    await runTicks(page, 10, LEVEL_5_DELAY);
+    await expect(banner).toBeHidden();
+    await expectGame(game, "running", "10,0");
+  });
+
+  test("goes with a new game", async ({ page }) => {
+    const banner = page.locator("#banner");
+    await openToLevel5(page, "10,10", "up", 394);
+    await expect(banner).toBeVisible();
+    await page.getByRole("button", { name: "New game", exact: true }).click();
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+  });
+});
