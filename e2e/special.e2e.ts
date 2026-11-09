@@ -173,6 +173,14 @@ test("each shielded crash says the layers left and which turns go on, and warns 
   await expectGame(game, "running", "10,0");
   await expect(status).toHaveText("Shield lost, 2 left. Turn left or right to go on.");
 
+  // Paused while waiting, the paused line shows; resumed, the wait line is back.
+  await page.keyboard.press("Space");
+  await expect(game).toHaveAttribute("data-status", "paused");
+  await expect(status).toHaveText("Paused. Space, P or Resume to go on");
+  await page.keyboard.press("Space");
+  await expect(game).toHaveAttribute("data-status", "running");
+  await expect(status).toHaveText("Shield lost, 2 left. Turn left or right to go on.");
+
   // Left along row 0 into the obstacle on (3,0).
   await page.keyboard.press("ArrowLeft");
   await runTicks(page, 7, LEVEL_5_DELAY);
@@ -193,4 +201,27 @@ test("each shielded crash says the layers left and which turns go on, and warns 
   await runTicks(page, 1, LEVEL_5_DELAY);
   await expectGame(game, "running", "5,19");
   await expect(status).toHaveText("Space or P to pause");
+});
+
+test("a 21st turn that ends a wait blows the snake up and shows only Blown up", async ({
+  page,
+}) => {
+  // The staircase of the 21st-turn test, then up column 10 into the top wall.
+  const game = await openToLevel5(page, "0,19", "up", 15);
+  await page.keyboard.press("ArrowUp");
+  await runTicks(page, 1, LEVEL_5_DELAY);
+  for (let turn = 1; turn <= 20; turn++) {
+    await page.keyboard.press(turn % 2 === 1 ? "ArrowRight" : "ArrowUp");
+    await runTicks(page, 1, LEVEL_5_DELAY);
+  }
+  await expectGame(game, "running", "10,8");
+  // 8 moves to (10,0), then the crash: 29 moves in all, under the first jump at 3 s.
+  await runTicks(page, 9, LEVEL_5_DELAY);
+  await expectGame(game, "running", "10,0");
+  await expect(game).toHaveAttribute("data-waiting", "true");
+
+  await page.keyboard.press("ArrowRight");
+  await expectGame(game, "blown", "10,0");
+  await expect(game).toHaveAttribute("data-waiting", "true");
+  await expect(page.locator("#status")).toHaveText("Blown up! Enter or New game to play again");
 });
