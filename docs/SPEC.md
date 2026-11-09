@@ -14,7 +14,7 @@ Approved: Adam, 2026-11-09 21:16 to 21:20, in chat ("apyr for what was
 specced now"), levels, obstacles and the rising speed: his own rules and
 Clead's recommendations of 21:18 and 21:19 he accepted; recorded in the
 product office (`DECISIONS.md`, PO-170). Sections 2.10 and 2.11, and the
-changes to 2.1, 2.2, 2.3, 2.5, 2.8, 3, 3.1 and 5 that follow from them,
+changes to 2.1, 2.2, 2.3, 2.5, 2.8, 2.9, 3, 3.1 and 5 that follow from them,
 are Clead's exact wording of that decision. At 21:24 Adam lowered the
 clear cells ahead of a start from 10 to 8 (`DECISIONS.md`, PO-170).
 
@@ -36,8 +36,8 @@ branding or look is used.
 
 1. The board is a square grid of 20 × 20 cells. A cell is `(x, y)`, with
    `x` from 0 (left) to 19 (right) and `y` from 0 (top) to 19 (bottom).
-2. A new game starts at level 1 with the score 0 and a snake 3 cells
-   long, laid out as 2.11 says, in the state `ready`. Nothing moves.
+2. A new game starts at level 1 with the score 0 and a snake of 3
+   segments, laid out as 2.11 says, in the state `ready`. Nothing moves.
 3. In `ready`, a turn starts the game: the snake's heading becomes that
    direction and the state becomes `running`. A turn opposite to the
    heading is ignored and the game stays `ready`. The on-screen Start
@@ -154,8 +154,10 @@ new game.
 3. When a level is cleared, the game goes to the next level: the level
    goes up by one, the dots eaten on it start at 0, the queued turns are
    cleared, and the board is laid out anew (2.11) with the snake as long
-   as it was when the level was cleared. The state is `ready`, and the
-   page shows the new level until the first turn.
+   as it was when the level was cleared, the growth from the 5th dot
+   included. The state is `ready` until a turn or the Start button
+   starts the level (2.1 (3)); while `ready`, the page's status line says
+   which level is about to start.
 4. Level N has N − 1 obstacles: none on level 1, one on level 2, and so
    on. An obstacle is a cell the snake must not enter.
 
@@ -167,18 +169,25 @@ For a new game and for each new level, in this order:
 2. The start: the possible starts are every cell and heading from which
    the 8 cells straight ahead lie on the board. They are listed row by
    row (as in 2.3), and for each cell in the order up, right, down, left;
-   a chooser like the one in 2.3 picks one. The game picks at random.
+   the chooser picks one. One chooser, the one of 2.3, picks the start,
+   each obstacle and the dot; the game picks at random, and tests pass
+   fixed answers.
 3. The snake: all its segments are put on the start cell, with the start
    heading. The head moves on from there and the rest follow, so the
    snake unrolls behind the head and has its full length on the board
-   after as many ticks as it is long.
-4. The obstacles: one at a time, each on a free cell that is not the
-   start cell and not one of the 8 cells ahead of it, picked by the
-   chooser from those cells listed row by row.
-5. The dot: placed as 2.3 says.
+   after as many ticks as it is long. While the snake is on one cell, the
+   page marks its heading on the head.
+4. The obstacles: one at a time, each picked at random by the chooser
+   from the free cells that are not the start cell and not one of the 8
+   cells ahead of it, listed row by row.
+5. The dot: placed as 2.3 says. It may land on one of the 8 cells ahead
+   of the start; those are kept free of obstacles only.
 
-If there are not enough free cells for the obstacles and the dot, the game
-is `won`.
+The board must be at least 9 × 9 so that a start exists; `newGame`
+rejects a smaller one. If there are not enough cells for the obstacles,
+the dot and the snake's length, the game is `won`, with the level, the
+score and the snake as they were when the last level was cleared, and no
+obstacles or dot.
 
 ---
 

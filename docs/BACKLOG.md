@@ -51,9 +51,8 @@ one list he reads (product-office Process P-9 § 3 (1)), not here.
 2.11 describe them, published and playable at the game's link (Adam,
 2026-11-09 21:20, product office PO-170).
 
-- **[NEXT] PBI-2.1** — Levels in the game rules, `src/game.ts` and `src/config.ts`: laying out a level with its start chooser, obstacles and stacked snake, clearing a level after 5 dots, obstacle hits, the delay of a level, and a win when no free cell is left (`docs/SPEC.md` 2.1 to 2.3, 2.5, 2.8, 2.10, 2.11, 3, 3.1). Every rule of 2.10 and 2.11 has a test; the existing tests change where the start of 2.1 changed.
-- **[NEXT] PBI-2.2** (after PBI-2.1) — Levels on the page, `src/main.ts`, `src/style.css`, `index.html`: obstacles drawn, the level shown (also while `ready` between levels), the tick timer with the level's delay, and browser tests for clearing a level, a new level's board and start, the faster delay, and an obstacle hit (`docs/SPEC.md` 2.9 (1), 2.10, 3).
-- **[LATER] PBI-2.3** — Power-ups: Adam, 2026-11-09, "power ups will be added later". Not specified; Adam describes them first.
+- **[NEXT] PBI-2.1** — Levels, in one PR so that no half-built level is published (Pages deploys every merge): the rules in `src/game.ts` and `src/config.ts` (laying out a level with its chooser, obstacles and stacked snake, clearing a level after 5 dots, obstacle hits, the delay of a level, the win when no free cell is left; `docs/SPEC.md` 2.1 to 2.3, 2.5, 2.8, 2.10, 2.11, 3, 3.1), and the page in `src/main.ts`, `src/style.css` and `index.html` (obstacles drawn, the level shown, the status line between levels, the heading marked while the snake is on one cell, the tick timer with the level's delay; 2.9 (1), 2.10, 2.11 (3), 3). The existing unit and browser tests change where the start of 2.1 changed (no fixed `10,10` start, no "Start heading right"); new browser tests cover clearing a level, a new level's board, the faster delay and an obstacle hit, with the page's random answers fixed by the tests. Every rule of 2.10 and 2.11 has a test.
+- **[LATER] PBI-2.2** — Power-ups: Adam, 2026-11-09, "power ups will be added later". Not specified; Adam describes them first.
 
 ---
 
