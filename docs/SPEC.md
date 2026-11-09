@@ -16,7 +16,8 @@ Clead's recommendations of 21:18 and 21:19 he accepted; recorded in the
 product office (`DECISIONS.md`, PO-170). Sections 2.10 and 2.11, and the
 changes to 2.1, 2.2, 2.3, 2.5, 2.8, 2.9, 3, 3.1 and 5 that follow from them,
 are Clead's exact wording of that decision. At 21:24 Adam lowered the
-clear cells ahead of a start from 10 to 8 (`DECISIONS.md`, PO-170).
+clear cells ahead of a start from 10 to 8, and at 21:29 he chose a random
+start for every level, level 1 included (`DECISIONS.md`, PO-170).
 
 ---
 
@@ -37,7 +38,8 @@ branding or look is used.
 1. The board is a square grid of 20 × 20 cells. A cell is `(x, y)`, with
    `x` from 0 (left) to 19 (right) and `y` from 0 (top) to 19 (bottom).
 2. A new game starts at level 1 with the score 0 and a snake of 3
-   segments, laid out as 2.11 says, in the state `ready`. Nothing moves.
+   segments, laid out as 2.11 says, in the state `ready`, with the status
+   line naming level 1 (2.10 (3)). Nothing moves.
 3. In `ready`, a turn starts the game: the snake's heading becomes that
    direction and the state becomes `running`. A turn opposite to the
    heading is ignored and the game stays `ready`. The on-screen Start
