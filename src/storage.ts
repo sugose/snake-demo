@@ -36,11 +36,16 @@ export function readBest(getStore: () => ScoreStore, key: string, max: number): 
 
 /**
  * Writes `score` under `key` in plain digits. A score that is not a whole
- * number from 0 up is not written. Any error is swallowed: the best score
- * then lasts only as long as the page.
+ * number from 0 to `max` is not written, and the store is then not touched.
+ * Any error is swallowed: the best score then lasts only as long as the page.
  */
-export function writeBest(getStore: () => ScoreStore, key: string, score: number): void {
-  if (!Number.isInteger(score) || score < 0) {
+export function writeBest(
+  getStore: () => ScoreStore,
+  key: string,
+  score: number,
+  max: number,
+): void {
+  if (!Number.isInteger(score) || score < 0 || score > max) {
     return;
   }
   try {

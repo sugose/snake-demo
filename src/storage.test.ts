@@ -114,49 +114,73 @@ describe("readBest", () => {
 describe("writeBest", () => {
   it("writes the score in plain digits under the key it is given", () => {
     const { store, writes } = memoryStore();
-    writeBest(() => store, KEY, 42);
+    writeBest(() => store, KEY, 42, MAX);
     expect(writes).toEqual([[KEY, "42"]]);
   });
 
   it("writes 0 as the digit 0", () => {
     const { store, writes } = memoryStore();
-    writeBest(() => store, KEY, 0);
+    writeBest(() => store, KEY, 0, MAX);
     expect(writes).toEqual([[KEY, "0"]]);
   });
 
   it("writes negative zero as the digit 0", () => {
     const { store, writes } = memoryStore();
-    writeBest(() => store, KEY, -0);
+    writeBest(() => store, KEY, -0, MAX);
     expect(writes).toEqual([[KEY, "0"]]);
   });
 
-  it("writes a very large whole number in plain digits, not exponent form", () => {
+  it("writes a score equal to max", () => {
     const { store, writes } = memoryStore();
-    writeBest(() => store, KEY, 1e21);
-    expect(writes).toEqual([[KEY, "1000000000000000000000"]]);
+    writeBest(() => store, KEY, MAX, MAX);
+    expect(writes).toEqual([[KEY, "400"]]);
+  });
+
+  it("writes nothing for a score above max, leaving the stored value unchanged", () => {
+    const { store, writes } = memoryStore({ [KEY]: "9" });
+    writeBest(() => store, KEY, MAX + 1, MAX);
+    expect(writes).toEqual([]);
+    expect(readBest(() => store, KEY, MAX)).toBe(9);
+  });
+
+  it("takes the upper bound from the max parameter", () => {
+    const { store, writes } = memoryStore();
+    writeBest(() => store, KEY, 50, 49);
+    writeBest(() => store, KEY, 50, 50);
+    expect(writes).toEqual([[KEY, "50"]]);
   });
 
   it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
     "writes nothing for %p, which is not a whole number from 0 up",
     (score) => {
       const { store, writes } = memoryStore({ [KEY]: "9" });
-      writeBest(() => store, KEY, score);
+      writeBest(() => store, KEY, score, MAX);
       expect(writes).toEqual([]);
       expect(readBest(() => store, KEY, MAX)).toBe(9);
     },
   );
 
+  it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, MAX + 1])(
+    "never calls the store getter for the invalid score %p",
+    (score) => {
+      const { store } = memoryStore();
+      const getStore = jest.fn(() => store);
+      writeBest(getStore, KEY, score, MAX);
+      expect(getStore).not.toHaveBeenCalled();
+    },
+  );
+
   it("does not throw when getting the store throws", () => {
-    expect(() => writeBest(throwingGetter, KEY, 5)).not.toThrow();
+    expect(() => writeBest(throwingGetter, KEY, 5, MAX)).not.toThrow();
   });
 
   it("does not throw when setItem throws", () => {
-    expect(() => writeBest(() => throwingStore, KEY, 5)).not.toThrow();
+    expect(() => writeBest(() => throwingStore, KEY, 5, MAX)).not.toThrow();
   });
 
   it("writes a value that readBest reads back", () => {
     const { store } = memoryStore();
-    writeBest(() => store, KEY, 123);
+    writeBest(() => store, KEY, 123, MAX);
     expect(readBest(() => store, KEY, MAX)).toBe(123);
   });
 });
