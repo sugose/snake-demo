@@ -30,7 +30,7 @@ All notable changes to Snake demo are documented here.
   modifier keys, held keys, keys while a button has the focus, and mouse
   drags (#14).
 - The published levels recorded (#18); the specification states the layout shortfalls and the unrolling
-  exactly (#19); the special levels idea in the backlog (#21, #22).
+  exactly (#19); the special levels idea in the backlog (#21, #22, #24); PBI-2.6 recorded done (#23).
 
 ### Removed
 
