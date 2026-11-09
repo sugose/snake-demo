@@ -194,3 +194,57 @@ test("each shielded crash says the layers left and which turns go on, and warns 
   await expectGame(game, "running", "5,19");
   await expect(status).toHaveText("Space or P to pause");
 });
+
+test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () => {
+  test("blinks twice a second over the board for 3 seconds from the level's layout, then goes", async ({
+    page,
+  }) => {
+    const banner = page.locator("#banner");
+    const random = [1, 2, 3, 4].flatMap(straightLevel).concat(level5("10,10", "up", 394));
+    const game = await openGame(page, random);
+    await expect(banner).toBeHidden();
+    // Levels 1 to 4 are normal: no text when they are laid out.
+    for (const [index, delay] of DELAYS.entries()) {
+      await expect(game).toHaveAttribute("data-level", String(index + 1));
+      await expect(banner).toBeHidden();
+      await page.keyboard.press("ArrowRight");
+      await runTicks(page, 5, delay);
+    }
+    await expect(game).toHaveAttribute("data-level", "5");
+    await expect(banner).toBeVisible();
+    await expect(banner).toHaveText("Special Level");
+    for (let step = 1; step < 12; step++) {
+      await page.clock.runFor(250);
+      if (step % 2 === 1) await expect(banner).toBeHidden();
+      else await expect(banner).toBeVisible();
+    }
+    // 2750 ms: shown; at 3000 ms it goes for good.
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(1000);
+    await expect(banner).toBeHidden();
+    await expect(game).toHaveAttribute("data-status", "ready");
+  });
+
+  test("goes as soon as the level starts, and does not block the turn", async ({ page }) => {
+    const banner = page.locator("#banner");
+    const game = await openToLevel5(page, "10,10", "up", 394);
+    await expect(banner).toBeVisible();
+    await page.keyboard.press("ArrowUp");
+    await expect(game).toHaveAttribute("data-status", "running");
+    await expect(banner).toBeHidden();
+    await runTicks(page, 10, LEVEL_5_DELAY);
+    await expect(banner).toBeHidden();
+    await expectGame(game, "running", "10,0");
+  });
+
+  test("goes with a new game", async ({ page }) => {
+    const banner = page.locator("#banner");
+    await openToLevel5(page, "10,10", "up", 394);
+    await expect(banner).toBeVisible();
+    await page.getByRole("button", { name: "New game", exact: true }).click();
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(500);
+    await expect(banner).toBeHidden();
+  });
+});
