@@ -43,6 +43,12 @@ wall: in `ready`, a turn whose next cell is outside the board or on an
 obstacle is ignored (2.1 (3)); recorded in the product office
 (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-10 00:03, in chat: on entering a special level,
+a blinking "Special Level" text over the board for 3 seconds; at 00:04
+("apyr") he accepted Clead's option 1 of 00:03, that the text goes when
+the level starts if that is sooner and takes no input (2.12 (11))
+(`DECISIONS.md`, PO-171).
+
 ---
 
 ## 1. System overview
@@ -332,6 +338,14 @@ cleared, no queued turns, and no obstacles or dot.
     30 seconds, shield of 3. …"); while the snake waits after a crash it
     says to turn to go on; when the game is `blown` it says "Blown up".
     The obstacles look the same as on a normal level.
+11. When a special level is laid out and waits in `ready`, the text
+    "Special Level" blinks over the board: shown for 250 ms, hidden for
+    250 ms, and so on. It goes when 3 seconds have passed since the
+    level was laid out, or as soon as the level starts (a turn or the
+    Start button, 2.1 (3)), or with a new game, whichever comes first.
+    It takes no input: keys, swipes and buttons work as they do without
+    it. **[Clead]** The look: large bold text centred on the board, in
+    the head's colour.
 
 ---
 
