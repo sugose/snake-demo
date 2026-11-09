@@ -252,7 +252,10 @@ test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () =
     // 2750 ms: shown; at 3000 ms it goes for good.
     await page.clock.runFor(250);
     await expect(banner).toBeHidden();
-    await page.clock.runFor(1000);
+    // One blink step later it does not come back.
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(750);
     await expect(banner).toBeHidden();
     await expect(game).toHaveAttribute("data-status", "ready");
   });
@@ -266,6 +269,14 @@ test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () =
     // A turn that is ignored (straight back) leaves it.
     await page.keyboard.press("ArrowDown");
     await expect(game).toHaveAttribute("data-status", "ready");
+    await expect(banner).toBeVisible();
+    // An ignored turn while it is hidden does not start it again: it keeps its blink.
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.keyboard.press("ArrowDown");
+    await expect(game).toHaveAttribute("data-status", "ready");
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(250);
     await expect(banner).toBeVisible();
     await page.keyboard.press("ArrowUp");
     await expect(game).toHaveAttribute("data-status", "running");
@@ -281,7 +292,9 @@ test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () =
     await expect(banner).toBeVisible();
     await page.getByRole("button", { name: "New game", exact: true }).click();
     await expect(banner).toBeHidden();
-    await page.clock.runFor(500);
+    await page.clock.runFor(250);
+    await expect(banner).toBeHidden();
+    await page.clock.runFor(250);
     await expect(banner).toBeHidden();
   });
 });
