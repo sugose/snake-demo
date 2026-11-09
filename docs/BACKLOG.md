@@ -29,15 +29,21 @@ one list he reads (product-office Process P-9 § 3 (1)), not here.
 
 ---
 
-## Phase 1 — [PHASE NAME]
+## Phase 1 — The game, playable from its link
 
-**Goal:** [What this phase delivers and how you know it is done.]
+**Goal:** the game as `docs/SPEC.md` describes it, published at
+`https://sugose.github.io/snake-demo/` and playable there.
 
-- [No items yet. The product owner describes the first PBI; Clead
-  specs it here.]
+- **[NEXT] PBI-1.6** (first, before any PR that changes `src/`) — `.github/workflows/review.yml` posts a review-ready marker on PRs that change `src/`, but no local rule provides for automation in the review flow (product-office Process P-3 § 1 (3)); Crog's observation 1 on #2. Remove the workflow: reviews are started by Clead (P-3 § 1 (3)).
+- **[NEXT] PBI-1.1** — Game rules, `src/game.ts`: the game state and the commands as pure functions, with the grid size, start length and food chooser passed in (`docs/SPEC.md` 2.1 to 2.5, 2.8, 3, 3.1). Every rule of those sections has a test.
+- **[NEXT] PBI-1.2** — Input, `src/input.ts`: key names and swipes mapped to turns and commands, with the shortest swipe passed in (`docs/SPEC.md` 2.6, 2.7, 3). Pure; other keys, short swipes and exact diagonals do nothing.
+- **[NEXT] PBI-1.3** — Best score, `src/storage.ts`: read and write the best score through a function passed in that returns the store and may throw, with the key passed in; every error caught, and the game going on without it (`docs/SPEC.md` 2.9 (3), (4), 3).
+- **[NEXT] PBI-1.4** (after PBI-1.1 to PBI-1.3) — The page: `src/config.ts`, canvas, tick timer, keys, swipes and buttons, page visibility, score and best score, in `src/main.ts`, `src/style.css` and `index.html`; the starter example removed; browser tests for a game played to its end, pause, restart, light and dark, 375 px and 1280 px with no sideways scrolling, and a clean console (`docs/SPEC.md` 2, 3, web pack rules).
+- **[NEXT] PBI-1.5** (after PBI-1.4) — Publishing: a workflow that builds `dist/index.html` on every merge to `main` and publishes it to GitHub Pages (`docs/SPEC.md` 4). Adam switches the Pages source to "GitHub Actions" (product office "Waiting for Adam").
+- **[LATER] PBI-1.7** (after PBI-1.5) — Adam plays the game on his phone from its link; his finding on how the swipes feel settles `docs/SPEC.md` 6.1.
 
 ---
 
 ## Explicitly out of scope
 
-- [Things deliberately not being built, so they are not re-proposed.]
+- Levels, rising speed, sound, obstacles, several players, online scores (`docs/SPEC.md` 5).
