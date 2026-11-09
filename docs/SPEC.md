@@ -19,6 +19,16 @@ are Clead's exact wording of that decision. At 21:24 Adam lowered the
 clear cells ahead of a start from 10 to 8, and at 21:29 he chose a random
 start for every level, level 1 included (`DECISIONS.md`, PO-170).
 
+Approved: Adam, 2026-11-09 22:20 to 22:39, in chat, the special levels:
+his own rules of 22:20, 22:21, 22:33, 22:35 and 22:38, and Clead's
+recommendations of 22:35 to 22:40 he accepted with "apyr" at 22:39;
+recorded in the product office (`DECISIONS.md`, the row "Snake demo,
+special levels", PO-171). Section 2.12, and the changes to 2.2, 2.4, 2.5,
+2.8, 2.9, 2.10, 3 and 3.1 that follow from it, are Clead's exact wording
+of that decision. Details the decision does not settle are marked
+**[Clead]**: they are Clead's choices, not Adam's, and are put to him in
+the product office's "Waiting for Adam" list.
+
 ---
 
 ## 1. System overview
@@ -48,7 +58,8 @@ branding or look is used.
 ### 2.2 One tick
 
 The snake moves one cell per tick while the state is `running`, with the
-delay between ticks of its level (2.10). A tick does these steps in this order:
+delay between ticks of its level (2.10). A tick does these steps in this order;
+on a special level, 2.12 (4) adds to them and changes steps 1, 3, 5 and 7:
 
 1. If a turn is queued (2.4), the first one is taken from the queue and
    becomes the heading.
@@ -88,12 +99,14 @@ number minus one; the game uses a random one, and tests pass a fixed one.
    turns are already queued, in which case it is ignored.
 3. Each tick takes at most one turn from the queue (2.2 step 1), so a
    second turn pressed within one tick is kept for the next tick.
-4. In `paused`, `over` and `won`, a turn is ignored. In `ready`, 2.1 (3)
-   applies.
+4. In `paused`, `over`, `blown` and `won`, a turn is ignored. In `ready`,
+   2.1 (3) applies.
+5. On a special level, turns are counted, and a snake waiting after a
+   shielded crash takes its turn as 2.12 (5) says.
 
 ### 2.5 States and commands
 
-| Command | `ready` | `running` | `paused` | `over` or `won` |
+| Command | `ready` | `running` | `paused` | `over`, `blown` or `won` |
 |---|---|---|---|---|
 | Turn (key or swipe) | 2.1 (3) | 2.4 | ignored | ignored |
 | Start button | starts in the heading it has | ignored | ignored | ignored |
@@ -130,18 +143,29 @@ buttons Start, Pause and New game do what 2.5 says.
 ### 2.8 Win and loss
 
 Hitting a wall, an obstacle or the snake's own body ends the game
-(`over`); leaving no free cell for the next dot wins it (`won`). Both show the final score and a way to start a
-new game.
+(`over`), except that on a special level a shield layer can take a hit
+on a wall or an obstacle (2.12 (5)); running out of turns or time on a
+special level ends it as `blown` (2.12 (6), (7)); leaving no free cell
+for the next dot wins it (`won`). All three show the final score and a
+way to start a new game. A game that is `blown` keeps its last board and
+score on show, as `over` and `won` do.
 
 ### 2.9 Score and best score
 
 1. The page shows the level, the score and the best score. The score
-   counts on across levels; the best score is the best such total.
-2. When a game ends (`over` or `won`) with a score above the best score,
-   that score becomes the best score and is saved.
+   counts on across levels; the best score is the best such total. On a
+   normal level each dot gives one point; on a special level the dots
+   give none and the level gives its points when it is cleared
+   (2.12 (8)).
+2. When a game ends (`over`, `blown` or `won`) with a score above the
+   best score, that score becomes the best score and is saved.
 3. The best score is kept in the browser's local storage under the key
-   `snake-demo.best`, as a whole number from 0 to 400 written in digits.
-   A missing value, or any other value, reads as 0.
+   `snake-demo.best`, as a whole number from 0 to 4000 written in digits.
+   A missing value, or any other value, reads as 0. **[Clead]** 4000 is
+   a bound no game can pass: every level takes 5 dots, so at most
+   400 / 5 = 80 levels can be cleared, and no level gives more than
+   20 + 30 = 50 points. A best score saved before the special levels
+   (at most 400) still reads as it was.
 4. If the browser does not allow local storage, or any read or write
    fails, the game goes on: the best score then lasts only until the page
    is closed. Every access to the storage, including getting hold of it,
@@ -150,9 +174,12 @@ new game.
 ### 2.10 Levels
 
 1. A game starts at level 1. A level is cleared by eating 5 dots on it.
-2. The delay between ticks on level N is 125 − 5 × (N − 1) milliseconds,
-   and never less than 50: 125 ms on level 1, 120 ms on level 2, and
-   50 ms from level 16 on.
+2. The delay between ticks on a normal level (one that is not special,
+   2.12 (1)) is 125 − 5 × M milliseconds, where M is the number of normal
+   levels before it, and never less than 50: 125 ms on level 1, 120 ms on
+   level 2, 110 ms on level 4, 105 ms on level 6 (the special level 5 is
+   not counted), and 50 ms from level 19 on. The delay on a special level
+   is in 2.12 (2).
 3. When a level is cleared, the game goes to the next level: the level
    goes up by one, the dots eaten on it start at 0, the queued turns are
    cleared, and the board is laid out anew (2.11) with the snake as long
@@ -195,21 +222,104 @@ start and the cells kept free ahead of it; then the game is `won`, with
 the level, the score and the snake as they were when the last level was
 cleared, no queued turns, and no obstacles or dot.
 
+### 2.12 Special levels
+
+1. Every level whose number is divisible by 5 (5, 10, 15 …) is special;
+   every other level is normal. A special level is laid out as 2.11
+   says, with N − 1 obstacles like any level, is cleared by 5 dots like
+   any level (2.10 (1)), and goes to the next level as 2.10 (3) says.
+   The level after a special level is normal.
+2. The delay between ticks on a special level is half the delay of the
+   level before it, with no 50 ms floor: 55 ms on level 5, 45 ms on
+   level 10, 35 ms on level 15, and 25 ms from level 20 on (half of
+   110, 90, 70 and 50).
+3. At its start (when it is laid out), a special level has a shield of
+   3 layers, 20 turns and 30 seconds. **[Clead]** Each special level
+   starts with a full shield, all 20 turns and all 30 seconds; nothing
+   carries over from an earlier special level. Its time is the sum of
+   the delays of the ticks in which the snake moved (step 6 of 2.2);
+   so the time runs only while the snake moves, and not in `ready`, in
+   `paused`, while the snake waits after a shielded crash (5), or in the
+   tick of the crash itself.
+4. A tick on a special level is 2.2 with these changes:
+   - If the snake is waiting (5), the tick does nothing.
+   - Step 1: a turn taken from the queue is counted (6). If that makes
+     21 turns on this level, the game is `blown` (6) and the tick ends,
+     with everything else as it was.
+   - Steps 3 and 5: a new head outside the board or on an obstacle is a
+     crash, which (5) handles. A new head on the snake's own body ends
+     the game (`over`), shield or not.
+   - Step 7: eating a dot adds one to the dots eaten on this level but
+     nothing to the score. When it clears the level, the level's points
+     (8) are added to the score before the next level is laid out.
+   - After step 7, if the level was not cleared and the game was not
+     won: if the level's time is now 30 seconds or more, the game is
+     `blown` (7); otherwise, if the time has passed a whole multiple of
+     3 seconds in this tick, the obstacles jump (9).
+5. A crash with at least one shield layer left uses one layer. The
+   snake does not move: its segments stay where they were, the heading
+   stays the one of this tick (a turn taken in step 1 included), and the
+   queued turns are cleared **[Clead]**. The game stays `running`, but
+   the snake waits until a turn: while it waits, a turn in the heading
+   or opposite to it is ignored; any other turn becomes the heading at
+   once (not queued), is counted (6), and ends the wait, so the snake
+   moves that way on the next tick. **[Clead]** That turn counts as a
+   turn, since it changes the snake's direction. A crash with no layer
+   left ends the game (`over`).
+6. A turn counts when it becomes the heading: when a tick takes it from
+   the queue (step 1), or when it ends a wait (5). The turn that starts
+   the level from `ready` (2.1 (3)), and the Start button, are not
+   turns. At most 20 turns are allowed; the 21st turn ends the game
+   as `blown` at the moment it would become the heading, before the
+   snake moves, with the board as it was.
+7. The level must be cleared within 30 seconds of its time (3). A tick
+   after which the time is 30 seconds or more and the level is not
+   cleared ends the game as `blown`, with the board as that tick left it.
+8. When the 5th dot clears a special level, the level gives
+   (T + S) × (3 − U) / 3 points, rounded to the nearest whole number,
+   where T is the turns left (20 minus the turns counted), S the seconds
+   left and U the shield layers used. The multiplier is 1, 2/3 or 1/3;
+   the product never ends in exactly .5, so the rounding has no tie.
+   **[Clead]** The seconds left are counted in whole seconds, rounded
+   up: 30 minus the time in seconds, rounded up to a whole number (a
+   second that has begun counts as left). The page's countdown shows the
+   same number.
+9. The obstacles jump: all of them at once, each picked anew at random,
+   one at a time, by the chooser of 2.3 from the free cells listed row
+   by row, leaving out the snake's cells, the dot's cell, the cells of
+   the obstacles already picked in this jump, and the 2 cells straight
+   ahead of the head in its heading that lie on the board. If there are
+   fewer such cells than obstacles, the obstacles stay where they are
+   (this cannot happen on the 20 × 20 board). **[Clead]** The obstacles
+   follow the level's time (3): they first jump 3 seconds into it, and
+   do not jump while the snake waits after a crash.
+10. **[Clead]** What the page shows on a special level: next to the
+    level, the score and the best score, three more values: the turns
+    left, the seconds left (8) and the shield layers left. They are
+    hidden on a normal level. The status line in `ready` says it is a
+    special level and names its limits ("Level 5, special: 20 turns,
+    30 seconds, shield of 3. …"); while the snake waits after a crash it
+    says to turn to go on; when the game is `blown` it says "Blown up".
+    The obstacles look the same as on a normal level.
+
 ---
 
 ## 3. Architecture
 
 - `src/config.ts`: the named values: grid size 20, start length 3,
   shortest swipe 30, the storage key, dots per level 5, the first delay
-  125 ms, the delay step 5 ms, the shortest delay 50 ms, and the 8 clear
-  cells ahead of a start. No other module writes these numbers
+  125 ms, the delay step 5 ms, the shortest delay 50 ms, the 8 clear
+  cells ahead of a start, and the special levels' values of 2.12: every
+  5th level, 3 shield layers, 20 turns, 30 seconds, a jump every
+  3 seconds and 2 cells kept free ahead of the head. No other module
+  writes these numbers
   (product-office Process P-11 § 5 (2)): `game.ts`, `input.ts` and
   `storage.ts` take the values they need as parameters, and `main.ts`
   passes them from here.
 - `src/game.ts`: the game rules as pure functions over a game state (no
   DOM, no timers): a new game, a turn, a tick, pause, the commands of
-  2.5, levels and laying out a level (2.10, 2.11), and the delay of a
-  level. The choosers of 2.3 and 2.11 are passed in, so tests are
+  2.5, levels and laying out a level (2.10, 2.11), special levels
+  (2.12), and the delay of a level. The choosers of 2.3 and 2.11 are passed in, so tests are
   deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,
@@ -218,7 +328,7 @@ cleared, no queued turns, and no obstacles or dot.
   function passed in that returns the store and may throw. Covered by
   Jest with fake stores, also ones that throw.
 - `src/main.ts`: draws the board, the obstacles and the level on a
-  canvas, runs the tick timer with the delay of the current level, and
+  canvas, shows a special level's turns, seconds and shield (2.12 (10)), runs the tick timer with the delay of the current level, and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
   Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
@@ -231,7 +341,9 @@ The game state holds at least: the snake's segments (head first; several
 may share a cell), the heading, the queued turns (at most two), the
 food's cell (none when `won`), the obstacles' cells, the level, the dots
 eaten on it, the score and the state (`ready`, `running`, `paused`,
-`over`, `won`). Directions are the strings `"up"`, `"down"`, `"left"` and
+`over`, `blown`, `won`), and on a special level its turns counted, its
+time, the shield layers used and whether the snake waits after a crash.
+Directions are the strings `"up"`, `"down"`, `"left"` and
 `"right"`.
 
 ---
