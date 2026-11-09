@@ -97,9 +97,17 @@ Space and P (either case) pause and go on; Enter starts a new game. Other
 keys do nothing. The page stops the arrow keys and Space from scrolling
 it while the game has the focus.
 
+A key pressed together with Ctrl, Meta (Cmd) or Alt does nothing, so the
+browser's shortcuts are not taken as turns; Shift does not matter. When a
+key is held down, its repeats still turn the snake but do not pause, go
+on or start a new game again. Keys act on the game even while one of the
+buttons has the focus, and a key that does something in the game does
+not also press that button.
+
 ### 2.7 Swipes
 
-On a touch screen, a swipe on the board turns the snake. The swipe is the
+On a touch screen, a swipe on the board turns the snake (a touch or a
+pen; a mouse drag is not a swipe). The swipe is the
 line from where the touch starts to where it ends. If it is shorter than
 30 CSS pixels along both axes, it does nothing. Otherwise its direction is
 the axis along which it moved further; a swipe exactly as far along both
@@ -181,5 +189,6 @@ Levels, rising speed, sound, obstacles, several players, online scores.
 
 ## 6. Known unknowns
 
-1. Whether swipe control feels right on Adam's phone; checked when Adam
-   plays it (PBI-1.7).
+1. Whether swipe control feels right on Adam's phone. Settled: Adam
+   played it on his phone, "tested, swipe was good" (2026-11-09, in chat;
+   PBI-1.7).
