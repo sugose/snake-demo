@@ -34,8 +34,9 @@ restarts the snake after a crash is free to Clead, with "restart free
 (unless that gives unfair advantage to someone who didn't crash. if you
 think it is unfair, then you make it not free)", and Clead made it count
 (2.12 (5)). The marks of 2.12 (7) and (8) on a level cleared in the tick
-that reaches 30 seconds and on a level cleared with all layers used are
-Clead's, and are put to Adam in the product office's "Waiting for Adam".
+that reaches 30 seconds and on a level cleared with all layers used were
+Clead's; Adam accepted both on 2026-11-10 at 00:47 ("2a yes", "2b yes.
+the reward is that you get to continue").
 
 Approved: Adam, 2026-11-09 23:55, in chat ("apyr"), Clead's option 1 of
 23:54 after Adam found he could not start a level laid out against the
