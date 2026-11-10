@@ -102,6 +102,26 @@ buttons and the link doing nothing while it is open, the 2000 ms, the
 refused copy, a copy that finishes late, and the announcement to screen
 readers.
 
+Approved: Adam, 2026-11-11, in chat, a playtest start level `?level=N`
+(00:09, "apyr", to Clead's recommendation of 00:09) and a secret slow
+button `?slow` (his request of 00:10, "apyr" at 00:32 to Clead's
+recommendation of 00:12: the steps 1×, 2×, 4×, the time and points rules
+unchanged, a small button under the board); a high score list in the
+style of an old arcade machine, kept in the browser only, with the
+columns RANK, SCORE, LVL and NAME and a name of 3 letters (00:34, 00:35,
+00:38, "apyr on all except swap RND for LVL"); and an arcade look for
+that list only, with pixel graphics and pixel letters and a background
+slightly out of sync (00:35, 00:39, 00:40), Clead's choices accepted at
+00:50 ("start the batch, apyr"); recorded in the product office
+(`DECISIONS.md`, PO-171, the rows "Snake demo, a start level for
+playtesting", "Snake demo, a secret slow button for playtesting", "Snake
+demo, a high score list", "Snake demo, the high score list is settled",
+"Snake demo, an arcade look for the high score list" and "Snake demo,
+the arcade look of the high score list"). Sections 2.14 to 2.16, and the
+changes to 2.1, 2.5, 2.9, 2.10, 2.12 (3), 2.13, 3 and 5 that follow from
+them, are Clead's exact wording of that decision. Details Adam has not
+settled are marked **[Clead]**.
+
 ---
 
 ## 1. System overview
@@ -120,9 +140,10 @@ branding or look is used.
 
 1. The board is a square grid of 20 × 20 cells. A cell is `(x, y)`, with
    `x` from 0 (left) to 19 (right) and `y` from 0 (top) to 19 (bottom).
-2. A new game starts at level 1 with the score 0 and a snake of 3
+2. A new game starts at level 1 (at the start level of 2.14 (2) on a
+   page opened with `?level=N`) with the score 0 and a snake of 3
    segments, laid out as 2.11 says, in the state `ready`, with the status
-   line naming level 1 (2.10 (3)). Nothing moves.
+   line naming that level (2.10 (3)). Nothing moves.
 3. In `ready`, a turn starts the game: the snake's heading becomes that
    direction and the state becomes `running`. A turn opposite to the
    heading is ignored and the game stays `ready`, and so is a turn whose
@@ -189,7 +210,7 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
-can also pause a `running` game and go on.
+and the scores panel of 2.15 (5) can also pause a `running` game and go on.
 
 ### 2.6 Keys
 
@@ -254,7 +275,8 @@ you hit the wall. No shield left. Enter or New game to play again".
    give none and the level gives its points when it is cleared
    (2.12 (8)).
 2. When a game ends (`over`, `blown` or `won`) with a score above the
-   best score, that score becomes the best score and is saved.
+   best score, that score becomes the best score and is saved, except on
+   a playtest page (2.14 (4)), where nothing is saved.
 3. The best score is kept in the browser's local storage under the key
    `snake-demo.best`, as a whole number from 0 to 4000 written in digits.
    A missing value, or any other value, reads as 0. **[Clead]** 4000 is
@@ -266,10 +288,14 @@ you hit the wall. No shield left. Enter or New game to play again".
    fails, the game goes on: the best score then lasts only until the page
    is closed. Every access to the storage, including getting hold of it,
    happens inside the best-score module's error handling.
+5. The best score stays as it is. The high score list of 2.15 is a
+   separate list under its own key (2.15 (1)); the best score gives it
+   one entry when it is above every stored one (2.15 (2)).
 
 ### 2.10 Levels
 
-1. A game starts at level 1. A level is cleared by eating 5 dots on it.
+1. A game starts at level 1, or at the start level of 2.14 (2). A level
+   is cleared by eating 5 dots on it.
 2. The delay between ticks on a normal level (one that is not special,
    2.12 (1)) is 125 − 5 × M milliseconds, where M is the number of normal
    levels before it, and never less than 50: 125 ms on level 1, 120 ms on
@@ -332,8 +358,9 @@ cleared, no queued turns, and no obstacles or dot.
 3. At its start (when it is laid out), a special level has a shield of
    3 layers, 20 turns and 30 seconds. **[Clead]** Each special level
    starts with a full shield; no layer carries over from an earlier
-   special level. Its time is the sum of the delays of the ticks in
-   which the snake moved (step 6 of 2.2), kept in whole milliseconds;
+   special level. Its time is the sum, over the ticks in which the snake
+   moved (step 6 of 2.2), of the level's delay (2), whatever the tick
+   really took (2.14 (6)), kept in whole milliseconds;
    so the time runs only while the snake moves, and not in `ready`, in
    `paused`, while the snake waits after a shielded crash (5), or in the
    tick of the crash itself.
@@ -456,14 +483,16 @@ cleared, no queued turns, and no obstacles or dot.
    tick (an input, pause, the page hidden) has the K of the last tick.
 3. **[Clead]** The first line names the build (the commit it was built
    from, or `dev` for a local build) and the named values of section 3
-   the game uses, so a log from any build can be read.
+   the game uses, so a log from any build can be read. **[Clead]** On a
+   playtest page (2.14) it ends with the options, `playtest
+   start-level=5 slow`, `playtest start-level=5` or `playtest slow`.
 4. **[Clead]** The inputs that make a line: every key that maps to a
    command of 2.6, held repeats included; every swipe that maps to a
-   turn (2.7); every press of the Start, Pause or Resume, and New game
-   buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
-   that map to nothing, and any input while the panel of (6) is open
-   make no line; opening and closing the panel make a line only as (6)
-   says. The New game command's line is the first stamped line
+   turn (2.7); every press of the Start, Pause or Resume, New game and Slow
+   (2.14 (5)) buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
+   that map to nothing, and any input while the panel of (6), the scores panel
+   or the name entry of 2.15 is open make no line; opening and closing
+   the panels make a line only as (6) and 2.15 (5) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
    ignored, and if ignored, why, with one of these reasons:
@@ -491,13 +520,15 @@ cleared, no queued turns, and no obstacles or dot.
 | a shielded crash | `crash wall shield=2 free=up,left` |
 | an obstacle jump | `jump obstacles=(1,2),(7,9),(0,0),(4,4)` |
 | a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31`; on a normal level `cleared level 4 score=20` |
-| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log` |
+| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores` |
+| a slow step (2.14 (5)) | `slow x2`, `slow x4`, `slow x1`, after the input line `button Slow used`; a press the state ignores is `button Slow ignored state` |
+| a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped` |
 | the page hidden or shown | `hidden`, `shown` |
 | the end of the game | `end over boxed score=43 best=yes`; `best=no` when the score did not become the best score |
 
    The words used: commands `up`, `down`, `left`, `right`, `pause`,
    `new`; buttons `Start`, `Pause`, `Resume`, `New game`, as labelled
-   when pressed; end states `over`, `blown`, `won`; end reasons `wall`,
+   when pressed, and `Slow`; end states `over`, `blown`, `won`; end reasons `wall`,
    `obstacle`, `self`, `boxed`, `turns`, `time`, `full`, `noroom`, one
    for each row of 2.8; an empty list of cells is written `-`.
 
@@ -544,6 +575,185 @@ cleared, no queued turns, and no obstacles or dot.
      when a copy has succeeded; it is emptied when the button goes back
      and when a copy starts, so that a repeated copy is announced again.
 
+### 2.14 Playtest options
+
+The page reads its address once, when it loads; a later change of the
+address does nothing. Two options of the query string are for playtesting.
+Without them the page is as every other section says.
+
+1. **[Clead]** The query string is read as `URLSearchParams` reads it. A
+   name given twice takes its first value, and names other than `level`
+   and `slow` are ignored.
+2. `level=N` is the start level. N is valid when it is written in plain
+   digits with no leading zero and is from 1 to 99 (a named value,
+   section 3). A valid N makes every new game on this page, the one made
+   at the page load and each made by the New game command, start at
+   level N instead of level 1: the level is laid out as 2.11 says, with
+   the delay of level N (2.10 (2), 2.12 (2)), N − 1 obstacles, and on a
+   special level its shield, turns and seconds (2.12 (3)); the snake has
+   the start length of 3 (2.1 (2)), the score is 0, and the status line
+   names level N (2.10 (3)). Clearing a level goes on to the next as
+   usual. **[Clead]** The start level holds for every new game of the
+   page, so that a special level can be played again and again. A missing
+   or invalid value is ignored: the game starts at level 1 and the page
+   is not a playtest page for this option.
+3. `slow` is on when it is in the query string with any value or none
+   (`?slow`, `?slow=1`). **[Clead]** Any value counts, because `?slow`
+   with no value is the use.
+4. A page with a valid `level` or with `slow` is a playtest page. On it,
+   no game writes the best score (2.9 (2), so the end line says
+   `best=no`) and none enters the high score list (2.15 (3)); both keep
+   showing what they hold. **[Clead]** The page shows no sign of a
+   playtest page apart from the Slow button of (5); the first line of
+   every log names the options (2.13 (3)).
+5. The Slow button. When `slow` is on, a small button sits under the
+   board, at its right edge. **[Clead]** It has no visible text, it is
+   24 × 24 CSS pixels, its colours are close to the page's background,
+   and it shows a clear focus ring when focused; its accessible name is
+   "Slow down", so that screen readers and tests can find it. It is shown,
+   and in the tab order, only while the current level is a special level;
+   on a normal level it is hidden. Each press steps the factor 1× → 2× →
+   4× → 1×, in `ready`, `running` and `paused`; in `over`, `blown` and
+   `won` a press is ignored. While the log panel, the scores panel or the
+   name entry is open the button does nothing and makes no line.
+   **[Clead]** The factor is 1× when a level is laid out and when a new
+   game is made, so a special level always starts at its normal speed
+   and the factor does not carry from one level to the next.
+6. The factor multiplies the delay of the tick timer on the level: the
+   ticks come every (the level's delay × the factor) milliseconds. A
+   change takes effect from the next tick that is scheduled. The rules of
+   a tick, and the game's time of 2.12 (3), are not changed: each tick in
+   which the snake moves adds the level's delay of 2.12 (2) to the time,
+   whatever the factor. So a game played slowed has the same budget of
+   moves, seconds and turns, the obstacles jump after the same number of
+   moves (2.12 (9)), the points are given by the same formula (2.12 (8)),
+   and the seconds left run down slower than the clock on the wall.
+   Things in real time, the "Special Level" text (2.12 (11)) and the
+   `t=` stamps of the log (2.13 (2)), do not change.
+
+### 2.15 High score list
+
+1. The page keeps a list of up to 10 entries in the browser's local
+   storage, for this browser only. An entry has a score (a whole number
+   from 1 to the bound of 2.9 (3)), the level reached (a whole number from
+   1 to the number of cells divided by the dots per level, plus 1: 81,
+   which `main.ts` works out from the named values as it does the score
+   bound) and a name of 3 letters, each from A to Z. The list is in
+   order of score, highest first; entries with the same score are in
+   the order they were made, the older first. It is kept under the key
+   `snake-demo.scores` as text: the entries in that order, each written
+   `SCORE:LEVEL:NAME` in plain digits with no leading zero, joined by
+   `,`, for example `43:7:ABC,40:6:XYZ`. **[Clead]** A missing value,
+   or a value that is not exactly of that form (an entry that is not
+   valid, more than 10 entries, or scores that rise along the list),
+   reads as an empty list, the whole value and not an entry at a time.
+   If the browser does not allow local storage, or any read or write
+   fails, the game goes on and the list then lasts only until the page
+   is closed; every access to the storage, including getting hold of it,
+   happens inside the module's error handling, as in 2.9 (4).
+2. **[Clead]** The list as shown, and as (3) uses it, has one more entry
+   ahead of the stored ones when the best score of 2.9 is above the score
+   of every stored entry (above 0 when none is stored): the entry has that
+   score, the level `--` and the name `---`. It is made each time the
+   list is read, never stored, and goes when a stored entry has a score
+   at least as high. At most 10 entries are shown and used: when the
+   stored ones and this one are 11, the last stored one is not shown. At
+   most 10 are stored: an entry made after the 10th is full drops the
+   last one.
+3. A game qualifies when it ends (`over`, `blown` or `won`) on a page
+   that is not a playtest page (2.14 (4)) with a score of at least 1,
+   and the list as shown has fewer than 10 entries or the score is above
+   that of the 10th. Its rank is the place it takes after every entry
+   with a score at least as high.
+4. When a game qualifies, a panel over the board offers a name entry,
+   with the game's score, the level it reached and its rank. It has 3
+   slots, each showing a letter from A to Z and starting at A, one of
+   them selected, the first at the start. ArrowUp and ArrowDown change
+   the selected letter (after Z comes A, and before A comes Z),
+   ArrowLeft and ArrowRight move the selection (not past the first or the
+   last slot), Enter confirms and Escape skips. **[Clead]** Each slot
+   also has an Up and a Down button, with the accessible names "Letter 1
+   up", "Letter 1 down" and so on, tapping a slot selects it, and the panel
+   has an OK button and a Skip button, so that a phone can do all of it.
+   Confirming stores the entry at its rank (2.15 (1)), writes the line
+   `scores name=ABC rank=3` (2.13 (5)) and turns the panel into the table
+   of (5), with the new entry marked. Skipping stores nothing, writes
+   `scores skipped` and closes the panel. While the entry is open, game
+   keys, swipes, the Start, Pause and Resume buttons, the New game
+   button, the Log link and the Scores link do nothing, and Enter
+   confirms instead of making a new game (2.6). **[Clead]** The entry
+   can be skipped, so that nobody is held up by it.
+5. A "Scores" link below the board, next to the Log link, opens the
+   table in a panel over the board with a Close button. **[Clead]** It
+   can be used in every state, as the Log link can (2.13 (6)), and the
+   panel works as the log panel does: opening it on a `running` game
+   pauses it, closing it with Close or Escape goes on if opening paused
+   the game (the lines `pause scores` and `resume scores`); while it is
+   open, game keys, swipes, the Start, Pause and Resume buttons and both
+   links do nothing, and the New game command closes it and makes a new
+   game; only one of the log panel, the scores panel and the name entry
+   is open at a time. The panel has the title "TOP 10 SCORES", the
+   headings RANK, SCORE, LVL and NAME, and a row for each entry of the
+   list as shown: its rank written 1ST, 2ND, 3RD, 4TH and so on to
+   10TH, its score, its level (`--` for the entry of (2)) and its name.
+   **[Clead]** With no entries the panel says NO SCORES YET instead of the
+   rows. After a name is entered, the panel is this table with the new
+   entry's row marked; closing it leaves the ended game as it was.
+6. The status line of an ended game (2.8) is not changed.
+
+### 2.16 Arcade look of the scores panel
+
+This look is for the panel of 2.15 (4) and (5), the name entry and the
+table, and for nothing else; the rest of the page keeps the plain look of
+section 3.
+
+1. The letters are pixels. **[Clead]** The panel's letters are drawn from
+   a bitmap font of 5 × 7 pixels for A to Z, 0 to 9, the hyphen and the
+   space, with the arrow and cursor shapes of the entry, whose patterns
+   are written in the project's own code, drawn for this project; no
+   font, image or other third-party material is used. Every text of the
+   panel (the title, the headings, the ranks, scores, levels and names,
+   the labels of the buttons and the line NO SCORES YET) is drawn as
+   squares, one per pixel, at a whole-number scale of 1, 2 or 3 (a named
+   value, section 3), the largest at which the table is no wider than
+   the board; no pixel is blurred. The drawn pixels are hidden from
+   screen readers, and each drawn text sits in an element that holds the
+   same text in plain letters, so that screen readers and tests read it:
+   the table is a real table whose cells hold the texts of 2.15 (5),
+   and the buttons are real buttons with the accessible names of 2.15 (4)
+   and "Close".
+2. **[Clead]** The colours. The panel is dark in light and in dark mode
+   alike: the background is `#0a0a18`, the title `#5fe3ff`, the
+   headings `#ffb000`, the rows `#f2f2f2`, the marked row `#ff6ad5`,
+   the selected slot and the focused button have a frame of `#5fe3ff`. Each
+   of the text colours has a contrast ratio of at least 7:1 against the
+   background (13.0, 10.7, 17.5 and 7.7).
+3. **[Clead]** Scanlines and glow. A layer over the panel that takes no
+   input draws a dark line of 1 pixel every 3 pixels, at 25 % opacity,
+   and each drawn text has a glow of its own colour with a blur of 4
+   pixels.
+4. **[Clead]** The picture is a little out of sync. Two movements, in CSS
+   only (no script timer): a band of the background 40 pixels high and
+   6 % lighter rolls down the panel once in 8000 ms and starts again at
+   the top; and the whole picture shifts sideways by 2 pixels for 120 ms
+   at 900 ms, 3300 ms and 5600 ms of a cycle of 7000 ms, as if the sync
+   had slipped. They move `transform` and the background position only,
+   and run only while the panel is shown. Nothing in the panel flashes:
+   the one thing that blinks is the cursor of the selected slot, twice a
+   second (500 ms on and off), which is under the 3 flashes a second of
+   WCAG 2.3.1.
+5. **[Clead]** With `prefers-reduced-motion: reduce` nothing moves: no
+   band, no shift, and the cursor does not blink but stays on; the
+   colours, the scanlines and the glow remain.
+6. The values (the scales, the size of the band, the periods, the shift
+   and the cursor's period) are named values (section 3). What the look
+   looks like is Adam's to judge by playing; the tests of the panel check
+   what can be measured: the texts, the colours and their contrast, the
+   animation names and periods in the styles the browser computes, none
+   of them under reduced motion, and, in Jest, the bitmap font (every
+   glyph 5 × 7, every character of the panel present and different from
+   the others) and the drawing of a text into pixels.
+
 ---
 
 ## 3. Architecture
@@ -555,7 +765,13 @@ cleared, no queued turns, and no obstacles or dot.
   5th level, 3 shield layers, 20 turns, 30 seconds, a jump every
   3 seconds and 2 cells kept free ahead of the head; and the "Special
   Level" text's blink of 250 ms and its 3000 ms (2.12 (11)); and the
-  2000 ms the Copy button of the log panel shows "✓ Copied!" (2.13 (6)). The best score's
+  2000 ms the Copy button of the log panel shows "✓ Copied!" (2.13 (6));
+  the playtest options' highest start level 99 and their slow factors
+  1, 2 and 4 (2.14); the list's 10 entries, name of 3 letters and storage
+  key `snake-demo.scores` (2.15); and the arcade look's pixel scales 1, 2
+  and 3, band of 40 pixels, roll of 8000 ms, shift of 2 pixels for 120 ms
+  in a cycle of 7000 ms at 900, 3300 and 5600 ms, and cursor period of
+  500 ms (2.16). The best score's
   bound of 2.9 (3) is not a value of its own: `main.ts` works it out
   from these, as (20 × 20 / 5) × the larger of 5 and 20 + 30. No other
   module writes these numbers
@@ -577,6 +793,17 @@ cleared, no queued turns, and no obstacles or dot.
 - `src/storage.ts`: reads and writes the best score (2.9) through a
   function passed in that returns the store and may throw. Covered by
   Jest with fake stores, also ones that throw.
+- `src/query.ts`: reads the query string (2.14): the start level, whether
+  `slow` is on, and whether the page is a playtest page. Pure, covered by
+  Jest: every valid and invalid form of `level`, `slow` in every form, a
+  name given twice and other names.
+- `src/scores.ts`: the high score list (2.15) as pure functions: reading
+  and writing its text through a function passed in that returns the store
+  and may throw, the entry made from the best score, whether a game
+  qualifies, its rank and the list after an entry. Covered by Jest with
+  fake stores, also ones that throw, and every malformed text of (1).
+- `src/pixel.ts`: the 5 × 7 bitmap font and the drawing of a text into
+  pixels (2.16 (1)). Pure, covered by Jest.
 - `src/status.ts`: the status line of an ended game (2.8) and of a
   snake waiting after a shielded crash (2.12 (10)), as pure functions of
   the game state (no DOM). Pure, covered by Jest: every line of 2.8
@@ -595,11 +822,15 @@ cleared, no queued turns, and no obstacles or dot.
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
   shows the "Special Level" text (2.12 (11)), shows the status line
   (the ended game's from `src/status.ts`), keeps the event log and
-  shows its panel and the Copy feedback (2.13), runs the tick timer with the delay of the current level, and
+  shows its panel and the Copy feedback (2.13), runs the tick timer with the delay of the current level
+  times the factor of the Slow button (2.14), shows the name entry, the Scores link and the table
+  (2.15, 2.16), and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
   Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
-  for a 375 px wide phone first, with no sideways scrolling.
+  for a 375 px wide phone first, with no sideways scrolling. The scores
+  panel and the name entry have the arcade look of 2.16, and nothing
+  else does.
 - The build is one self-contained `dist/index.html` (web pack rule).
 
 ### 3.1 Game state
@@ -626,7 +857,9 @@ Pages source to "GitHub Actions" once (a repository setting).
 
 ## 5. Out of scope
 
-Sound, several players, online scores. Power-ups: Adam, 2026-11-09,
+Sound, several players, online scores (the high score list of 2.15 is
+kept in the browser only; a server for a global list is PBI-2.30, later).
+Power-ups: Adam, 2026-11-09,
 "will be added later"; not specified yet.
 
 ---
