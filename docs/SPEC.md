@@ -73,8 +73,9 @@ Approved: Adam, 2026-11-10 08:34, in chat: an event log of the game,
 with every move and event (keystrokes, obstacle jumps, points) and each
 level's entry data (level, speed), detailed enough to replay the game,
 behind a link that opens it over the board with a copy button (2.13);
-at 08:35 he added that the link is not usable until the game is over.
-Everything in 2.13 beyond Adam's words of 08:34 and 08:35 is Clead's,
+at 08:35 he added that the link is not usable until the game is over,
+which he replaced at 10:10 (below).
+Everything in 2.13 beyond Adam's words of 08:34, 08:35 and 10:10 is Clead's,
 marked **[Clead]**: the design sent to him at 08:34, as changed at
 08:35, and the detail added in Crog's review rounds of #43
 (`DECISIONS.md`, PO-171).
@@ -87,6 +88,19 @@ is ended by a turn into a free direction and by no other, the status
 line names only the free directions, and a snake with no free
 direction ends the game as boxed in (2.12 (5), (10), 2.8). The details
 marked **[Clead]** are Clead's (`DECISIONS.md`, PO-171).
+
+Approved: Adam, 2026-11-10 10:10, in chat: the Log link can always be
+used, in every state of the game, because a bug may stop play while the
+game still counts as running ("The log link must always be clickable,
+even when the game is ongoign"); and when Copy has copied the log, the
+button turns green and its text changes to "✓ Copied!" (2.13 (6))
+(`DECISIONS.md`, PO-171). Everything else in 2.13 (6) that this changes
+is Clead's, marked **[Clead]**. Adam accepted it on 2026-11-10 at 22:39
+("apyr", in chat, to Clead's recommendation of 22:38): the pause when the panel opens on a running game and the going on when
+it closes, the lines `pause log` and `resume log`, the panel's text, the
+buttons and the link doing nothing while it is open, the 2000 ms, the
+refused copy, a copy that finishes late, and the announcement to screen
+readers.
 
 ---
 
@@ -174,7 +188,8 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | New game (Enter, New game button) | new game, level 1 (2.1 (2)) | new game | new game | new game |
 
 The queued turns are cleared by a new game. When the page is hidden (the
-browser tab is left), a `running` game is paused.
+browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
+can also pause a `running` game and go on.
 
 ### 2.6 Keys
 
@@ -447,7 +462,8 @@ cleared, no queued turns, and no obstacles or dot.
    turn (2.7); every press of the Start, Pause or Resume, and New game
    buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6) is open
-   make no line. The New game command's line is the first stamped line
+   make no line; opening and closing the panel make a line only as (6)
+   says. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
    ignored, and if ignored, why, with one of these reasons:
@@ -475,7 +491,7 @@ cleared, no queued turns, and no obstacles or dot.
 | a shielded crash | `crash wall shield=2 free=up,left` |
 | an obstacle jump | `jump obstacles=(1,2),(7,9),(0,0),(4,4)` |
 | a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31`; on a normal level `cleared level 4 score=20` |
-| pause, resume | `pause`, `resume` |
+| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log` |
 | the page hidden or shown | `hidden`, `shown` |
 | the end of the game | `end over boxed score=43 best=yes`; `best=no` when the score did not become the best score |
 
@@ -489,14 +505,44 @@ cleared, no queued turns, and no obstacles or dot.
    jump) has a line, and every cell the head visited follows from the
    start and the move lines.
 6. A "Log" link below the board opens the log in a panel over the board,
-   with a Copy button and a Close button. The link can be used only when
-   the game has ended (`over`, `blown` or `won`); before that it is
-   shown as not usable and does nothing. Copy puts the whole log on the
-   clipboard. **[Clead]** The link's place and look, the Close button,
-   and that, if the browser refuses Copy, the log's text is selected so
-   it can be copied by hand. While the panel is open, game keys and
-   swipes do nothing, Escape or Close closes it, and the New game
-   command (Enter or the button) closes it and makes a new game.
+   with a Copy button and a Close button. The link can be used in every
+   state of the game (`ready`, `running`, `paused`, `over`, `blown` and
+   `won`), so a log can be had when a bug stops play while the game
+   still counts as running. **[Clead]** The panel's text is the log as
+   it is when the panel has opened, the pause of its opening (below)
+   included; Copy puts that text on the clipboard. **[Clead]** The
+   link's place and look, the Close button, and that, if the browser
+   refuses Copy, the log's text is selected so it can be copied by hand.
+   While the panel is open, game keys, swipes and the Start, Pause and
+   Resume buttons do nothing, and so does the Log link; Escape or Close
+   closes it, and the New game command (Enter or the button) closes it
+   and makes a new game.
+   - **[Clead]** Opening the panel on a `running` game pauses it, as the
+     Pause command does (2.5), so that a snake that cannot be steered
+     does not crash under the panel. Closing the panel with Close or
+     Escape goes on, as Pause does from `paused`, but only if opening it
+     paused the game, so the snake moves at once. In `ready`, `paused`
+     and the ended states the panel changes nothing, on opening or on
+     closing, and the New game command makes a new game without going
+     on. The pause and the going on are written `pause log` and
+     `resume log`; opening and closing make no other line. Lines the
+     game makes while the panel is open (the page hidden or shown) are
+     in the log, and in the panel the next time it is opened. A page
+     shown again does not go on a game the panel paused (2.5).
+   - When Copy has copied the log, the button turns green and its text
+     reads "✓ Copied!". **[Clead]** The green keeps the text readable in
+     light and dark mode. The button goes back to its plain look and the
+     text "Copy" after 2000 ms (a named value, section 3), and at once
+     when the panel closes or opens again. Pressing Copy again while it
+     shows copies again and starts the 2000 ms over. The browser refuses
+     the copy when it has no clipboard API, or the call throws or is
+     rejected; then the button does not change, a "✓ Copied!" still
+     showing goes at once, and the text is selected as above. A copy that
+     finishes after the panel has closed or opened again has no effect:
+     no green, no announcement. The change is also announced to screen
+     readers: the panel holds a polite live region that reads "Copied"
+     when a copy has succeeded; it is emptied when the button goes back
+     and when a copy starts, so that a repeated copy is announced again.
 
 ---
 
@@ -508,7 +554,8 @@ cleared, no queued turns, and no obstacles or dot.
   cells ahead of a start, and the special levels' values of 2.12: every
   5th level, 3 shield layers, 20 turns, 30 seconds, a jump every
   3 seconds and 2 cells kept free ahead of the head; and the "Special
-  Level" text's blink of 250 ms and its 3000 ms (2.12 (11)). The best score's
+  Level" text's blink of 250 ms and its 3000 ms (2.12 (11)); and the
+  2000 ms the Copy button of the log panel shows "✓ Copied!" (2.13 (6)). The best score's
   bound of 2.9 (3) is not a value of its own: `main.ts` works it out
   from these, as (20 × 20 / 5) × the larger of 5 and 20 + 30. No other
   module writes these numbers
@@ -548,7 +595,7 @@ cleared, no queued turns, and no obstacles or dot.
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
   shows the "Special Level" text (2.12 (11)), shows the status line
   (the ended game's from `src/status.ts`), keeps the event log and
-  shows its panel (2.13), runs the tick timer with the delay of the current level, and
+  shows its panel and the Copy feedback (2.13), runs the tick timer with the delay of the current level, and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
   Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
