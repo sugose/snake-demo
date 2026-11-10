@@ -98,6 +98,8 @@ describe("newGame", () => {
       special: null,
       run: null,
       ended: null,
+      crashed: null,
+      cleared: null,
     });
   });
 
