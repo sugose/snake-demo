@@ -72,7 +72,8 @@ the crash's cost (2.12 (5), (6)) (`DECISIONS.md`, PO-171).
 Approved: Adam, 2026-11-10 08:34, in chat: an event log of the game,
 with every move and event (keystrokes, obstacle jumps, points) and each
 level's entry data (level, speed), detailed enough to replay the game,
-behind a link that opens it over the board with a copy button (2.13).
+behind a link that opens it over the board with a copy button (2.13);
+at 08:35 he added that the link is not usable until the game is over.
 The details marked **[Clead]** and the list in 2.13 (4) are Clead's,
 sent to him at 08:34 (`DECISIONS.md`, PO-171).
 
@@ -445,11 +446,12 @@ cleared, no queued turns, and no obstacles or dot.
    - the end of the game, with its state and reason (2.8), the final
      score, and whether it became the best score (2.9 (2)).
 5. A "Log" link below the board opens the log in a panel over the board,
-   with a Copy button and a Close button. Copy puts the whole log on the
+   with a Copy button and a Close button. The link can be used only when
+   the game has ended (`over`, `blown` or `won`); before that it is shown
+   as not usable and does nothing. Copy puts the whole log on the
    clipboard; if the browser refuses, the log's text is selected so it
-   can be copied by hand. **[Clead]** Opening the panel pauses a running
-   game (2.5); while it is open, game keys and swipes do nothing, and
-   Escape or Close closes it. Closing it does not resume the game.
+   can be copied by hand. **[Clead]** While the panel is open, game keys
+   and swipes do nothing, and Escape or Close closes it.
 
 ---
 
