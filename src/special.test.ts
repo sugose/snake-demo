@@ -359,19 +359,23 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
       },
     );
 
-    it("another turn becomes the heading at once, is counted and ends the wait; the next tick moves", () => {
+    it("another turn becomes the heading at once, is not counted and ends the wait; the next tick moves", () => {
       const turned = turn(waiting, "down");
       expect(turned.heading).toBe("down");
       expect(turned.queue).toEqual([]);
-      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false, turns: 4, timeMs: 700 });
+      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false, turns: 3, timeMs: 700 });
       const moved = tick(turned, answers(0));
       expect(moved.snake[0]).toEqual({ x: 19, y: 11 });
       expect(moved.run?.timeMs).toBe(700 + LEVEL_5_DELAY);
     });
 
-    it("that turn, as the 21st, blows the snake up", () => {
+    it("with all 20 turns used, that turn is still free: the snake goes on", () => {
       const last = special({ shieldUsed: 1, waiting: true, turns: 20 }, { snake: atWall });
-      expect(turn(last, "down")).toEqual({ ...last, status: "blown" });
+      const turned = turn(last, "down");
+      expect(turned.status).toBe("running");
+      expect(turned.heading).toBe("down");
+      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false, turns: 20, timeMs: 0 });
+      expect(tick(turned, answers(0)).snake[0]).toEqual({ x: 19, y: 11 });
     });
 
     it("pause still works", () => {
