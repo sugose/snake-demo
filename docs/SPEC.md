@@ -69,6 +69,15 @@ he reported that he could not restart with a shield layer left: the turn
 that ends a wait after a shielded crash is free, and the used layer is
 the crash's cost (2.12 (5), (6)) (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-10 08:36 and 08:37, in chat ("option 1 apyr",
+then "1. option 1 apyr", to Clead's option 1 of 08:26 and 08:29, after
+a wait in his game of 08:26 ignored a free Left and offered "up or
+down" with Down into the snake's neck): a wait after a shielded crash
+is ended by a turn into a free direction and by no other, the status
+line names only the free directions, and a snake with no free
+direction ends the game as boxed in (2.12 (5), (10), 2.8). The details
+marked **[Clead]** are Clead's (`DECISIONS.md`, PO-171).
+
 ---
 
 ## 1. System overview
@@ -199,6 +208,7 @@ The status line of an ended game gives the reason it ended, then
 | `over` | the new head is outside the board | "Game over: you hit the wall." |
 | `over` | the new head is on an obstacle | "Game over: you hit an obstacle." |
 | `over` | the new head is on the snake's body | "Game over: you ran into yourself." |
+| `over` | a shielded crash leaves no free direction (2.12 (5)) | "Game over: you are boxed in." |
 | `blown` | the 21st turn (2.12 (6)) | "Blown up: no turns left." |
 | `blown` | the level's time (2.12 (7)) | "Blown up: time ran out." |
 | `won` | no free cell for the next dot (2.3) | "You won! The board is full." |
@@ -321,11 +331,17 @@ cleared, no queued turns, and no obstacles or dot.
 5. A crash with at least one shield layer left uses one layer. The
    snake does not move: its segments stay where they were, the heading
    stays the one of this tick (a turn taken in step 1 included), and the
-   queued turns are cleared **[Clead]**. The game stays `running`, but
-   the snake waits until a turn: while it waits, a turn in the heading
-   or opposite to it is ignored; any other turn becomes the heading at
-   once (not queued), ends the wait, and is not counted (6), so the
-   snake moves that way on the next tick, even with all 20 turns used.
+   queued turns are cleared **[Clead]**. A direction is free when a
+   move of the snake's head one cell that way would not crash and not
+   end the game by 2.2 steps 3 to 5 (the dot's cell is free; the last
+   segment's cell is free unless that cell holds the dot). If no
+   direction is free, the game ends (`over`, "boxed in", 2.8).
+   Otherwise the game stays `running`, but the snake waits until a turn:
+   while it waits, a turn in a direction that is not free is ignored;
+   a turn in a free direction, the opposite of the heading included,
+   becomes the heading at once (not queued), ends the wait, and is not
+   counted (6), so the snake moves that way on the next tick, even with
+   all 20 turns used.
    The used layer is the crash's cost: it lowers the multiplier of the
    level's points (8).
    A crash with no layer left ends the game (`over`).
@@ -377,13 +393,13 @@ cleared, no queued turns, and no obstacles or dot.
     reason (2.8). In `running`, while the snake waits after a crash (5),
     the status line says
     that a shield layer was lost, how many are left, and which turns go
-    on: the two directions at right angles to the heading (up or down for
-    a heading left or right; left or right for a heading up or down).
+    on: the free directions of (5), and no others.
     **[Clead]** The wording: "Shield lost, N left. Turn D to go on.",
     where N is the number of layers left as a numeral (2 or 1 with a
     shield of 3), and with no layer left "Shield lost, none left. Turn D
-    to go on. The next crash ends the game."; D is "up or down" for a
-    heading left or right, and "left or right" for a heading up or down.
+    to go on. The next crash ends the game."; D names the free
+    directions in the order up, down, left, right: one alone ("up"), two
+    joined by "or" ("up or left"), three as "up, down or left".
     The obstacles look the same as on a normal level.
 11. When a special level is laid out and waits in `ready`, the text
     "Special Level" blinks over the board, twice a second: **[Clead]**
