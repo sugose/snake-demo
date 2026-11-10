@@ -75,7 +75,7 @@ level's entry data (level, speed), detailed enough to replay the game,
 behind a link that opens it over the board with a copy button (2.13);
 at 08:35 he added that the link is not usable until the game is over,
 which he replaced at 10:10 (below).
-Everything in 2.13 beyond Adam's words of 08:34 and 08:35 is Clead's,
+Everything in 2.13 beyond Adam's words of 08:34, 08:35 and 10:10 is Clead's,
 marked **[Clead]**: the design sent to him at 08:34, as changed at
 08:35, and the detail added in Crog's review rounds of #43
 (`DECISIONS.md`, PO-171).
@@ -94,10 +94,13 @@ used, in every state of the game, because a bug may stop play while the
 game still counts as running ("The log link must always be clickable,
 even when the game is ongoign"); and when Copy has copied the log, the
 button turns green and its text changes to "✓ Copied!" (2.13 (6))
-(`DECISIONS.md`, PO-171). The pause when the panel opens on a running
-game, the 2000 ms, the refused copy and the announcement to screen
-readers are Clead's, marked **[Clead]** in 2.13 (6), and are not Adam's
-until he accepts them.
+(`DECISIONS.md`, PO-171). Everything else in 2.13 (6) that this changes
+is Clead's, marked **[Clead]**, and is not Adam's until he accepts it:
+the pause when the panel opens on a running game and the going on when
+it closes, the lines `pause log` and `resume log`, the panel's text, the
+buttons and the link doing nothing while it is open, the 2000 ms, the
+refused copy, a copy that finishes late, and the announcement to screen
+readers.
 
 ---
 
@@ -185,7 +188,8 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | New game (Enter, New game button) | new game, level 1 (2.1 (2)) | new game | new game | new game |
 
 The queued turns are cleared by a new game. When the page is hidden (the
-browser tab is left), a `running` game is paused.
+browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
+can also pause a `running` game and go on.
 
 ### 2.6 Keys
 
@@ -504,34 +508,41 @@ cleared, no queued turns, and no obstacles or dot.
    with a Copy button and a Close button. The link can be used in every
    state of the game (`ready`, `running`, `paused`, `over`, `blown` and
    `won`), so a log can be had when a bug stops play while the game
-   still counts as running. Copy puts the text of the panel, the log as
-   it was when the panel opened, on the clipboard. **[Clead]** The
+   still counts as running. **[Clead]** The panel's text is the log as
+   it is when the panel has opened, the pause of its opening (below)
+   included; Copy puts that text on the clipboard. **[Clead]** The
    link's place and look, the Close button, and that, if the browser
    refuses Copy, the log's text is selected so it can be copied by hand.
-   While the panel is open, game keys and swipes do nothing, Escape or
-   Close closes it, and the New game command (Enter or the button)
-   closes it and makes a new game.
+   While the panel is open, game keys, swipes and the Start, Pause and
+   Resume buttons do nothing, and so does the Log link; Escape or Close
+   closes it, and the New game command (Enter or the button) closes it
+   and makes a new game.
    - **[Clead]** Opening the panel on a `running` game pauses it, as the
      Pause command does (2.5), so that a snake that cannot be steered
      does not crash under the panel. Closing the panel with Close or
      Escape goes on, as Pause does from `paused`, but only if opening it
-     paused the game. In `ready`, `paused` and the ended states the
-     panel changes nothing, on opening or on closing, and the New game
-     command makes a new game without going on. The pause and the going
-     on are written `pause log` and `resume log`; opening and closing
-     make no other line. Lines the game makes while the panel is open
-     (the page hidden or shown) are in the log, and in the panel the next
-     time it is opened. A page shown again does not go on a game the
-     panel paused (2.5).
+     paused the game, so the snake moves at once. In `ready`, `paused`
+     and the ended states the panel changes nothing, on opening or on
+     closing, and the New game command makes a new game without going
+     on. The pause and the going on are written `pause log` and
+     `resume log`; opening and closing make no other line. Lines the
+     game makes while the panel is open (the page hidden or shown) are
+     in the log, and in the panel the next time it is opened. A page
+     shown again does not go on a game the panel paused (2.5).
    - When Copy has copied the log, the button turns green and its text
      reads "✓ Copied!". **[Clead]** The green keeps the text readable in
-     light and dark mode. The button goes back to its plain look and the text
-     "Copy" after 2000 ms (a named value, section 3), and at once when
-     the panel closes or opens again. Pressing Copy again while it shows copies
-     again and starts the 2000 ms over. If the browser refuses the copy,
-     the button does not change and the text is selected as above. The
-     change is also announced to screen readers: the panel holds a polite
-     live region that reads "Copied" when a copy has succeeded.
+     light and dark mode. The button goes back to its plain look and the
+     text "Copy" after 2000 ms (a named value, section 3), and at once
+     when the panel closes or opens again. Pressing Copy again while it
+     shows copies again and starts the 2000 ms over. The browser refuses
+     the copy when it has no clipboard API, or the call throws or is
+     rejected; then the button does not change, a "✓ Copied!" still
+     showing goes at once, and the text is selected as above. A copy that
+     finishes after the panel has closed or opened again has no effect:
+     no green, no announcement. The change is also announced to screen
+     readers: the panel holds a polite live region that reads "Copied"
+     when a copy has succeeded; it is emptied when the button goes back
+     and when a copy starts, so that a repeated copy is announced again.
 
 ---
 
