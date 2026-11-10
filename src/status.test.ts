@@ -57,6 +57,7 @@ describe("endText (docs/SPEC.md 2.8)", () => {
     ["self", "Game over: you ran into yourself."],
     ["turns", "Blown up: no turns left."],
     ["time", "Blown up: time ran out."],
+    ["full", "You won! The board is full."],
     ["noRoom", "You won! There is no room for the next level."],
   ])("on a special level, %s gives %p and how to play again", (reason, text) => {
     expect(endText(ended(reason, true))).toBe(`${text} ${PLAY_AGAIN}`);
