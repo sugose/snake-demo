@@ -83,7 +83,7 @@ test("a normal level shows no special values; level 5 is special, with its limit
   await expect(page.locator("#status")).toContainText("shield of 3");
 });
 
-test("a wall on level 5 takes a shield layer; the snake waits, then a turn moves it on and counts", async ({
+test("a wall on level 5 takes a shield layer; the snake waits, then a free turn moves it on", async ({
   page,
 }) => {
   const game = await openToLevel5(page, "10,10", "up", 394);
