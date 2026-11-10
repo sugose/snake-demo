@@ -32,7 +32,8 @@ turns cleared), (6) (the 21st turn), (8) (whole seconds, rounded up),
 2026-11-09 at 23:02 and 23:04; at 23:02 he left whether the turn that
 restarts the snake after a crash is free to Clead, with "restart free
 (unless that gives unfair advantage to someone who didn't crash. if you
-think it is unfair, then you make it not free)", and Clead made it count
+think it is unfair, then you make it not free)", and Clead made it count;
+on 2026-11-10 at 03:25 Adam made it free (see below)
 (2.12 (5)). The marks of 2.12 (7) and (8) on a level cleared in the tick
 that reaches 30 seconds and on a level cleared with all layers used were
 Clead's; Adam accepted both on 2026-11-10 at 00:47 ("2a yes", "2b yes.
@@ -60,6 +61,13 @@ Approved: Adam, 2026-11-10 03:24, in chat ("when the game is over, give
 the reason"): the status line of an ended game gives the reason it ended
 (2.8). The wording is Clead's, sent to him at 03:24; he accepted it at
 03:25 ("apyr") (`DECISIONS.md`, PO-171).
+
+Approved: Adam, 2026-11-10 03:25, in chat ("apyr", replying to Clead's
+three options of 03:23 and its wording of 03:24; Clead read it as
+option 1, the turn free, said so at 03:25 and invited correction), after
+he reported that he could not restart with a shield layer left: the turn
+that ends a wait after a shielded crash is free, and the used layer is
+the crash's cost (2.12 (5), (6)) (`DECISIONS.md`, PO-171).
 
 ---
 
@@ -316,22 +324,20 @@ cleared, no queued turns, and no obstacles or dot.
    queued turns are cleared **[Clead]**. The game stays `running`, but
    the snake waits until a turn: while it waits, a turn in the heading
    or opposite to it is ignored; any other turn becomes the heading at
-   once (not queued), is counted (6), and ends the wait, so the snake
-   moves that way on the next tick. **[Clead]** That turn counts as a
-   turn: a free one would give a player who crashes an advantage over
-   one who does not, since with all 20 turns used a deliberate crash
-   would buy up to 3 more turns. A crash with no layer
-   left ends the game (`over`).
-6. A turn counts when it becomes the heading: when a tick takes it from
-   the queue (step 1), or when it ends a wait (5). The turn that starts
-   the level from `ready` (2.1 (3)), and the Start button, are not
-   turns. At most 20 turns are allowed; **[Clead]** the 21st turn ends
+   once (not queued), ends the wait, and is not counted (6), so the
+   snake moves that way on the next tick, even with all 20 turns used.
+   The used layer is the crash's cost: it lowers the multiplier of the
+   level's points (8).
+   A crash with no layer left ends the game (`over`).
+6. A turn counts when a tick takes it from the queue and it becomes
+   the heading (step 1). The turn that starts the level from `ready`
+   (2.1 (3)), the Start button, and the turn that ends a wait after a
+   shielded crash (5) are not turns. At most 20 turns are allowed; **[Clead]** the 21st turn ends
    the game as `blown` at the moment it would become the heading,
    before the snake moves. Only the state changes: the turns counted stay 20 (so
    the page shows 0 turns left), the heading stays as it was, and the
    snake, the queued turns, the obstacles, the dot, the time and the
-   shield stay as they were; a snake that was waiting (5) still counts
-   as waiting.
+   shield stay as they were.
 7. The level must be cleared within 30 seconds of its time (3). A tick
    after which the time is 30 seconds or more and the level is not
    cleared ends the game as `blown`, with the board as that tick left it.
