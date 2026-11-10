@@ -188,7 +188,8 @@ test("each shielded crash says the layers left and which turns go on, and warns 
   await page.keyboard.press("ArrowLeft");
   await runTicks(page, 7, LEVEL_5_DELAY);
   await expectGame(game, "running", "4,0");
-  await expect(status).toHaveText("Shield lost, 1 left. Turn up or down to go on.");
+  // The top wall is above and the neck to the right: only down is free.
+  await expect(status).toHaveText("Shield lost, 1 left. Turn down to go on.");
 
   // Down column 4 into the bottom wall.
   await page.keyboard.press("ArrowDown");
