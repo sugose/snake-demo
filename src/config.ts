@@ -38,4 +38,6 @@ export const config = Object.freeze({
   bannerBlinkMs: 250,
   /** The "Special Level" text goes this long after a special level is laid out, in ms (docs/SPEC.md 2.12 (11)). */
   bannerMs: 3000,
+  /** The Copy button shows "✓ Copied!" this long after a copy, in ms (docs/SPEC.md 2.13 (6)). */
+  copiedMs: 2000,
 });

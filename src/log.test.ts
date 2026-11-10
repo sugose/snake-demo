@@ -15,6 +15,8 @@ import {
   logEnd,
   logInput,
   logPage,
+  logPanelPause,
+  logPanelResume,
   logText,
   logTick,
   startLog,
@@ -446,5 +448,26 @@ describe("logEnd (docs/SPEC.md 2.13 (5))", () => {
       "[t=250 #2] move right 1 head=(11,10)",
       "[t=250 #2] end over wall score=0 best=no",
     ]);
+  });
+});
+
+describe("the log panel's pause and resume (docs/SPEC.md 2.13 (5), (6))", () => {
+  it("pause log ends the open stretch and writes pause log", () => {
+    const running = game();
+    const moved = logTick(EMPTY, at(125, 1), running, tick(running, ZERO));
+    const log = logPanelPause(moved, at(200, 1));
+    expect(added(moved, log)).toEqual([
+      "[t=200 #1] move right 1 head=(11,10)",
+      "[t=200 #1] pause log",
+    ]);
+    expect(log.stretch).toBeNull();
+  });
+
+  it("pause log with no open stretch writes only pause log", () => {
+    expect(logPanelPause(EMPTY, at(5, 0)).lines).toEqual(["[t=5 #0] pause log"]);
+  });
+
+  it("resume log writes resume log and nothing else", () => {
+    expect(logPanelResume(EMPTY, at(900, 1)).lines).toEqual(["[t=900 #1] resume log"]);
   });
 });

@@ -6,6 +6,12 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- The Log link works in every state of the game, not only once it has ended. Opening the log on a running game pauses
+  it (`pause log` in the log); Close or Escape goes on only if opening it paused the game (`resume log`). While the log
+  is open, keys, swipes and the Start, Pause, Resume and Log buttons do nothing (#51). Specified in #50.
+- The Copy button turns green and reads "✓ Copied!" for 2 seconds after it copies the log, and goes back at once when
+  the log closes or opens again; a refused copy leaves it plain and selects the text; screen readers hear "Copied"
+  (#51). Specified in #50.
 - An event log of each game: every input, turn, move, dot, crash, obstacle jump, cleared level and the end, with each
   level's layout and speed. Once the game ends, a Log link below the board opens it over the board, with Copy and
   Close (#46). Specified in #43.

@@ -30,6 +30,8 @@ import {
   logEnd,
   logInput,
   logPage,
+  logPanelPause,
+  logPanelResume,
   logText,
   logTick,
   type Stamp,
@@ -56,6 +58,7 @@ const {
   clearAheadOfHead,
   bannerBlinkMs,
   bannerMs,
+  copiedMs,
 } = config;
 /**
  * The best score's bound (docs/SPEC.md 2.9 (3)): at most one level per 5 cells of the board can be
@@ -129,6 +132,7 @@ const logLink = element("log-link", HTMLButtonElement);
 const logPanel = element("log-panel", HTMLElement);
 const logTextBox = element("log-text", HTMLElement);
 const logCopy = element("log-copy", HTMLButtonElement);
+const logLive = element("log-live", HTMLElement);
 const logClose = element("log-close", HTMLButtonElement);
 const frame = canvas.parentElement;
 if (frame === null) throw new Error("the board has no frame");
@@ -161,7 +165,7 @@ function newGameWithLog(input: Input): GameState {
   gameMadeAt = performance.now();
   ticks = 0;
   log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES, input);
-  closeLog();
+  hideLog();
   return game;
 }
 let timer: { id: number; delay: number } | undefined;
@@ -241,29 +245,89 @@ function onInput(
 
 const logOpen = (): boolean => !logPanel.hidden;
 
-/** Opens the log panel over the board, once the game has ended (docs/SPEC.md 2.13 (6)). */
+/** True from an opening that paused a running game until the panel closes (docs/SPEC.md 2.13 (6)). */
+let pausedByLog = false;
+/** Counts openings and closings of the panel, so a copy that finishes later can tell (2.13 (6)). */
+let panelSession = 0;
+let copiedTimer: number | undefined;
+
+/** The Copy button back to its plain look and text, and the live region emptied (2.13 (6)). */
+function resetCopied(): void {
+  if (copiedTimer !== undefined) {
+    window.clearTimeout(copiedTimer);
+    copiedTimer = undefined;
+  }
+  logCopy.classList.remove("copied");
+  logCopy.textContent = "Copy";
+  logLive.textContent = "";
+}
+
+/**
+ * Opens the log panel over the board, in every state of the game (docs/SPEC.md 2.13 (6)). A running
+ * game is paused first, and the panel shows the log after that pause.
+ */
 function openLog(): void {
-  if (!ended(state)) return;
+  if (logOpen()) return;
+  panelSession++;
+  resetCopied();
+  if (state.status === "running") {
+    pausedByLog = true;
+    log = logPanelPause(log, stamp());
+    apply(pauseIfRunning(state));
+  }
   logTextBox.textContent = logText(log);
   logPanel.hidden = false;
   logClose.focus();
 }
 
-function closeLog(): void {
+/** Hides the panel; the game is left as it is. */
+function hideLog(): void {
+  panelSession++;
+  resetCopied();
+  pausedByLog = false;
   logPanel.hidden = true;
 }
 
-/** Copy: the whole log to the clipboard, or, if the browser refuses, the text selected. */
-async function copyLog(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(logText(log));
-  } catch {
-    const range = document.createRange();
-    range.selectNodeContents(logTextBox);
-    const selection = window.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+/** Close and Escape: hides the panel and goes on, but only if opening it paused the game. */
+function closeLog(): void {
+  const goOn = pausedByLog && state.status === "paused";
+  hideLog();
+  logLink.focus();
+  if (goOn) {
+    log = logPanelResume(log, stamp());
+    apply(togglePause(state));
   }
+}
+
+/**
+ * Copy: the text the panel showed to the clipboard, with "✓ Copied!" for `copiedMs` after it; if the
+ * browser refuses, no feedback and the text selected (docs/SPEC.md 2.13 (6)). A copy that finishes
+ * after the panel closed or opened again does nothing.
+ */
+async function copyLog(): Promise<void> {
+  const session = panelSession;
+  logLive.textContent = "";
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(logTextBox.textContent ?? "");
+    copied = true;
+  } catch {
+    copied = false;
+  }
+  if (session !== panelSession) return;
+  resetCopied();
+  if (copied) {
+    logCopy.classList.add("copied");
+    logCopy.textContent = "✓ Copied!";
+    logLive.textContent = "Copied";
+    copiedTimer = window.setTimeout(resetCopied, copiedMs);
+    return;
+  }
+  const range = document.createRange();
+  range.selectNodeContents(logTextBox);
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
 }
 
 const KEY_NAMES: Readonly<Record<string, string>> = { " ": "Space" };
@@ -303,7 +367,6 @@ function render(): void {
     shieldText.textContent = String(info.shieldLeft);
   }
   pauseButton.textContent = state.status === "paused" ? "Resume" : "Pause";
-  logLink.disabled = !ended(state);
   draw();
 }
 
@@ -383,7 +446,6 @@ document.addEventListener("keydown", (event) => {
   if (logOpen() && event.key === "Escape") {
     event.preventDefault();
     closeLog();
-    logLink.focus();
     return;
   }
   const command = keyToCommand(event.key, {
@@ -457,10 +519,7 @@ newGameButton.addEventListener("click", () =>
 
 // The event log's link and panel (docs/SPEC.md 2.13 (6)).
 logLink.addEventListener("click", openLog);
-logClose.addEventListener("click", () => {
-  closeLog();
-  logLink.focus();
-});
+logClose.addEventListener("click", closeLog);
 logCopy.addEventListener("click", () => {
   void copyLog();
 });
