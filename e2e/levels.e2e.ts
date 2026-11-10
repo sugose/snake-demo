@@ -148,7 +148,9 @@ test("hitting an obstacle ends the game", async ({ page }) => {
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 1, LEVEL_2_TICK_MS);
   await expectGame(game, "over", "10,9");
-  await expect(page.locator("#status")).toContainText("Game over");
+  await expect(page.locator("#status")).toHaveText(
+    "Game over: you hit an obstacle. Enter or New game to play again",
+  );
   await expect(game).toHaveAttribute("data-score", "5");
 });
 

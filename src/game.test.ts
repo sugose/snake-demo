@@ -97,6 +97,7 @@ describe("newGame", () => {
       status: "ready",
       special: null,
       run: null,
+      ended: null,
     });
   });
 
@@ -433,7 +434,7 @@ describe("tick", () => {
     (heading, head) => {
       const choose = answers(0);
       const before = running({ heading, snake: [head], score: 7 });
-      expect(tick(before, choose)).toEqual({ ...before, status: "over" });
+      expect(tick(before, choose)).toEqual({ ...before, status: "over", ended: "wall" });
       expect(choose.counts).toEqual([]);
     },
   );
@@ -448,7 +449,7 @@ describe("tick", () => {
       { x: 4, y: 6 },
     ];
     const before = running({ heading: "down", snake, score: 2 });
-    expect(tick(before, answers(0))).toEqual({ ...before, status: "over" });
+    expect(tick(before, answers(0))).toEqual({ ...before, status: "over", ended: "self" });
   });
 
   it("ends the game when the head hits an obstacle, leaving everything else as it was", () => {
@@ -460,7 +461,7 @@ describe("tick", () => {
       score: 6,
       dotsEaten: 1,
     });
-    expect(tick(before, choose)).toEqual({ ...before, status: "over" });
+    expect(tick(before, choose)).toEqual({ ...before, status: "over", ended: "obstacle" });
     expect(choose.counts).toEqual([]);
   });
 
@@ -492,7 +493,7 @@ describe("tick", () => {
     it("counts when the snake eats (step 4 before step 5)", () => {
       // Food on the tail cell is reachable only in a constructed state; it pins the step order.
       const before = running({ heading: "down", snake: loop, food: { x: 5, y: 6 } });
-      expect(tick(before, answers(0))).toEqual({ ...before, status: "over" });
+      expect(tick(before, answers(0))).toEqual({ ...before, status: "over", ended: "self" });
     });
   });
 
@@ -616,6 +617,7 @@ describe("tick", () => {
       dotsEaten: 2,
       score: 2,
       status: "won",
+      ended: "full",
     });
     expect(choose.counts).toEqual([]);
   });
@@ -747,6 +749,7 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         dotsEaten: 2,
         score: 2,
         status: "won",
+        ended: "noRoom",
       });
       expect(choose.counts).toEqual([]);
     });
@@ -810,6 +813,7 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         score: 10,
         queue: [],
         status: "won",
+        ended: "noRoom",
       });
       expect(choose.counts).toEqual([]);
     });
@@ -819,7 +823,13 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
       // right in the queue of the eaten state.
       const before = frozen({ ...smallBoard(6), heading: "left", queue: ["up", "right"] });
       const after = tick(before, answers(0));
-      expect(after).toMatchObject({ status: "won", heading: "up", level: 2, score: 10 });
+      expect(after).toMatchObject({
+        status: "won",
+        ended: "noRoom",
+        heading: "up",
+        level: 2,
+        score: 10,
+      });
       expect(after.queue).toEqual([]);
     });
 
@@ -856,7 +866,13 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
       // hold an obstacle.
       const choose = answers(0);
       const after = tick(crowded(75), choose);
-      expect(after).toMatchObject({ status: "won", level: 75, obstacles: [], food: null });
+      expect(after).toMatchObject({
+        status: "won",
+        ended: "noRoom",
+        level: 75,
+        obstacles: [],
+        food: null,
+      });
       expect(choose.counts).toEqual([]);
     });
   });

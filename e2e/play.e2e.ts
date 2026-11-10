@@ -98,7 +98,9 @@ test("heading right from the start, the game is over after 10 ticks at the wall"
   await expectGame(game, "running", "19,10");
   await runTicks(page, 1);
   await expectGame(game, "over", "19,10");
-  await expect(page.locator("#status")).toContainText("Game over");
+  await expect(page.locator("#status")).toHaveText(
+    "Game over: you hit the wall. Enter or New game to play again",
+  );
   await expect(page.locator("#status")).toContainText("New game");
   // The timer has stopped: the last board stays on show.
   await runTicks(page, 8);
