@@ -440,9 +440,11 @@ cleared, no queued turns, and no obstacles or dot.
 - `src/storage.ts`: reads and writes the best score (2.9) through a
   function passed in that returns the store and may throw. Covered by
   Jest with fake stores, also ones that throw.
-- `src/status.ts`: the status line of an ended game (2.8), as a pure
-  function of the game state (no DOM). Pure, covered by Jest: every
-  line of 2.8 whole, on a normal and on a special level.
+- `src/status.ts`: the status line of an ended game (2.8) and of a
+  snake waiting after a shielded crash (2.12 (10)), as pure functions of
+  the game state (no DOM). Pure, covered by Jest: every line of 2.8
+  whole, on a normal and on a special level, and the waiting line for
+  one, two and three free directions and for no layer left.
 - `src/main.ts`: draws the board, the obstacles and the level on a
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
   shows the "Special Level" text (2.12 (11)), shows the status line
