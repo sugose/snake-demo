@@ -57,6 +57,11 @@ twice a second from when the level is laid out, goes when the level
 starts if that is sooner, and takes no input (2.12 (11))
 (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-10 03:24, in chat ("when the game is over, give
+the reason"): the status line of an ended game gives the reason it ended
+(2.8). The wording is Clead's, sent to him at 03:24; he accepted it at
+03:25 ("apyr") (`DECISIONS.md`, PO-171).
+
 Approved: Adam, 2026-11-10 03:25, in chat ("apyr", replying to Clead's
 three options of 03:23 and its wording of 03:24; Clead read it as
 option 1, the turn free, said so at 03:25 and invited correction), after
@@ -185,6 +190,26 @@ special level ends it as `blown` (2.12 (6), (7)); leaving no free cell
 for the next dot wins it (`won`). All three show the final score and a
 way to start a new game. A game that is `blown` keeps its last board and
 score on show, as `over` and `won` do.
+
+The status line of an ended game gives the reason it ended, then
+"Enter or New game to play again". **[Clead]** The wording, by reason:
+
+| State | Reason | Status line starts |
+|---|---|---|
+| `over` | the new head is outside the board | "Game over: you hit the wall." |
+| `over` | the new head is on an obstacle | "Game over: you hit an obstacle." |
+| `over` | the new head is on the snake's body | "Game over: you ran into yourself." |
+| `blown` | the 21st turn (2.12 (6)) | "Blown up: no turns left." |
+| `blown` | the level's time (2.12 (7)) | "Blown up: time ran out." |
+| `won` | no free cell for the next dot (2.3) | "You won! The board is full." |
+| `won` | the next level cannot be laid out (2.11) | "You won! There is no room for the next level." |
+
+On a special level, a game `over` on a wall or an obstacle adds "No
+shield left." after its reason, since the shield had no layer left
+(2.12 (5)). The whole status line is the reason, then "No shield left."
+where it applies, then "Enter or New game to play again", separated by
+single spaces and with no full stop at the end, for example "Game over:
+you hit the wall. No shield left. Enter or New game to play again".
 
 ### 2.9 Score and best score
 
@@ -348,8 +373,8 @@ cleared, no queued turns, and no obstacles or dot.
     left, the seconds left (8) and the shield layers left. They are
     hidden on a normal level. The status line in `ready` says it is a
     special level and names its limits ("Level 5, special: 20 turns,
-    30 seconds, shield of 3. …"); when the game is `blown` it says
-    "Blown up". In `running`, while the snake waits after a crash (5),
+    30 seconds, shield of 3. …"); when the game is `blown` it gives the
+    reason (2.8). In `running`, while the snake waits after a crash (5),
     the status line says
     that a shield layer was lost, how many are left, and which turns go
     on: the two directions at right angles to the heading (up or down for
@@ -414,7 +439,7 @@ The game state holds at least: the snake's segments (head first; several
 may share a cell), the heading, the queued turns (at most two), the
 food's cell (none when `won`), the obstacles' cells, the level, the dots
 eaten on it, the score and the state (`ready`, `running`, `paused`,
-`over`, `blown`, `won`), and on a special level its turns counted, its
+`over`, `blown`, `won`) with the reason an ended game ended (2.8), and on a special level its turns counted, its
 time, the shield layers used and whether the snake waits after a crash.
 Directions are the strings `"up"`, `"down"`, `"left"` and
 `"right"`.
