@@ -456,6 +456,21 @@ describe("free directions after a shielded crash (docs/SPEC.md 2.12 (5))", () =>
     expect(freeDirections(state)).toEqual(["up", "down", "left"]);
   });
 
+  it("the last segment's cell is not free while another segment is on it (the snake unrolling)", () => {
+    // The head has moved up from (5,6), where the last two segments are still stacked.
+    const unrolling: Cell[] = [
+      { x: 5, y: 5 },
+      { x: 5, y: 6 },
+      { x: 5, y: 6 },
+    ];
+    const state = special(
+      { shieldUsed: 1, waiting: true },
+      { snake: unrolling, heading: "up", obstacles: [{ x: 5, y: 4 }] },
+    );
+    expect(freeDirections(state)).toEqual(["left", "right"]);
+    expect(turn(state, "down")).toBe(state);
+  });
+
   it("a crash that leaves no free direction ends the game as boxed in, with the layer used", () => {
     // Head in the top-left corner heading up, the neck below it, an obstacle to its right.
     const corner: Cell[] = [
