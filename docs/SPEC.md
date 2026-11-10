@@ -214,9 +214,9 @@ The status line of an ended game gives the reason it ended, then
 | `won` | no free cell for the next dot (2.3) | "You won! The board is full." |
 | `won` | the next level cannot be laid out (2.11) | "You won! There is no room for the next level." |
 
-On a special level, a game `over` on a wall or an obstacle adds "No
-shield left." after its reason, since the shield had no layer left
-(2.12 (5)). The whole status line is the reason, then "No shield left."
+On a special level, a game `over` with the reason wall or obstacle adds
+"No shield left." after its reason, since the shield had no layer left
+(2.12 (5)). A game ended as boxed in never adds it. The whole status line is the reason, then "No shield left."
 where it applies, then "Enter or New game to play again", separated by
 single spaces and with no full stop at the end, for example "Game over:
 you hit the wall. No shield left. Enter or New game to play again".
@@ -334,8 +334,10 @@ cleared, no queued turns, and no obstacles or dot.
    queued turns are cleared **[Clead]**. A direction is free when a
    move of the snake's head one cell that way would not crash and not
    end the game by 2.2 steps 3 to 5 (the dot's cell is free; the last
-   segment's cell is free unless that cell holds the dot). If no
-   direction is free, the game ends (`over`, "boxed in", 2.8).
+   segment's cell is free only when no other segment is on it, as 2.2
+   step 5 says). The layer is used first; if then no direction is free,
+   the game ends `over` with the reason boxed in (2.8), and the page
+   shows the layers left after that use.
    Otherwise the game stays `running`, but the snake waits until a turn:
    while it waits, a turn in a direction that is not free is ignored;
    a turn in a free direction, the opposite of the heading included,
@@ -432,7 +434,9 @@ cleared, no queued turns, and no obstacles or dot.
 - `src/game.ts`: the game rules as pure functions over a game state (no
   DOM, no timers): a new game, a turn, a tick, pause, the commands of
   2.5, levels and laying out a level (2.10, 2.11), special levels
-  (2.12), and the delay of a level. The choosers of 2.3 and 2.11 are passed in, so tests are
+  (2.12), the free directions of a waiting snake (2.12 (5)), exported,
+  which `turn`, the boxed-in check and `src/status.ts` use, and the
+  delay of a level. The choosers of 2.3 and 2.11 are passed in, so tests are
   deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,
@@ -444,7 +448,9 @@ cleared, no queued turns, and no obstacles or dot.
   snake waiting after a shielded crash (2.12 (10)), as pure functions of
   the game state (no DOM). Pure, covered by Jest: every line of 2.8
   whole, on a normal and on a special level, and the waiting line for
-  one, two and three free directions and for no layer left.
+  one, two and three free directions and for no layer left. It takes
+  the free directions from `src/game.ts` and does not work them out
+  itself.
 - `src/main.ts`: draws the board, the obstacles and the level on a
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
   shows the "Special Level" text (2.12 (11)), shows the status line
