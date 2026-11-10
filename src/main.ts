@@ -22,6 +22,7 @@ import {
   turn,
 } from "./game";
 import { keyToCommand, type Point, swipeToDirection } from "./input";
+import { endText } from "./status";
 import { readBest, writeBest } from "./storage";
 
 const {
@@ -84,9 +85,9 @@ const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {
       : `Level ${level}, special: ${maxTurns} turns, ${specialSeconds} seconds, shield of ${shieldLayers}. ${PLAY}`,
   running: (state) => (state.run?.waiting ? waitingText(state) : "Space or P to pause"),
   paused: () => "Paused. Space, P or Resume to go on",
-  over: () => "Game over. Enter or New game to play again",
-  blown: () => "Blown up! Enter or New game to play again",
-  won: () => "You won! Enter or New game to play again",
+  over: endText,
+  blown: endText,
+  won: endText,
 };
 
 /** The gap around a snake or obstacle cell, as a share of the cell, so the cells read as separate. */

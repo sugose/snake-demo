@@ -135,7 +135,9 @@ test("the 21st turn on level 5 blows the snake up, and the best score is saved",
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 1, LEVEL_5_DELAY);
   await expectGame(game, "blown", "10,8");
-  await expect(page.locator("#status")).toContainText("Blown up");
+  await expect(page.locator("#status")).toHaveText(
+    "Blown up: no turns left. Enter or New game to play again",
+  );
   await expect(page.locator("#seconds-left")).toHaveText("29");
   await expect(game).toHaveAttribute("data-best", "20");
   expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBe("20");
@@ -230,6 +232,29 @@ test("with all 20 turns used, the turn that ends a wait is free and the snake go
   await expect(page.locator("#status")).toHaveText("Space or P to pause");
   await runTicks(page, 1, LEVEL_5_DELAY);
   await expectGame(game, "running", "11,0");
+});
+
+test("a crash with no shield layer left says so (docs/SPEC.md 2.8)", async ({ page }) => {
+  // Level 5 from (10,10) heading up, its 4 obstacles on (0,0) to (3,0), the dot on (19,19).
+  const game = await openToLevel5(page, "10,10", "up", 394);
+  await page.keyboard.press("ArrowUp");
+  await runTicks(page, 11, LEVEL_5_DELAY); // up to (10,0), then the top wall: 2 layers left
+  await page.keyboard.press("ArrowLeft");
+  await runTicks(page, 7, LEVEL_5_DELAY); // left to (4,0), then the obstacle on (3,0): 1 left
+  await page.keyboard.press("ArrowDown");
+  await runTicks(page, 1, LEVEL_5_DELAY); // (4,1)
+  await page.keyboard.press("ArrowLeft");
+  await runTicks(page, 5, LEVEL_5_DELAY); // left to (0,1), then the left wall: none left
+  await expectGame(game, "running", "0,1");
+  await expect(page.locator("#shield-left")).toHaveText("0");
+  await page.keyboard.press("ArrowDown");
+  await runTicks(page, 1, LEVEL_5_DELAY); // (0,2)
+  await page.keyboard.press("ArrowLeft");
+  await runTicks(page, 1, LEVEL_5_DELAY); // the left wall, with no layer left
+  await expectGame(game, "over", "0,2");
+  await expect(page.locator("#status")).toHaveText(
+    "Game over: you hit the wall. No shield left. Enter or New game to play again",
+  );
 });
 
 test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () => {

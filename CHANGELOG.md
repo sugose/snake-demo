@@ -6,6 +6,8 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- An ended game says why it ended: the wall, an obstacle, the snake itself, no turns left, time ran out, the board full or
+  no room for the next level, and on a special level, no shield left (#41). Specified in #38.
 - The turn that gets the snake moving again after a shielded crash is free: it does not count against the 20 turns
   (#40). Specified in #39.
 - A blinking "Special Level" text over the board for 3 seconds when a special level is laid out (#34). Specified in #33.
