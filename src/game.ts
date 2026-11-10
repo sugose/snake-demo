@@ -13,6 +13,9 @@ export type Cell = { readonly x: number; readonly y: number };
 
 export type Status = "ready" | "running" | "paused" | "over" | "blown" | "won";
 
+/** Why a game ended (docs/SPEC.md 2.8). */
+export type EndReason = "wall" | "obstacle" | "self" | "turns" | "time" | "full" | "noRoom";
+
 /** The delays between ticks, in milliseconds (docs/SPEC.md 2.10 (2)). */
 export interface Delays {
   readonly first: number;
@@ -81,6 +84,8 @@ export interface GameState {
   readonly special: SpecialRules | null;
   /** Where the current special level stands; `null` on a normal level. */
   readonly run: SpecialRun | null;
+  /** Why the game ended; `null` while it has not (docs/SPEC.md 2.8). */
+  readonly ended: EndReason | null;
 }
 
 /** At most two turns wait in the queue (docs/SPEC.md 2.4 (2), 3.1). */
@@ -291,6 +296,7 @@ export function newGame(options: {
     status: "ready",
     special,
     run: runFor(1, special),
+    ended: null,
   };
 }
 
@@ -410,7 +416,7 @@ function nextLevel(cleared: GameState, choose: Chooser): GameState {
   const level = cleared.level + 1;
   const layout = layOut(cleared.size, cleared.clearAhead, level, cleared.snake.length, choose);
   if (layout === null) {
-    return { ...cleared, queue: [], obstacles: [], food: null, status: "won" };
+    return { ...cleared, queue: [], obstacles: [], food: null, status: "won", ended: "noRoom" };
   }
   return {
     ...cleared,
@@ -465,7 +471,7 @@ function jump(state: GameState, rules: SpecialRules, choose: Chooser): readonly 
 function afterMove(state: GameState, timeBefore: number, choose: Chooser): GameState {
   const { run, special } = state;
   if (run === null || special === null) return state;
-  if (run.timeMs >= special.seconds * 1000) return { ...state, status: "blown" };
+  if (run.timeMs >= special.seconds * 1000) return { ...state, status: "blown", ended: "time" };
   const interval = special.jumpSeconds * 1000;
   if (Math.floor(run.timeMs / interval) <= Math.floor(timeBefore / interval)) return state;
   return { ...state, obstacles: jump(state, special, choose) };
@@ -493,15 +499,15 @@ export function tick(state: GameState, choose: Chooser): GameState {
   const heading = nextTurn ?? state.heading;
   if (run !== null && nextTurn !== undefined) {
     run = countTurn(state, run);
-    if (run === null) return { ...state, status: "blown" };
+    if (run === null) return { ...state, status: "blown", ended: "turns" };
   }
   const head = state.snake[0];
   if (head === undefined) throw new RangeError("the snake has no segments");
   const newHead = ahead(head, heading, 1);
 
-  const crash = (): GameState => {
+  const crash = (ended: "wall" | "obstacle"): GameState => {
     if (run === null || special === null || run.shieldUsed >= special.shieldLayers) {
-      return { ...state, status: "over" };
+      return { ...state, status: "over", ended };
     }
     return {
       ...state,
@@ -510,11 +516,13 @@ export function tick(state: GameState, choose: Chooser): GameState {
       run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: true },
     };
   };
-  if (!onBoard(newHead, state.size)) return crash();
+  if (!onBoard(newHead, state.size)) return crash("wall");
   const eats = state.food !== null && sameCell(newHead, state.food);
   const body = eats ? state.snake : state.snake.slice(0, -1);
-  if (state.obstacles.some((cell) => sameCell(cell, newHead))) return crash();
-  if (body.some((cell) => sameCell(cell, newHead))) return { ...state, status: "over" };
+  if (state.obstacles.some((cell) => sameCell(cell, newHead))) return crash("obstacle");
+  if (body.some((cell) => sameCell(cell, newHead))) {
+    return { ...state, status: "over", ended: "self" };
+  }
 
   const snake = eats ? [newHead, ...state.snake] : [newHead, ...state.snake.slice(0, -1)];
   const timeBefore = run?.timeMs ?? 0;
@@ -533,6 +541,6 @@ export function tick(state: GameState, choose: Chooser): GameState {
     return nextLevel({ ...eaten, score: eaten.score + levelPoints(eaten) }, choose);
   }
   const free = freeCells(state.size, [...snake, ...state.obstacles]);
-  if (free.length === 0) return { ...eaten, food: null, status: "won" };
+  if (free.length === 0) return { ...eaten, food: null, status: "won", ended: "full" };
   return afterMove({ ...eaten, food: pick(free, choose, "the dot") }, timeBefore, choose);
 }

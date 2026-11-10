@@ -9,6 +9,7 @@ import {
   type Cell,
   type Chooser,
   type Direction,
+  type EndReason,
   type GameState,
   levelDelay,
   newGame,
@@ -65,6 +66,25 @@ const delayOfLevel = (level: number): number =>
 
 const PLAY = "Arrow keys, W A S D, a swipe or Start to play";
 
+/** The reason an ended game gives, by why it ended (docs/SPEC.md 2.8). */
+const END_REASON: Readonly<Record<EndReason, string>> = {
+  wall: "Game over: you hit the wall.",
+  obstacle: "Game over: you hit an obstacle.",
+  self: "Game over: you ran into yourself.",
+  turns: "Blown up: no turns left.",
+  time: "Blown up: time ran out.",
+  full: "You won! The board is full.",
+  noRoom: "You won! There is no room for the next level.",
+};
+
+/** The status line of an ended game: its reason, then how to play again (docs/SPEC.md 2.8). */
+function endText(state: GameState): string {
+  const reason = state.ended === null ? "Game over." : END_REASON[state.ended];
+  const crashed = state.ended === "wall" || state.ended === "obstacle";
+  const noShield = crashed && state.run !== null ? " No shield left." : "";
+  return `${reason}${noShield} Enter or New game to play again`;
+}
+
 /**
  * The status line while the snake waits after a shielded crash (docs/SPEC.md 2.12 (10)): the layers
  * left, and the two turns at right angles to the heading that go on.
@@ -84,9 +104,9 @@ const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {
       : `Level ${level}, special: ${maxTurns} turns, ${specialSeconds} seconds, shield of ${shieldLayers}. ${PLAY}`,
   running: (state) => (state.run?.waiting ? waitingText(state) : "Space or P to pause"),
   paused: () => "Paused. Space, P or Resume to go on",
-  over: () => "Game over. Enter or New game to play again",
-  blown: () => "Blown up! Enter or New game to play again",
-  won: () => "You won! Enter or New game to play again",
+  over: endText,
+  blown: endText,
+  won: endText,
 };
 
 /** The gap around a snake or obstacle cell, as a share of the cell, so the cells read as separate. */

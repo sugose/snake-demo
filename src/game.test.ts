@@ -749,7 +749,7 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         dotsEaten: 2,
         score: 2,
         status: "won",
-        ended: "full",
+        ended: "noRoom",
       });
       expect(choose.counts).toEqual([]);
     });
