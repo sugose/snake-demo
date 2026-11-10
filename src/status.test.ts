@@ -1,5 +1,5 @@
 import { type EndReason, type GameState, newGame, type SpecialRules } from "./game";
-import { endText } from "./status";
+import { endText, waitingText } from "./status";
 
 // The status line of an ended game (docs/SPEC.md 2.8), whole.
 const SPECIAL: SpecialRules = {
@@ -43,6 +43,7 @@ describe("endText (docs/SPEC.md 2.8)", () => {
     ["wall", "Game over: you hit the wall."],
     ["obstacle", "Game over: you hit an obstacle."],
     ["self", "Game over: you ran into yourself."],
+    ["boxed", "Game over: you are boxed in."],
     ["turns", "Blown up: no turns left."],
     ["time", "Blown up: time ran out."],
     ["full", "You won! The board is full."],
@@ -55,6 +56,7 @@ describe("endText (docs/SPEC.md 2.8)", () => {
     ["wall", "Game over: you hit the wall. No shield left."],
     ["obstacle", "Game over: you hit an obstacle. No shield left."],
     ["self", "Game over: you ran into yourself."],
+    ["boxed", "Game over: you are boxed in."],
     ["turns", "Blown up: no turns left."],
     ["time", "Blown up: time ran out."],
     ["full", "You won! The board is full."],
@@ -65,5 +67,54 @@ describe("endText (docs/SPEC.md 2.8)", () => {
 
   it("throws a RangeError for a game that has not ended", () => {
     expect(() => endText(BASE)).toThrow(RangeError);
+  });
+});
+
+describe("waitingText (docs/SPEC.md 2.12 (10))", () => {
+  /** A snake waiting after a crash at (5,5), with `shieldUsed` layers used and these blocked cells. */
+  function waiting(shieldUsed: number, obstacles: { x: number; y: number }[]): GameState {
+    return {
+      ...BASE,
+      level: 5,
+      status: "running",
+      heading: "right",
+      snake: [
+        { x: 5, y: 5 },
+        { x: 5, y: 5 },
+      ],
+      food: { x: 19, y: 19 },
+      obstacles,
+      run: { turns: 3, timeMs: 1000, shieldUsed, waiting: true },
+    };
+  }
+  const right = { x: 6, y: 5 };
+  const left = { x: 4, y: 5 };
+  const up = { x: 5, y: 4 };
+  const down = { x: 5, y: 6 };
+
+  it.each<[string, { x: number; y: number }[], string]>([
+    ["three", [right], "up, down or left"],
+    ["two", [right, left], "up or down"],
+    ["one", [right, left, up], "down"],
+    ["two, one of them right", [up, left], "down or right"],
+    ["two, down blocked", [right, down], "up or left"],
+  ])("names %s free directions in the order up, down, left, right", (_, blocked, words) => {
+    expect(waitingText(waiting(1, blocked))).toBe(`Shield lost, 2 left. Turn ${words} to go on.`);
+  });
+
+  it("with no layer left, warns that the next crash ends the game", () => {
+    expect(waitingText(waiting(3, [right, left]))).toBe(
+      "Shield lost, none left. Turn up or down to go on. The next crash ends the game.",
+    );
+  });
+
+  it("says 1 left", () => {
+    expect(waitingText(waiting(2, [right]))).toBe(
+      "Shield lost, 1 left. Turn up, down or left to go on.",
+    );
+  });
+
+  it("throws a RangeError for a snake that is not waiting", () => {
+    expect(() => waitingText(BASE)).toThrow(RangeError);
   });
 });

@@ -22,7 +22,7 @@ import {
   turn,
 } from "./game";
 import { keyToCommand, type Point, swipeToDirection } from "./input";
-import { endText } from "./status";
+import { endText, waitingText } from "./status";
 import { readBest, writeBest } from "./storage";
 
 const {
@@ -65,17 +65,6 @@ const delayOfLevel = (level: number): number =>
   levelDelay(level, { ...delays, every: specialEvery });
 
 const PLAY = "Arrow keys, W A S D, a swipe or Start to play";
-
-/**
- * The status line while the snake waits after a shielded crash (docs/SPEC.md 2.12 (10)): the layers
- * left, and the two turns at right angles to the heading that go on.
- */
-function waitingText(state: GameState): string {
-  const left = specialInfo(state)?.shieldLeft ?? 0;
-  const sides = state.heading === "up" || state.heading === "down" ? "left or right" : "up or down";
-  const lost = `Shield lost, ${left === 0 ? "none" : left} left. Turn ${sides} to go on.`;
-  return left === 0 ? `${lost} The next crash ends the game.` : lost;
-}
 
 /** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3), 2.12 (10)). */
 const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {

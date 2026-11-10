@@ -14,7 +14,15 @@ export type Cell = { readonly x: number; readonly y: number };
 export type Status = "ready" | "running" | "paused" | "over" | "blown" | "won";
 
 /** Why a game ended (docs/SPEC.md 2.8). */
-export type EndReason = "wall" | "obstacle" | "self" | "turns" | "time" | "full" | "noRoom";
+export type EndReason =
+  | "wall"
+  | "obstacle"
+  | "self"
+  | "boxed"
+  | "turns"
+  | "time"
+  | "full"
+  | "noRoom";
 
 /** The delays between ticks, in milliseconds (docs/SPEC.md 2.10 (2)). */
 export interface Delays {
@@ -119,6 +127,28 @@ function sameCell(a: Cell, b: Cell): boolean {
 
 function onBoard(cell: Cell, size: number): boolean {
   return cell.x >= 0 && cell.x < size && cell.y >= 0 && cell.y < size;
+}
+
+/** The four directions, in the order the waiting line names them (docs/SPEC.md 2.12 (10)). */
+const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
+
+/**
+ * The directions in which a move of the head one cell would not crash and not end the game, by
+ * 2.2 steps 3 to 5 (docs/SPEC.md 2.12 (5)): on the board, not an obstacle, and not the body; the
+ * last segment's cell counts as free unless the move eats the dot. In the order up, down, left,
+ * right. Empty for a snake with no segments.
+ */
+export function freeDirections(state: GameState): Direction[] {
+  const head = state.snake[0];
+  if (head === undefined) return [];
+  return DIRECTIONS.filter((direction) => {
+    const next = ahead(head, direction, 1);
+    if (!onBoard(next, state.size)) return false;
+    if (state.obstacles.some((cell) => sameCell(cell, next))) return false;
+    const eats = state.food !== null && sameCell(next, state.food);
+    const body = eats ? state.snake : state.snake.slice(0, -1);
+    return !body.some((cell) => sameCell(cell, next));
+  });
 }
 
 function ahead(cell: Cell, heading: Direction, distance: number): Cell {
@@ -349,8 +379,8 @@ export function specialInfo(
  * against the last queued turn, or the heading when none is queued: the same or the opposite
  * direction is ignored, and so is any turn while the queue is full. Elsewhere a turn is ignored. A
  * value that is not one of the four directions (possible only past the type checker) is ignored in
- * every state. On a special level a snake waiting after a shielded crash takes a turn at once,
- * and the turn is not counted (docs/SPEC.md 2.12 (5), (6)).
+ * every state. On a special level a snake waiting after a shielded crash takes a turn into a free
+ * direction at once, ignores any other, and does not count the turn (docs/SPEC.md 2.12 (5), (6)).
  */
 export function turn(state: GameState, direction: Direction): GameState {
   if (!Object.hasOwn(STEP, direction)) return state;
@@ -367,9 +397,9 @@ export function turn(state: GameState, direction: Direction): GameState {
   }
   if (state.status !== "running") return state;
   if (state.run?.waiting) {
-    // A snake waiting after a shielded crash takes its turn at once, and the turn is free
-    // (docs/SPEC.md 2.12 (5), (6)).
-    if (direction === state.heading || direction === OPPOSITE[state.heading]) return state;
+    // A snake waiting after a shielded crash takes a turn into a free direction at once, and the
+    // turn is not counted (docs/SPEC.md 2.12 (5), (6)).
+    if (!freeDirections(state).includes(direction)) return state;
     return { ...state, heading: direction, run: { ...state.run, waiting: false } };
   }
   const last = state.queue[state.queue.length - 1] ?? state.heading;
@@ -509,12 +539,21 @@ export function tick(state: GameState, choose: Chooser): GameState {
     if (run === null || special === null || run.shieldUsed >= special.shieldLayers) {
       return { ...state, status: "over", ended };
     }
-    return {
+    const waiting: GameState = {
       ...state,
       heading,
       queue: [],
       run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: true },
     };
+    if (freeDirections(waiting).length === 0) {
+      return {
+        ...waiting,
+        status: "over",
+        ended: "boxed",
+        run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: false },
+      };
+    }
+    return waiting;
   };
   if (!onBoard(newHead, state.size)) return crash("wall");
   const eats = state.food !== null && sameCell(newHead, state.food);

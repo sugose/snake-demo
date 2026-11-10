@@ -1,6 +1,7 @@
 import {
   type Cell,
   type Chooser,
+  freeDirections,
   type GameState,
   levelDelay,
   newGame,
@@ -388,6 +389,102 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
     it("pause still works", () => {
       expect(togglePause(waiting).status).toBe("paused");
     });
+  });
+});
+
+describe("free directions after a shielded crash (docs/SPEC.md 2.12 (5))", () => {
+  // Adam's game of 2026-11-10 08:26: going up a column, an obstacle right of the head, Right taken.
+  const column: Cell[] = [
+    { x: 12, y: 2 },
+    { x: 12, y: 3 },
+    { x: 12, y: 4 },
+    { x: 12, y: 5 },
+  ];
+  const up = special(
+    { turns: 14, timeMs: 7000 },
+    { snake: column, heading: "up", obstacles: [{ x: 13, y: 2 }], food: { x: 0, y: 19 } },
+  );
+  const crashed = tick(turn(up, "right"), answers(0));
+
+  it("the crash leaves the snake waiting, heading right, with up and left free", () => {
+    expect(crashed.status).toBe("running");
+    expect(crashed.run?.waiting).toBe(true);
+    expect(crashed.heading).toBe("right");
+    expect(freeDirections(crashed)).toEqual(["up", "left"]);
+  });
+
+  it("left, the opposite of the heading, is free and ends the wait", () => {
+    const turned = turn(crashed, "left");
+    expect(turned.heading).toBe("left");
+    expect(turned.run?.waiting).toBe(false);
+    expect(tick(turned, answers(0)).snake[0]).toEqual({ x: 11, y: 2 });
+  });
+
+  it("up ends the wait", () => {
+    expect(tick(turn(crashed, "up"), answers(0)).snake[0]).toEqual({ x: 12, y: 1 });
+  });
+
+  it.each(["down", "right"] as const)("%s (the neck or the obstacle) is ignored", (d) => {
+    expect(turn(crashed, d)).toBe(crashed);
+  });
+
+  it("the tail's cell is free, as the tail moves on; the dot's cell is free", () => {
+    // A square: head (5,5), then (6,5), (6,6), tail (5,6) below the head; the dot left of the head.
+    const square: Cell[] = [
+      { x: 5, y: 5 },
+      { x: 6, y: 5 },
+      { x: 6, y: 6 },
+      { x: 5, y: 6 },
+    ];
+    const state = special(
+      { shieldUsed: 1, waiting: true },
+      { snake: square, heading: "up", food: { x: 4, y: 5 }, obstacles: [{ x: 5, y: 4 }] },
+    );
+    expect(freeDirections(state)).toEqual(["down", "left"]);
+  });
+
+  it("a snake on one cell (stacked) has every direction free but the one it crashed into", () => {
+    const stacked: Cell[] = [
+      { x: 5, y: 5 },
+      { x: 5, y: 5 },
+      { x: 5, y: 5 },
+    ];
+    const state = special(
+      { shieldUsed: 1, waiting: true },
+      { snake: stacked, heading: "right", obstacles: [{ x: 6, y: 5 }] },
+    );
+    expect(freeDirections(state)).toEqual(["up", "down", "left"]);
+  });
+
+  it("the last segment's cell is not free while another segment is on it (the snake unrolling)", () => {
+    // The head has moved up from (5,6), where the last two segments are still stacked.
+    const unrolling: Cell[] = [
+      { x: 5, y: 5 },
+      { x: 5, y: 6 },
+      { x: 5, y: 6 },
+    ];
+    const state = special(
+      { shieldUsed: 1, waiting: true },
+      { snake: unrolling, heading: "up", obstacles: [{ x: 5, y: 4 }] },
+    );
+    expect(freeDirections(state)).toEqual(["left", "right"]);
+    expect(turn(state, "down")).toBe(state);
+  });
+
+  it("a crash that leaves no free direction ends the game as boxed in, with the layer used", () => {
+    // Head in the top-left corner heading up, the neck below it, an obstacle to its right.
+    const corner: Cell[] = [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+    ];
+    const state = special({}, { snake: corner, heading: "up", obstacles: [{ x: 1, y: 0 }] });
+    const next = tick(state, answers(0));
+    expect(next.status).toBe("over");
+    expect(next.ended).toBe("boxed");
+    expect(next.snake).toEqual(corner);
+    expect(next.run?.shieldUsed).toBe(1);
+    expect(next.run?.waiting).toBe(false);
   });
 });
 
