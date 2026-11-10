@@ -95,8 +95,8 @@ game still counts as running ("The log link must always be clickable,
 even when the game is ongoign"); and when Copy has copied the log, the
 button turns green and its text changes to "✓ Copied!" (2.13 (6))
 (`DECISIONS.md`, PO-171). Everything else in 2.13 (6) that this changes
-is Clead's, marked **[Clead]**, and is not Adam's until he accepts it:
-the pause when the panel opens on a running game and the going on when
+is Clead's, marked **[Clead]**. Adam accepted it on 2026-11-10 at 22:39
+("apyr", in chat, to Clead's recommendation of 22:38): the pause when the panel opens on a running game and the going on when
 it closes, the lines `pause log` and `resume log`, the panel's text, the
 buttons and the link doing nothing while it is open, the 2000 ms, the
 refused copy, a copy that finishes late, and the announcement to screen
