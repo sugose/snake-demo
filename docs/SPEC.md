@@ -58,8 +58,8 @@ starts if that is sooner, and takes no input (2.12 (11))
 
 Approved: Adam, 2026-11-10 03:24, in chat ("when the game is over, give
 the reason"): the status line of an ended game gives the reason it ended
-(2.8). The wording is Clead's, sent to him at 03:24 (`DECISIONS.md`,
-PO-171).
+(2.8). The wording is Clead's, sent to him at 03:24; he accepted it at
+03:25 ("apyr") (`DECISIONS.md`, PO-171).
 
 ---
 
@@ -198,7 +198,10 @@ The status line of an ended game gives the reason it ended, then
 
 On a special level, a game `over` on a wall or an obstacle adds "No
 shield left." after its reason, since the shield had no layer left
-(2.12 (5)).
+(2.12 (5)). The whole status line is the reason, then "No shield left."
+where it applies, then "Enter or New game to play again", separated by
+single spaces and with no full stop at the end, for example "Game over:
+you hit the wall. No shield left. Enter or New game to play again".
 
 ### 2.9 Score and best score
 
