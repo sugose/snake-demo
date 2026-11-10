@@ -106,9 +106,20 @@ function levelLine(game: GameState, values: LogValues): string {
   return `${line} turns=${info.turnsLeft} seconds=${info.secondsLeft} shield=${info.shieldLeft}`;
 }
 
-/** A new log: the first line, then the first level's line. */
-export function startLog(first: string, at: Stamp, game: GameState, values: LogValues): Log {
-  return add({ lines: [first], stretch: null, values }, at, levelLine(game, values));
+/**
+ * A new log: the first line, then, for a game made by the New game command, that input's line,
+ * then the first level's line (2.13 (4)).
+ */
+export function startLog(
+  first: string,
+  at: Stamp,
+  game: GameState,
+  values: LogValues,
+  input?: Input,
+): Log {
+  const log: Log = { lines: [first], stretch: null, values };
+  const opened = input === undefined ? log : add(log, at, `${inputText(input)} used`);
+  return add(opened, at, levelLine(game, values));
 }
 
 /** The log as text, one line each (2.13 (2)). */
@@ -175,6 +186,7 @@ export function logTick(log: Log, at: Stamp, before: GameState, after: GameState
   let next = log;
   const taken = before.run?.waiting ? undefined : before.queue[0];
   const newLevel = after.level !== before.level;
+  const cleared = after.cleared !== before.cleared;
   if (taken !== undefined && !(after.status === "blown" && after.ended === "turns")) {
     next = flush(next, at);
     const counted = before.run !== null && before.special !== null;
@@ -212,23 +224,24 @@ export function logTick(log: Log, at: Stamp, before: GameState, after: GameState
   if (open !== null && open.heading !== heading) next = flush(next, at);
   next = { ...next, stretch: { heading, cells, head: moved } };
 
-  const ate = newLevel || after.dotsEaten > before.dotsEaten;
+  const ate = cleared || after.dotsEaten > before.dotsEaten;
   if (ate) {
-    const levelPoints = newLevel ? (after.cleared?.special?.points ?? 0) : 0;
+    const levelPoints = cleared ? (after.cleared?.special?.points ?? 0) : 0;
     const dotPoints = after.score - before.score - levelPoints;
     next = add(flush(next, at), at, `dot +${dotPoints} score=${before.score + dotPoints}`);
   }
-  if (newLevel) {
-    const cleared = after.cleared?.special;
+  if (cleared) {
+    const special = after.cleared?.special;
     next = add(
       next,
       at,
-      cleared == null
+      special == null
         ? `cleared level ${before.level} score=${after.score}`
-        : `cleared level ${before.level} points=${cleared.points} turns-left=${cleared.turnsLeft}` +
-            ` seconds-left=${cleared.secondsLeft} shield-used=${cleared.shieldUsed} score=${after.score}`,
+        : `cleared level ${before.level} points=${special.points} turns-left=${special.turnsLeft}` +
+            ` seconds-left=${special.secondsLeft} shield-used=${special.shieldUsed} score=${after.score}`,
     );
-    return add(next, at, levelLine(after, next.values));
+    // A level that cannot be laid out ends the game (2.11): no next level's line.
+    return newLevel ? add(next, at, levelLine(after, next.values)) : next;
   }
   if (ate && after.food !== null) next = add(next, at, `dot at ${cellText(after.food)}`);
   if (!sameCells(after.obstacles, before.obstacles)) {

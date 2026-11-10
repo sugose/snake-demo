@@ -76,9 +76,18 @@ test("Copy puts the log on the clipboard; Escape and Close close the panel", asy
   expect(copied).toBe(await page.locator("#log-text").textContent());
   expect(copied.split("\n").at(-1)).toMatch(/end over wall score=0 best=no$/);
 
-  // Game keys do nothing while it is open.
+  // Game keys and buttons do nothing while it is open, and make no line.
+  const text = await page.locator("#log-text").textContent();
   await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("p");
+  await page.locator("#start").click({ force: true });
+  await page.locator("#pause").click({ force: true });
   await expect(panel).toBeVisible();
+  await expect(game).toHaveAttribute("data-status", "over");
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await link.click();
+  await expect(page.locator("#log-text")).toHaveText(text ?? "");
   await page.keyboard.press("Escape");
   await expect(panel).toBeHidden();
 
@@ -100,12 +109,23 @@ test("a new game while the panel is open closes it and starts a new log", async 
   await expect(game).toHaveAttribute("data-status", "ready");
   await expect(link).toBeDisabled();
 
-  // The new game's log starts afresh.
+  // The new game's log starts afresh, with its own time and tick count.
+  await page.clock.runFor(500);
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 10);
   await expectGame(game, "over", "19,10");
   await link.click();
-  const { events } = await logLines(page);
-  expect(events[0]).toBe("level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)");
-  expect(events).toHaveLength(5);
+  const { events, ticks } = await logLines(page);
+  const stamps = ((await page.locator("#log-text").textContent()) ?? "").split("\n").slice(1);
+  expect(events).toEqual([
+    "key Enter new used",
+    "level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
+    "key ArrowRight right used",
+    "turn right start",
+    "move right 9 head=(19,10)",
+    "end over wall score=0 best=no",
+  ]);
+  expect(stamps[0]).toMatch(/^\[t=0 #0\] /);
+  expect(stamps[2]).toMatch(/^\[t=500 #0\] /);
+  expect(ticks.at(-1)).toBe(10);
 });

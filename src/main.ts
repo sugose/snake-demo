@@ -155,12 +155,12 @@ const stamp = (): Stamp => ({ t: performance.now() - gameMadeAt, k: ticks });
 const ended = (game: GameState): boolean =>
   game.status === "over" || game.status === "blown" || game.status === "won";
 
-/** Makes a new game and starts its log (docs/SPEC.md 2.13 (1)). */
-function newGameWithLog(): GameState {
+/** Makes a new game by the New game command and starts its log (docs/SPEC.md 2.13 (1), (4)). */
+function newGameWithLog(input: Input): GameState {
   const game = freshGame();
   gameMadeAt = performance.now();
   ticks = 0;
-  log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES);
+  log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES, input);
   closeLog();
   return game;
 }
@@ -418,7 +418,7 @@ document.addEventListener("keydown", (event) => {
     onInput(input, next, next === state ? "state" : null);
     return;
   }
-  apply(newGameWithLog());
+  apply(newGameWithLog(input));
 });
 
 // Swipes on the board (docs/SPEC.md 2.7). A mouse drag is not a swipe.
@@ -451,7 +451,9 @@ pauseButton.addEventListener("click", () => {
   const label = pauseButton.textContent ?? "Pause";
   onInput({ kind: "button", label }, next, next === state ? "state" : null);
 });
-newGameButton.addEventListener("click", () => apply(newGameWithLog()));
+newGameButton.addEventListener("click", () =>
+  apply(newGameWithLog({ kind: "button", label: "New game" })),
+);
 
 // The event log's link and panel (docs/SPEC.md 2.13 (6)).
 logLink.addEventListener("click", openLog);

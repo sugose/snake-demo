@@ -100,6 +100,16 @@ describe("startLog and the level line (docs/SPEC.md 2.13 (5))", () => {
     expect(logText(log)).toBe(log.lines.join("\n"));
   });
 
+  it("a game made by the New game command starts with that input's line", () => {
+    const ready = game({ status: "ready" });
+    const log = startLog("F", at(0, 0), ready, VALUES, { kind: "button", label: "New game" });
+    expect(log.lines).toEqual([
+      "F",
+      "[t=0 #0] button New game used",
+      "[t=0 #0] level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,19)",
+    ]);
+  });
+
   it("writes a special level's limits", () => {
     const ready = game(
       {
@@ -349,6 +359,31 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
       "[t=55 #1] cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31",
     ]);
     expect(log.lines[3]).toMatch(/^\[t=55 #1\] level 6 normal delay=105 start=/);
+  });
+
+  it("a level cleared with no room for the next: the dot and the cleared line, no level line", () => {
+    // A 2 x 2 board, 2 dots a level: the last free cell (1,0) holds the 2nd dot.
+    const state = game({
+      size: 2,
+      clearAhead: 1,
+      dotsPerLevel: 2,
+      snake: [
+        { x: 1, y: 1 },
+        { x: 0, y: 1 },
+        { x: 0, y: 0 },
+      ],
+      heading: "up",
+      food: { x: 1, y: 0 },
+      dotsEaten: 1,
+      score: 1,
+    });
+    const next = tick(state, ZERO);
+    expect(next.ended).toBe("noRoom");
+    expect(logTick(EMPTY, at(125, 1), state, next).lines).toEqual([
+      "[t=125 #1] move up 1 head=(1,0)",
+      "[t=125 #1] dot +1 score=2",
+      "[t=125 #1] cleared level 1 score=2",
+    ]);
   });
 
   it("the 21st turn writes no turn line", () => {
