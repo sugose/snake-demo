@@ -69,6 +69,16 @@ he reported that he could not restart with a shield layer left: the turn
 that ends a wait after a shielded crash is free, and the used layer is
 the crash's cost (2.12 (5), (6)) (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-10 08:34, in chat: an event log of the game,
+with every move and event (keystrokes, obstacle jumps, points) and each
+level's entry data (level, speed), detailed enough to replay the game,
+behind a link that opens it over the board with a copy button (2.13);
+at 08:35 he added that the link is not usable until the game is over.
+Everything in 2.13 beyond Adam's words of 08:34 and 08:35 is Clead's,
+marked **[Clead]**: the design sent to him at 08:34, as changed at
+08:35, and the detail added in Crog's review rounds of #43
+(`DECISIONS.md`, PO-171).
+
 Approved: Adam, 2026-11-10 08:36 and 08:37, in chat ("option 1 apyr",
 then "1. option 1 apyr", to Clead's option 1 of 08:26 and 08:29, after
 a wait in his game of 08:26 ignored a free Left and offered "up or
@@ -414,6 +424,78 @@ cleared, no queued turns, and no obstacles or dot.
     it. **[Clead]** The look: large bold text centred on the board, in
     the head's colour.
 
+
+### 2.13 Event log
+
+1. **[Clead]** The page keeps an event log of the current game: from the
+   moment the game is made (page load, or the New game command of 2.5,
+   Enter or the New game button, in any state) until the next one is
+   made. It stays readable after the game ends. It is kept in the
+   page's memory only and is not saved; a reload clears it.
+2. The log is plain text, one event per line. **[Clead]** Every line but
+   the first starts with `[t=T #K] `, where T is the time since the game
+   was made in whole milliseconds of the page's clock, and K the number
+   of ticks of the tick timer so far in this game while it was
+   `running`, ticks of a waiting snake (2.12 (5)) included. K counts the
+   tick being run when the line is written; a line written outside a
+   tick (an input, pause, the page hidden) has the K of the last tick.
+3. **[Clead]** The first line names the build (the commit it was built
+   from, or `dev` for a local build) and the named values of section 3
+   the game uses, so a log from any build can be read.
+4. **[Clead]** The inputs that make a line: every key that maps to a
+   command of 2.6, held repeats included; every swipe that maps to a
+   turn (2.7); every press of the Start, Pause or Resume, and New game
+   buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
+   that map to nothing, and any input while the panel of (6) is open
+   make no line. An input line says whether the input was used or
+   ignored, and if ignored, why, with one of these reasons:
+   `same direction` (the heading, or the last queued turn), `straight
+   back` (the opposite of either), `queue full` (2.4), `into a wall` or
+   `onto an obstacle` (in `ready`, 2.1 (3)), `not free` (a direction
+   that is not free while the snake waits, 2.12 (5)), `repeat` (a held
+   Space, P or Enter, 2.6), and `state` (a command the state ignores,
+   2.5). When two apply, the first that applies wins: `state`, then
+   `repeat`; in `ready`, `straight back` before `into a wall` and
+   `onto an obstacle`; while the snake waits, only `not free`; otherwise
+   `same direction`, then `straight back`, then `queue full`.
+5. **[Clead]** The kinds of line, after the stamp of (2), with cells
+   written `(x,y)`, directions as `up`, `down`, `left`, `right`, and
+   lists of cells joined by `,`:
+
+| Event | Line |
+|---|---|
+| a level laid out (2.11) | `level 5 special delay=55 start=(3,4) up obstacles=(1,2),(7,9),(0,0),(4,4) dot=(5,5) turns=20 seconds=30 shield=3`; on a normal level `level 4 normal delay=110 start=… obstacles=… dot=…`, without the last three |
+| an input | `key ArrowUp up used`, `key a left ignored straight back`, `swipe right used`, `button Start used`, `key p pause used` |
+| a turn becoming the heading | `turn up counted 5/20` on a special level, `turn up` on a normal one, `turn left free` when it ends a wait, `turn up start` for the turn that starts a level from `ready` |
+| a stretch of moves | `move right 7 head=(10,4)`: the heading, the number of cells, and the head's cell at the end; a line is written when the stretch ends (a turn, a dot, a crash, a level cleared, a pause or the end of the game) and has at least one move |
+| a dot eaten | `dot +1 score=12`; on a special level `dot +0 score=20` |
+| a new dot | `dot at (5,9)` |
+| a shielded crash | `crash wall shield=2 free=up,left` |
+| an obstacle jump | `jump obstacles=(1,2),(7,9),(0,0),(4,4)` |
+| a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31`; on a normal level `cleared level 4 score=20` |
+| pause, resume | `pause`, `resume` |
+| the page hidden or shown | `hidden`, `shown` |
+| the end of the game | `end over boxed score=43 best=yes`; `best=no` when the score did not become the best score |
+
+   The words used: commands `up`, `down`, `left`, `right`, `pause`,
+   `new`; buttons `Start`, `Pause`, `Resume`, `New game`, as labelled
+   when pressed; end states `over`, `blown`, `won`; end reasons `wall`,
+   `obstacle`, `self`, `boxed`, `turns`, `time`, `full`, `noroom`, one
+   for each row of 2.8; an empty list of cells is written `-`.
+
+   Every random outcome (the start, the obstacles, each dot and each
+   jump) has a line, and every cell the head visited follows from the
+   start and the move lines.
+6. A "Log" link below the board opens the log in a panel over the board,
+   with a Copy button and a Close button. The link can be used only when
+   the game has ended (`over`, `blown` or `won`); before that it is
+   shown as not usable and does nothing. Copy puts the whole log on the
+   clipboard. **[Clead]** The link's place and look, the Close button,
+   and that, if the browser refuses Copy, the log's text is selected so
+   it can be copied by hand. While the panel is open, game keys and
+   swipes do nothing, Escape or Close closes it, and the New game
+   command (Enter or the button) closes it and makes a new game.
+
 ---
 
 ## 3. Architecture
@@ -436,7 +518,9 @@ cleared, no queued turns, and no obstacles or dot.
   2.5, levels and laying out a level (2.10, 2.11), special levels
   (2.12), the free directions of a waiting snake (2.12 (5)), exported,
   which `turn`, the boxed-in check and `src/status.ts` use, and the
-  delay of a level. The choosers of 2.3 and 2.11 are passed in, so tests are
+  delay of a level. It reports what each step did for the event log
+  (2.13): why a turn is ignored (`ignoredBecause`), and what the last
+  shielded crash hit. The choosers of 2.3 and 2.11 are passed in, so tests are
   deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,
@@ -451,10 +535,18 @@ cleared, no queued turns, and no obstacles or dot.
   one, two and three free directions and for no layer left. It takes
   the free directions from `src/game.ts` and does not work them out
   itself.
+- `src/log.ts`: the event log of 2.13 as pure functions: the first
+  line, and the lines of one step of the game, given the state before
+  it, the input or tick, the state after it, what `src/game.ts`
+  reported about the step, the time and the tick count; it keeps its
+  own small state (the open stretch of moves) and works out no game
+  rule itself. Pure, covered by Jest: every kind of line of 2.13 (5)
+  whole.
 - `src/main.ts`: draws the board, the obstacles and the level on a
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
   shows the "Special Level" text (2.12 (11)), shows the status line
-  (the ended game's from `src/status.ts`), runs the tick timer with the delay of the current level, and
+  (the ended game's from `src/status.ts`), keeps the event log and
+  shows its panel (2.13), runs the tick timer with the delay of the current level, and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
   Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
