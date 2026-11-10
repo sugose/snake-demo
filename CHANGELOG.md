@@ -50,7 +50,7 @@ All notable changes to Snake demo are documented here.
   drags (#14).
 - The published levels recorded (#18); the specification states the layout shortfalls and the unrolling
   exactly (#19); the special levels idea in the backlog (#21, #22, #24); PBI-2.6 recorded done (#23).
-- The special levels recorded as published (#28), and the follow-ups from Adam's play (#35); the specification records
+- PBI-2.11 to 2.17 recorded as published (#47). The special levels recorded as published (#28), and the follow-ups from Adam's play (#35); the specification records
   Adam's acceptance of the level cleared at 30 seconds and of 0 points with all shield layers used (#36).
 
 ### Removed
