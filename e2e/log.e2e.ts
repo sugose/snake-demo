@@ -257,7 +257,9 @@ test("the panel changes nothing, opening or closing, in ready, paused and ended 
 
 test("while the panel is open, keys, swipes, Start, Pause, Resume and the Log link do nothing", async ({
   page,
+  context,
 }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const game = await runningGame(page);
   const panel = page.locator("#log-panel");
   await linkOf(page).click();
@@ -268,7 +270,20 @@ test("while the panel is open, keys, swipes, Start, Pause, Resume and the Log li
   await swipe(page, 0, -80);
   await page.locator("#start").click({ force: true });
   await page.locator("#pause").click({ force: true }); // reads "Resume"
+
+  // A line made since the opening (the page hidden and shown), and "✓ Copied!" showing: a click
+  // on the Log link leaves both the panel's text and the button as they were.
+  await page.evaluate(() => {
+    for (const state of ["hidden", "visible"]) {
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => state });
+      document.dispatchEvent(new Event("visibilitychange"));
+    }
+  });
+  await page.getByRole("button", { name: "Copy", exact: true }).click();
+  await expect(page.locator("#log-copy")).toHaveText("✓ Copied!");
   await linkOf(page).click({ force: true });
+  await expect(page.locator("#log-copy")).toHaveText("✓ Copied!");
+  expect(await panelText(page)).toBe(text);
   await runTicks(page, 5);
   await expect(panel).toBeVisible();
   await expectGame(game, "paused", "12,10");
@@ -284,6 +299,8 @@ test("while the panel is open, keys, swipes, Start, Pause, Resume and the Log li
   expect(events.slice(3)).toEqual([
     "move right 2 head=(12,10)",
     "pause log",
+    "hidden",
+    "shown",
     "resume log",
     "move right 1 head=(13,10)",
     "pause log",
@@ -304,6 +321,53 @@ test("a game the player paused stays paused while the panel is open and after it
   await runTicks(page, 5);
   await expectGame(game, "paused", "12,10");
 });
+
+for (const how of ["Escape", "Close"] as const) {
+  test(`a game the player paused after a panel that paused it stays paused when the panel closes with ${how}`, async ({
+    page,
+  }) => {
+    const game = await runningGame(page);
+    const close = async () => {
+      if (how === "Escape") await page.keyboard.press("Escape");
+      else await page.getByRole("button", { name: "Close", exact: true }).click();
+    };
+    await linkOf(page).click();
+    await close();
+    await expectGame(game, "running", "12,10");
+    await page.keyboard.press("Space");
+    await expectGame(game, "paused", "12,10");
+
+    await linkOf(page).click();
+    await close();
+    await expect(page.locator("#log-panel")).toBeHidden();
+    await runTicks(page, 5);
+    await expectGame(game, "paused", "12,10");
+  });
+}
+
+for (const newGame of ["Enter", "the New game button"] as const) {
+  test(`a game the player paused after ${newGame} closed a panel that paused it stays paused when the panel closes`, async ({
+    page,
+  }) => {
+    const game = await runningGame(page);
+    await linkOf(page).click();
+    if (newGame === "Enter") await page.keyboard.press("Enter");
+    else await page.locator("#new-game").click();
+    await expectGame(game, "ready", "10,10");
+
+    await page.keyboard.press("ArrowRight");
+    await runTicks(page, 2);
+    await expectGame(game, "running", "12,10");
+    await page.keyboard.press("Space");
+    await expectGame(game, "paused", "12,10");
+
+    await linkOf(page).click();
+    await page.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(page.locator("#log-panel")).toBeHidden();
+    await runTicks(page, 5);
+    await expectGame(game, "paused", "12,10");
+  });
+}
 
 test("in ready, keys, a swipe and Start do nothing while the panel is open", async ({ page }) => {
   const game = await openGame(page);
