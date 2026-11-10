@@ -69,6 +69,13 @@ he reported that he could not restart with a shield layer left: the turn
 that ends a wait after a shielded crash is free, and the used layer is
 the crash's cost (2.12 (5), (6)) (`DECISIONS.md`, PO-171).
 
+Approved: Adam, 2026-11-10 08:34, in chat: an event log of the game,
+with every move and event (keystrokes, obstacle jumps, points) and each
+level's entry data (level, speed), detailed enough to replay the game,
+behind a link that opens it over the board with a copy button (2.13).
+The details marked **[Clead]** and the list in 2.13 (4) are Clead's,
+sent to him at 08:34 (`DECISIONS.md`, PO-171).
+
 ---
 
 ## 1. System overview
@@ -396,6 +403,54 @@ cleared, no queued turns, and no obstacles or dot.
     it. **[Clead]** The look: large bold text centred on the board, in
     the head's colour.
 
+
+### 2.13 Event log
+
+1. The page keeps an event log of the current game: from the moment the
+   game is made (page load, New game, or Enter after an ended game)
+   until the next one is made. It stays readable after the game ends. It
+   is kept in the page's memory only and is not saved; a reload clears
+   it.
+2. The log is plain text, one event per line. Every line but the first
+   starts with the time since the game was made, in whole milliseconds
+   of the page's clock, and the number of ticks run so far in this game.
+   **[Clead]** The line format: `[t=1234 #57] ` followed by the event.
+3. The first line names the build (the commit it was built from, or
+   "dev" for a local build) and the named values of section 3 the game
+   uses, so a log from any build can be read.
+4. The log records, each with the cells and numbers needed to follow the
+   game without guessing:
+   - each level laid out: its number, normal or special, its delay, the
+     snake's start cell and heading, every obstacle cell, the dot's cell,
+     and on a special level its turns, seconds and shield;
+   - every input: each key, swipe and button press, the command it maps
+     to (2.5 to 2.7), and whether it was used or ignored, with the
+     reason it was ignored (for example straight back, into a wall, the
+     state, or waiting);
+   - every turn that becomes the heading, and whether it was counted
+     (2.12 (6));
+   - the snake's moves: one line for each stretch of moves in one
+     heading, ended by a turn, a dot, a crash or the end of the game,
+     giving the heading, the number of cells and the head's cell at the
+     end, so every cell the head visited follows from the log;
+   - each dot eaten, with the points it gave (2.9 (1)) and the score,
+     and each new dot's cell;
+   - each shielded crash (2.12 (5)), with what was hit and the layers
+     left, and the end of each wait;
+   - each jump of the obstacles (2.12 (9)), with all their new cells;
+   - each level cleared, with the points the level gave and, on a
+     special level, the turns left, seconds left and layers used it
+     counted (2.12 (8));
+   - pause and resume (2.5), and the page being hidden and shown again;
+   - the end of the game, with its state and reason (2.8), the final
+     score, and whether it became the best score (2.9 (2)).
+5. A "Log" link below the board opens the log in a panel over the board,
+   with a Copy button and a Close button. Copy puts the whole log on the
+   clipboard; if the browser refuses, the log's text is selected so it
+   can be copied by hand. **[Clead]** Opening the panel pauses a running
+   game (2.5); while it is open, game keys and swipes do nothing, and
+   Escape or Close closes it. Closing it does not resume the game.
+
 ---
 
 ## 3. Architecture
@@ -424,9 +479,14 @@ cleared, no queued turns, and no obstacles or dot.
 - `src/storage.ts`: reads and writes the best score (2.9) through a
   function passed in that returns the store and may throw. Covered by
   Jest with fake stores, also ones that throw.
+- `src/log.ts`: the event log of 2.13 as pure functions: the first
+  line, and the lines that describe one step of the game from the state
+  before it, the input or tick, and the state after it, with the time
+  and tick passed in. Pure, covered by Jest.
 - `src/main.ts`: draws the board, the obstacles and the level on a
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
-  shows the "Special Level" text (2.12 (11)), runs the tick timer with the delay of the current level, and
+  shows the "Special Level" text (2.12 (11)), keeps the event log and
+  shows its panel (2.13), runs the tick timer with the delay of the current level, and
   wires keys, swipes, buttons, page visibility and storage. Covered by the
   Playwright tests (web pack rule).
 - Look: an original, plain look, readable in light and dark mode, sized
