@@ -57,10 +57,12 @@ twice a second from when the level is laid out, goes when the level
 starts if that is sooner, and takes no input (2.12 (11))
 (`DECISIONS.md`, PO-171).
 
-Approved: Adam, 2026-11-10 03:25, in chat ("apyr" to Clead's option 1
-of 03:23, after he could not go on with a shield layer left and no turns
-left): the turn that ends a wait after a shielded crash is free
-(2.12 (5), (6)) (`DECISIONS.md`, PO-171).
+Approved: Adam, 2026-11-10 03:25, in chat ("apyr", replying to Clead's
+three options of 03:23 and its wording of 03:24; Clead read it as
+option 1, the turn free, said so at 03:25 and invited correction), after
+he reported that he could not restart with a shield layer left: the turn
+that ends a wait after a shielded crash is free, and the used layer is
+the crash's cost (2.12 (5), (6)) (`DECISIONS.md`, PO-171).
 
 ---
 
@@ -299,7 +301,8 @@ cleared, no queued turns, and no obstacles or dot.
    or opposite to it is ignored; any other turn becomes the heading at
    once (not queued), ends the wait, and is not counted (6), so the
    snake moves that way on the next tick, even with all 20 turns used.
-   The used layer is the crash's cost: it lowers the level's points (8).
+   The used layer is the crash's cost: it lowers the multiplier of the
+   level's points (8).
    A crash with no layer left ends the game (`over`).
 6. A turn counts when a tick takes it from the queue and it becomes
    the heading (step 1). The turn that starts the level from `ready`
