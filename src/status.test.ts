@@ -97,6 +97,7 @@ describe("waitingText (docs/SPEC.md 2.12 (10))", () => {
     ["two", [right, left], "up or down"],
     ["one", [right, left, up], "down"],
     ["two, one of them right", [up, left], "down or right"],
+    ["two, down blocked", [right, down], "up or left"],
   ])("names %s free directions in the order up, down, left, right", (_, blocked, words) => {
     expect(waitingText(waiting(1, blocked))).toBe(`Shield lost, 2 left. Turn ${words} to go on.`);
   });

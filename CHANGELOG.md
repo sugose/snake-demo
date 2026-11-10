@@ -6,6 +6,9 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- After a shielded crash, any turn into a free cell gets the snake moving again, back the way it came included; turns
+  into a wall, an obstacle or the snake itself are ignored, the status line names only the free directions, and a snake
+  with none ends the game as boxed in (#45). Specified in #44.
 - An ended game says why it ended: the wall, an obstacle, the snake itself, no turns left, time ran out, the board full or
   no room for the next level, and on a special level, no shield left (#41). Specified in #38.
 - The turn that gets the snake moving again after a shielded crash is free: it does not count against the 20 turns
