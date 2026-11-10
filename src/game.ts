@@ -344,7 +344,7 @@ export function specialInfo(
  * direction is ignored, and so is any turn while the queue is full. Elsewhere a turn is ignored. A
  * value that is not one of the four directions (possible only past the type checker) is ignored in
  * every state. On a special level a snake waiting after a shielded crash takes a turn at once,
- * and counts it (docs/SPEC.md 2.12 (5), (6)); its 21st turn blows it up.
+ * and the turn is not counted (docs/SPEC.md 2.12 (5), (6)).
  */
 export function turn(state: GameState, direction: Direction): GameState {
   if (!Object.hasOwn(STEP, direction)) return state;
@@ -361,11 +361,10 @@ export function turn(state: GameState, direction: Direction): GameState {
   }
   if (state.status !== "running") return state;
   if (state.run?.waiting) {
-    // A snake waiting after a shielded crash takes its turn at once (docs/SPEC.md 2.12 (5), (6)).
+    // A snake waiting after a shielded crash takes its turn at once, and the turn is free
+    // (docs/SPEC.md 2.12 (5), (6)).
     if (direction === state.heading || direction === OPPOSITE[state.heading]) return state;
-    const counted = countTurn(state, state.run);
-    if (counted === null) return { ...state, status: "blown" };
-    return { ...state, heading: direction, run: { ...counted, waiting: false } };
+    return { ...state, heading: direction, run: { ...state.run, waiting: false } };
   }
   const last = state.queue[state.queue.length - 1] ?? state.heading;
   if (direction === last || direction === OPPOSITE[last]) return state;

@@ -83,7 +83,7 @@ test("a normal level shows no special values; level 5 is special, with its limit
   await expect(page.locator("#status")).toContainText("shield of 3");
 });
 
-test("a wall on level 5 takes a shield layer; the snake waits, then a turn moves it on and counts", async ({
+test("a wall on level 5 takes a shield layer; the snake waits, then a free turn moves it on", async ({
   page,
 }) => {
   const game = await openToLevel5(page, "10,10", "up", 394);
@@ -108,7 +108,8 @@ test("a wall on level 5 takes a shield layer; the snake waits, then a turn moves
 
   await page.keyboard.press("ArrowLeft");
   await expect(game).toHaveAttribute("data-waiting", "false");
-  await expect(page.locator("#turns-left")).toHaveText("19");
+  // The turn that ends the wait is free (docs/SPEC.md 2.12 (5)).
+  await expect(page.locator("#turns-left")).toHaveText("20");
   await runTicks(page, 1, LEVEL_5_DELAY);
   await expectGame(game, "running", "9,0");
   await expect(game).toHaveAttribute("data-score", "20");
@@ -203,7 +204,7 @@ test("each shielded crash says the layers left and which turns go on, and warns 
   await expect(status).toHaveText("Space or P to pause");
 });
 
-test("a 21st turn that ends a wait blows the snake up and shows only Blown up", async ({
+test("with all 20 turns used, the turn that ends a wait is free and the snake goes on", async ({
   page,
 }) => {
   // The staircase of the 21st-turn test, then up column 10 into the top wall.
@@ -220,10 +221,15 @@ test("a 21st turn that ends a wait blows the snake up and shows only Blown up", 
   await expectGame(game, "running", "10,0");
   await expect(game).toHaveAttribute("data-waiting", "true");
 
+  await expect(page.locator("#turns-left")).toHaveText("0");
+
   await page.keyboard.press("ArrowRight");
-  await expectGame(game, "blown", "10,0");
-  await expect(game).toHaveAttribute("data-waiting", "true");
-  await expect(page.locator("#status")).toHaveText("Blown up! Enter or New game to play again");
+  await expect(game).toHaveAttribute("data-waiting", "false");
+  await expect(game).toHaveAttribute("data-status", "running");
+  await expect(page.locator("#turns-left")).toHaveText("0");
+  await expect(page.locator("#status")).toHaveText("Space or P to pause");
+  await runTicks(page, 1, LEVEL_5_DELAY);
+  await expectGame(game, "running", "11,0");
 });
 
 test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () => {

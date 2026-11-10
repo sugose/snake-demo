@@ -6,6 +6,8 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- The turn that gets the snake moving again after a shielded crash is free: it does not count against the 20 turns
+  (#40). Specified in #39.
 - A blinking "Special Level" text over the board for 3 seconds when a special level is laid out (#34). Specified in #33.
 - After a shielded crash, the status line says how many shield layers are left and which turns go on (#32).
   Specified in #31.
