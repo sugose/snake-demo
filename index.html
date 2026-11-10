@@ -24,13 +24,14 @@
         <p id="banner" class="banner" aria-hidden="true" hidden>Special Level</p>
         <section id="log-panel" class="log-panel" role="dialog" aria-label="Event log" hidden>
           <pre id="log-text" class="log-text"></pre>
+          <div id="log-live" class="visually-hidden" aria-live="polite"></div>
           <div class="log-actions">
             <button type="button" id="log-copy">Copy</button>
             <button type="button" id="log-close">Close</button>
           </div>
         </section>
       </div>
-      <p class="log-row"><button type="button" id="log-link" class="log-link" disabled>Log</button></p>
+      <p class="log-row"><button type="button" id="log-link" class="log-link">Log</button></p>
       <p id="status" class="status" role="status"></p>
       <div class="controls">
         <button type="button" id="start">Start</button>

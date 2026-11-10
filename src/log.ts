@@ -178,6 +178,19 @@ export function logPage(
 }
 
 /**
+ * The log panel pausing a running game as it opens (2.13 (5), (6)): the open stretch ends, then
+ * `pause log`.
+ */
+export function logPanelPause(log: Log, at: Stamp): Log {
+  return add(flush(log, at), at, "pause log");
+}
+
+/** The log panel going on as it closes, when its opening paused the game (2.13 (5), (6)). */
+export function logPanelResume(log: Log, at: Stamp): Log {
+  return add(log, at, "resume log");
+}
+
+/**
  * One tick (2.13 (4), (5)): a queued turn taken, the head's move, a dot, a new dot, a shielded crash,
  * an obstacle jump, a level cleared and the next one laid out. The end of the game is `logEnd`'s.
  */
