@@ -10,6 +10,7 @@ import {
   type Chooser,
   type Direction,
   type GameState,
+  ignoredBecause,
   levelDelay,
   newGame,
   pauseIfRunning,
@@ -22,6 +23,18 @@ import {
   turn,
 } from "./game";
 import { keyToCommand, type Point, swipeToDirection } from "./input";
+import {
+  firstLine,
+  type Input,
+  type Log,
+  logEnd,
+  logInput,
+  logPage,
+  logText,
+  logTick,
+  type Stamp,
+  startLog,
+} from "./log";
 import { endText, waitingText } from "./status";
 import { readBest, writeBest } from "./storage";
 
@@ -112,6 +125,11 @@ const banner = element("banner", HTMLElement);
 const startButton = element("start", HTMLButtonElement);
 const pauseButton = element("pause", HTMLButtonElement);
 const newGameButton = element("new-game", HTMLButtonElement);
+const logLink = element("log-link", HTMLButtonElement);
+const logPanel = element("log-panel", HTMLElement);
+const logTextBox = element("log-text", HTMLElement);
+const logCopy = element("log-copy", HTMLButtonElement);
+const logClose = element("log-close", HTMLButtonElement);
 const frame = canvas.parentElement;
 if (frame === null) throw new Error("the board has no frame");
 const drawing = canvas.getContext("2d");
@@ -126,6 +144,26 @@ const getStore = (): Storage => window.localStorage;
 
 let state = freshGame();
 let best = readBest(getStore, storageKey, maxScore);
+
+// The event log of the current game (docs/SPEC.md 2.13).
+const LOG_VALUES = { size: gridSize, startLength, clearAhead, dotsPerLevel, delays, special };
+const FIRST_LINE = firstLine(__BUILD__, LOG_VALUES);
+let gameMadeAt = performance.now();
+let ticks = 0;
+let log: Log = startLog(FIRST_LINE, { t: 0, k: 0 }, state, LOG_VALUES);
+const stamp = (): Stamp => ({ t: performance.now() - gameMadeAt, k: ticks });
+const ended = (game: GameState): boolean =>
+  game.status === "over" || game.status === "blown" || game.status === "won";
+
+/** Makes a new game and starts its log (docs/SPEC.md 2.13 (1)). */
+function newGameWithLog(): GameState {
+  const game = freshGame();
+  gameMadeAt = performance.now();
+  ticks = 0;
+  log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES);
+  closeLog();
+  return game;
+}
 let timer: { id: number; delay: number } | undefined;
 let bannerTimers: { blink: number; end: number } | undefined;
 
@@ -151,17 +189,17 @@ function hideBanner(): void {
 
 /** Makes `next` the game state: saves a new best score, starts or stops the timer, redraws. */
 function apply(next: GameState): void {
-  const ended =
-    next.status !== state.status &&
-    (next.status === "over" || next.status === "blown" || next.status === "won");
+  const justEnded = next.status !== state.status && ended(next);
   const enteredSpecial = next.run !== null && next.status === "ready" && next.level !== state.level;
   state = next;
   if (enteredSpecial) showBanner();
   else if (state.status !== "ready" || state.run === null) hideBanner();
-  if (ended && state.score > best) {
+  const madeBest = justEnded && state.score > best;
+  if (madeBest) {
     best = state.score;
     writeBest(getStore, storageKey, best, maxScore);
   }
+  if (justEnded) log = logEnd(log, stamp(), state, madeBest);
   syncTimer();
   render();
 }
@@ -177,9 +215,59 @@ function syncTimer(): void {
     timer = undefined;
   }
   if (state.status === "running" && timer === undefined) {
-    timer = { id: window.setInterval(() => apply(tick(state, choose)), delay), delay };
+    timer = { id: window.setInterval(onTick, delay), delay };
   }
 }
+
+/** One tick of the timer: the game moves on, and the log notes it (docs/SPEC.md 2.13 (2)). */
+function onTick(): void {
+  ticks++;
+  const before = state;
+  const after = tick(before, choose);
+  log = logTick(log, stamp(), before, after);
+  apply(after);
+}
+
+/** An input that makes a line in the log, and what it does (docs/SPEC.md 2.13 (4)). */
+function onInput(
+  input: Input,
+  next: GameState,
+  ignored: ReturnType<typeof ignoredBecause> | "repeat" | null,
+): void {
+  const before = state;
+  log = logInput(log, stamp(), input, ignored, before, next);
+  apply(next);
+}
+
+const logOpen = (): boolean => !logPanel.hidden;
+
+/** Opens the log panel over the board, once the game has ended (docs/SPEC.md 2.13 (6)). */
+function openLog(): void {
+  if (!ended(state)) return;
+  logTextBox.textContent = logText(log);
+  logPanel.hidden = false;
+  logClose.focus();
+}
+
+function closeLog(): void {
+  logPanel.hidden = true;
+}
+
+/** Copy: the whole log to the clipboard, or, if the browser refuses, the text selected. */
+async function copyLog(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(logText(log));
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents(logTextBox);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+}
+
+const KEY_NAMES: Readonly<Record<string, string>> = { " ": "Space" };
+const COMMAND_WORDS = { pause: "pause", newGame: "new" } as const;
 
 const cellText = (cell: Cell): string => `${cell.x},${cell.y}`;
 
@@ -215,6 +303,7 @@ function render(): void {
     shieldText.textContent = String(info.shieldLeft);
   }
   pauseButton.textContent = state.status === "paused" ? "Resume" : "Pause";
+  logLink.disabled = !ended(state);
   draw();
 }
 
@@ -289,22 +378,47 @@ function sizeBoard(container: HTMLElement): void {
 
 // Keys (docs/SPEC.md 2.5, 2.6), whichever button has the focus.
 document.addEventListener("keydown", (event) => {
+  // While the log panel is open, Escape closes it and a new game closes it too; other game keys do
+  // nothing and make no line (docs/SPEC.md 2.13 (4), (6)).
+  if (logOpen() && event.key === "Escape") {
+    event.preventDefault();
+    closeLog();
+    logLink.focus();
+    return;
+  }
   const command = keyToCommand(event.key, {
     ctrl: event.ctrlKey,
     meta: event.metaKey,
     alt: event.altKey,
   });
   if (command === null) return;
+  if (logOpen() && command.type !== "newGame") return;
   // Keeps the arrows and Space from scrolling the page, and keeps a focused button from also
   // acting on Space or Enter (its click), so each key acts once.
   event.preventDefault();
+  const key = KEY_NAMES[event.key] ?? event.key;
   if (command.type === "turn") {
-    apply(turn(state, command.direction));
+    const ignored = ignoredBecause(state, command.direction);
+    onInput(
+      { kind: "key", key, command: command.direction },
+      turn(state, command.direction),
+      ignored,
+    );
     return;
   }
+  const input: Input = { kind: "key", key, command: COMMAND_WORDS[command.type] };
   // A held Space, P or Enter does not flip the pause, or start new games, again and again.
-  if (event.repeat) return;
-  apply(command.type === "pause" ? togglePause(state) : freshGame());
+  if (event.repeat) {
+    const ignoredByState = command.type === "pause" && togglePause(state) === state;
+    onInput(input, state, ignoredByState ? "state" : "repeat");
+    return;
+  }
+  if (command.type === "pause") {
+    const next = togglePause(state);
+    onInput(input, next, next === state ? "state" : null);
+    return;
+  }
+  apply(newGameWithLog());
 });
 
 // Swipes on the board (docs/SPEC.md 2.7). A mouse drag is not a swipe.
@@ -318,20 +432,43 @@ canvas.addEventListener("pointerup", (event) => {
   const from = swipeStart.point;
   swipeStart = null;
   const direction = swipeToDirection(from, { x: event.clientX, y: event.clientY }, minSwipe);
-  if (direction !== null) apply(turn(state, direction));
+  if (direction === null || logOpen()) return;
+  onInput({ kind: "swipe", direction }, turn(state, direction), ignoredBecause(state, direction));
 });
 canvas.addEventListener("pointercancel", () => {
   swipeStart = null;
 });
 
 // Buttons (docs/SPEC.md 2.5, 2.7).
-startButton.addEventListener("click", () => apply(start(state)));
-pauseButton.addEventListener("click", () => apply(togglePause(state)));
-newGameButton.addEventListener("click", () => apply(freshGame()));
+startButton.addEventListener("click", () => {
+  if (logOpen()) return;
+  const next = start(state);
+  onInput({ kind: "button", label: "Start" }, next, next === state ? "state" : null);
+});
+pauseButton.addEventListener("click", () => {
+  if (logOpen()) return;
+  const next = togglePause(state);
+  const label = pauseButton.textContent ?? "Pause";
+  onInput({ kind: "button", label }, next, next === state ? "state" : null);
+});
+newGameButton.addEventListener("click", () => apply(newGameWithLog()));
+
+// The event log's link and panel (docs/SPEC.md 2.13 (6)).
+logLink.addEventListener("click", openLog);
+logClose.addEventListener("click", () => {
+  closeLog();
+  logLink.focus();
+});
+logCopy.addEventListener("click", () => {
+  void copyLog();
+});
 
 // A hidden page pauses a running game (docs/SPEC.md 2.5).
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") apply(pauseIfRunning(state));
+  const hidden = document.visibilityState === "hidden";
+  const next = hidden ? pauseIfRunning(state) : state;
+  log = logPage(log, stamp(), hidden, state, next);
+  apply(next);
 });
 
 // Size and colours follow the screen.

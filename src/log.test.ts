@@ -71,7 +71,7 @@ function game(overrides: Partial<GameState> = {}, level = 1): GameState {
 }
 
 /** A log with only the first line, so tests see just the lines they make. */
-const EMPTY: Log = { lines: [], stretch: null };
+const EMPTY: Log = { lines: [], stretch: null, values: VALUES };
 const added = (before: Log, after: Log): readonly string[] =>
   after.lines.slice(before.lines.length);
 

@@ -519,8 +519,8 @@ cleared, no queued turns, and no obstacles or dot.
   (2.12), the free directions of a waiting snake (2.12 (5)), exported,
   which `turn`, the boxed-in check and `src/status.ts` use, and the
   delay of a level. It reports what each step did for the event log
-  (2.13): why a turn is ignored (`ignoredBecause`), and what the last
-  shielded crash hit. The choosers of 2.3 and 2.11 are passed in, so tests are
+  (2.13): why a turn is ignored (`ignoredBecause`), what the last
+  shielded crash hit, and what the last cleared level gave. The choosers of 2.3 and 2.11 are passed in, so tests are
   deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,

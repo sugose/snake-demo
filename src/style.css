@@ -115,6 +115,67 @@ h1 {
   display: none;
 }
 
+.log-row {
+  margin: 0;
+  text-align: right;
+}
+
+.log-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--focus);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.log-link:disabled {
+  color: var(--muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+.log-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--board);
+  border: 1px solid var(--button-border);
+  border-radius: 6px;
+}
+
+.log-panel[hidden] {
+  display: none;
+}
+
+.log-text {
+  flex: 1;
+  margin: 0;
+  overflow: auto;
+  font-size: 0.75rem;
+  white-space: pre;
+  user-select: text;
+}
+
+.log-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.log-actions button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--button-border);
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font: inherit;
+}
+
 .status {
   margin: 0;
   min-height: 1.5em;
