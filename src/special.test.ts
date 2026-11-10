@@ -484,6 +484,7 @@ describe("free directions after a shielded crash (docs/SPEC.md 2.12 (5))", () =>
     expect(next.ended).toBe("boxed");
     expect(next.snake).toEqual(corner);
     expect(next.run?.shieldUsed).toBe(1);
+    expect(next.run?.waiting).toBe(false);
   });
 });
 

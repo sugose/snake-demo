@@ -258,6 +258,35 @@ test("a crash with no shield layer left says so (docs/SPEC.md 2.8)", async ({ pa
   );
 });
 
+test("after a crash, a turn into a free cell goes on, the opposite of the heading included (Adam, 08:26)", async ({
+  page,
+}) => {
+  // Level 5 from (10,10) heading up, its 4 obstacles on (0,0) to (3,0), the dot on (19,19).
+  const game = await openToLevel5(page, "10,10", "up", 394);
+  const status = page.locator("#status");
+  await page.keyboard.press("ArrowUp");
+  await runTicks(page, 9, LEVEL_5_DELAY);
+  await expectGame(game, "running", "10,1");
+  await page.keyboard.press("ArrowLeft");
+  await runTicks(page, 8, LEVEL_5_DELAY);
+  await expectGame(game, "running", "2,1");
+  // Up into the obstacle on (2,0): the neck is to the right, so only down and left are free.
+  await page.keyboard.press("ArrowUp");
+  await runTicks(page, 1, LEVEL_5_DELAY);
+  await expectGame(game, "running", "2,1");
+  await expect(game).toHaveAttribute("data-waiting", "true");
+  await expect(status).toHaveText("Shield lost, 2 left. Turn down or left to go on.");
+  for (const key of ["ArrowRight", "ArrowUp"]) {
+    await page.keyboard.press(key);
+    await expect(game).toHaveAttribute("data-waiting", "true");
+  }
+  // Down is the opposite of the heading (up), and free.
+  await page.keyboard.press("ArrowDown");
+  await expect(game).toHaveAttribute("data-waiting", "false");
+  await runTicks(page, 1, LEVEL_5_DELAY);
+  await expectGame(game, "running", "2,2");
+});
+
 test.describe('the blinking "Special Level" text (docs/SPEC.md 2.12 (11))', () => {
   test("blinks twice a second over the board for 3 seconds from the level's layout, then goes", async ({
     page,

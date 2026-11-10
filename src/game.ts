@@ -545,7 +545,14 @@ export function tick(state: GameState, choose: Chooser): GameState {
       queue: [],
       run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: true },
     };
-    if (freeDirections(waiting).length === 0) return { ...waiting, status: "over", ended: "boxed" };
+    if (freeDirections(waiting).length === 0) {
+      return {
+        ...waiting,
+        status: "over",
+        ended: "boxed",
+        run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: false },
+      };
+    }
     return waiting;
   };
   if (!onBoard(newHead, state.size)) return crash("wall");
