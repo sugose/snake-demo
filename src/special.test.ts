@@ -245,7 +245,7 @@ describe("turns on a special level (docs/SPEC.md 2.12 (6))", () => {
   it("the 21st turn blows the snake up before it moves, with the board as it was", () => {
     const state = special({ turns: 20 }, { queue: ["up"] });
     const next = tick(state, answers(0));
-    expect(next).toEqual({ ...state, status: "blown" });
+    expect(next).toEqual({ ...state, status: "blown", ended: "turns" });
   });
 
   it("a tick with no turn counts none", () => {
@@ -262,6 +262,7 @@ describe("the level's time (docs/SPEC.md 2.12 (3), (7))", () => {
   it("a tick that leaves the time at 30 s or more, the level not cleared, blows the snake up there", () => {
     const next = tick(special({ timeMs: 30000 - LEVEL_5_DELAY }), answers(0));
     expect(next.status).toBe("blown");
+    expect(next.ended).toBe("time");
     expect(next.snake).toEqual(shifted(1));
     expect(next.run?.timeMs).toBe(30000);
     expect(specialInfo(next)?.secondsLeft).toBe(0);
@@ -326,7 +327,12 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
 
   it("a wall with no layer left ends the game", () => {
     const state = special({ shieldUsed: 3 }, { snake: atWall });
-    expect(tick(state, answers(0))).toEqual({ ...state, status: "over" });
+    expect(tick(state, answers(0))).toEqual({ ...state, status: "over", ended: "wall" });
+  });
+
+  it("an obstacle with no layer left ends the game", () => {
+    const state = special({ shieldUsed: 3 }, { obstacles: [{ x: 11, y: 10 }] });
+    expect(tick(state, answers(0))).toEqual({ ...state, status: "over", ended: "obstacle" });
   });
 
   it("the snake's own body ends the game, shield or not", () => {
@@ -339,6 +345,7 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
     ];
     const next = tick(special({}, { snake: coiled, heading: "up", queue: ["right"] }), answers(0));
     expect(next.status).toBe("over");
+    expect(next.ended).toBe("self");
     expect(next.run?.shieldUsed).toBe(0);
   });
 
