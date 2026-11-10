@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, expectGame, openGame, runTicks, test } from "./helpers";
+import { expect, expectGame, openGame, runTicks, swipe, test } from "./helpers";
 
 // The event log in the browser (docs/SPEC.md 2.13).
 
@@ -18,20 +18,36 @@ async function logLines(page: Page): Promise<{ first: string; events: string[]; 
   return { first, events, ticks };
 }
 
-test("the Log link is not usable until the game ends; then the panel shows the whole game", async ({
-  page,
-}) => {
+test("the Log link is usable in every state; the panel shows the whole game", async ({ page }) => {
   const game = await openGame(page);
   const link = page.getByRole("button", { name: "Log", exact: true });
   const panel = page.locator("#log-panel");
   await expect(link).toBeVisible();
-  await expect(link).toBeDisabled();
+  await expect(link).toBeEnabled();
   await expect(panel).toBeHidden();
+
+  // ready: opens, and opening and closing change nothing.
+  await link.click();
+  await expect(panel).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(game).toHaveAttribute("data-status", "ready");
 
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 3);
+  await expect(game).toHaveAttribute("data-status", "running");
+  await expect(link).toBeEnabled();
   await page.keyboard.press("Space");
-  await expect(link).toBeDisabled();
+  await expect(game).toHaveAttribute("data-status", "paused");
+  await expect(link).toBeEnabled();
+
+  // paused: opens, and opening and closing change nothing.
+  await link.click();
+  await expect(panel).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(game).toHaveAttribute("data-status", "paused");
+
   await page.keyboard.press("Space");
   await runTicks(page, 7);
   await expectGame(game, "over", "19,10");
@@ -107,7 +123,7 @@ test("a new game while the panel is open closes it and starts a new log", async 
   await page.keyboard.press("Enter");
   await expect(page.locator("#log-panel")).toBeHidden();
   await expect(game).toHaveAttribute("data-status", "ready");
-  await expect(link).toBeDisabled();
+  await expect(link).toBeEnabled();
 
   // The new game's log starts afresh, with its own time and tick count.
   await page.clock.runFor(500);
@@ -129,3 +145,226 @@ test("a new game while the panel is open closes it and starts a new log", async 
   expect(stamps[2]).toMatch(/^\[t=500 #0\] /);
   expect(ticks.at(-1)).toBe(10);
 });
+
+// The panel and the game (docs/SPEC.md 2.13 (6)).
+
+const linkOf = (page: Page) => page.getByRole("button", { name: "Log", exact: true });
+const panelText = async (page: Page): Promise<string> =>
+  (await page.locator("#log-text").textContent()) ?? "";
+
+/** A game running to the right, two ticks in: the head is on (12,10). */
+async function runningGame(page: Page) {
+  const game = await openGame(page);
+  await page.keyboard.press("ArrowRight");
+  await runTicks(page, 2);
+  await expectGame(game, "running", "12,10");
+  return game;
+}
+
+for (const how of ["Escape", "Close"] as const) {
+  test(`opening the panel on a running game pauses it, and ${how} goes on`, async ({ page }) => {
+    const game = await runningGame(page);
+    await linkOf(page).click();
+    await expect(page.locator("#log-panel")).toBeVisible();
+    await expectGame(game, "paused", "12,10");
+    await expect(page.locator("#pause")).toHaveText("Resume");
+    // The text of the panel is the log after the pause of its opening.
+    const lines = (await panelText(page)).split("\n");
+    expect(lines.at(-2)).toMatch(/^\[t=\d+ #2\] move right 2 head=\(12,10\)$/);
+    expect(lines.at(-1)).toMatch(/^\[t=\d+ #2\] pause log$/);
+
+    await runTicks(page, 5);
+    await expectGame(game, "paused", "12,10");
+
+    if (how === "Escape") await page.keyboard.press("Escape");
+    else await page.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(page.locator("#log-panel")).toBeHidden();
+    await expectGame(game, "running", "12,10");
+    await runTicks(page, 1);
+    await expectGame(game, "running", "13,10");
+
+    await linkOf(page).click();
+    const { events } = await logLines(page);
+    expect(events).toEqual([
+      "level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
+      "key ArrowRight right used",
+      "turn right start",
+      "move right 2 head=(12,10)",
+      "pause log",
+      "resume log",
+      "move right 1 head=(13,10)",
+      "pause log",
+    ]);
+  });
+}
+
+test("the panel changes nothing, opening or closing, in ready, paused and ended states", async ({
+  page,
+}) => {
+  const game = await openGame(page);
+  const panel = page.locator("#log-panel");
+  const link = linkOf(page);
+
+  await link.click();
+  const readyText = await panelText(page);
+  await page.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(panel).toBeHidden();
+  await expect(game).toHaveAttribute("data-status", "ready");
+  await runTicks(page, 5);
+  await expectGame(game, "ready", "10,10");
+  await link.click();
+  expect(await panelText(page)).toBe(readyText);
+  await page.keyboard.press("Escape");
+
+  await page.keyboard.press("ArrowRight");
+  await runTicks(page, 2);
+  await page.keyboard.press("Space");
+  await expectGame(game, "paused", "12,10");
+  await link.click();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expectGame(game, "paused", "12,10");
+  await runTicks(page, 5);
+  await expectGame(game, "paused", "12,10");
+  await link.click();
+  await page.getByRole("button", { name: "Close", exact: true }).click();
+  await expectGame(game, "paused", "12,10");
+  await link.click();
+  const { events } = await logLines(page);
+  expect(events).toEqual([
+    "level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
+    "key ArrowRight right used",
+    "turn right start",
+    "key Space pause used",
+    "move right 2 head=(12,10)",
+    "pause",
+  ]);
+  await page.keyboard.press("Escape");
+
+  await page.keyboard.press("Space");
+  await runTicks(page, 8);
+  await expectGame(game, "over", "19,10");
+  const endedText = await (async () => {
+    await link.click();
+    return panelText(page);
+  })();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expectGame(game, "over", "19,10");
+  await link.click();
+  expect(await panelText(page)).toBe(endedText);
+});
+
+test("while the panel is open, keys, swipes, Start, Pause, Resume and the Log link do nothing", async ({
+  page,
+}) => {
+  const game = await runningGame(page);
+  const panel = page.locator("#log-panel");
+  await linkOf(page).click();
+  await expectGame(game, "paused", "12,10");
+  const text = await panelText(page);
+
+  for (const key of ["ArrowUp", "ArrowLeft", "w", "p", "P"]) await page.keyboard.press(key);
+  await swipe(page, 0, -80);
+  await page.locator("#start").click({ force: true });
+  await page.locator("#pause").click({ force: true }); // reads "Resume"
+  await linkOf(page).click({ force: true });
+  await runTicks(page, 5);
+  await expect(panel).toBeVisible();
+  await expectGame(game, "paused", "12,10");
+  await expect(page.locator("#pause")).toHaveText("Resume");
+  expect(await panelText(page)).toBe(text);
+
+  // Nothing steered the snake: it goes on to the right, and the log has no line for any of it.
+  await page.keyboard.press("Escape");
+  await runTicks(page, 1);
+  await expectGame(game, "running", "13,10");
+  await linkOf(page).click();
+  const { events } = await logLines(page);
+  expect(events.slice(3)).toEqual([
+    "move right 2 head=(12,10)",
+    "pause log",
+    "resume log",
+    "move right 1 head=(13,10)",
+    "pause log",
+  ]);
+});
+
+test("a game the player paused stays paused while the panel is open and after it closes", async ({
+  page,
+}) => {
+  const game = await runningGame(page);
+  await page.keyboard.press("Space");
+  await expectGame(game, "paused", "12,10");
+  await linkOf(page).click();
+  await page.keyboard.press("p");
+  await page.locator("#pause").click({ force: true }); // reads "Resume"
+  await expectGame(game, "paused", "12,10");
+  await page.keyboard.press("Escape");
+  await runTicks(page, 5);
+  await expectGame(game, "paused", "12,10");
+});
+
+test("in ready, keys, a swipe and Start do nothing while the panel is open", async ({ page }) => {
+  const game = await openGame(page);
+  await linkOf(page).click();
+  await page.keyboard.press("ArrowRight");
+  await swipe(page, 80, 0);
+  await page.locator("#start").click({ force: true });
+  await runTicks(page, 3);
+  await expectGame(game, "ready", "10,10");
+  await page.keyboard.press("Escape");
+  await expectGame(game, "ready", "10,10");
+  await page.locator("#start").click();
+  await expect(game).toHaveAttribute("data-status", "running");
+});
+
+test("lines made while the panel is open are in the log, not in the open panel; a shown page does not go on", async ({
+  page,
+}) => {
+  const game = await runningGame(page);
+  await linkOf(page).click();
+  const text = await panelText(page);
+  await page.evaluate(() => {
+    for (const state of ["hidden", "visible"]) {
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => state });
+      document.dispatchEvent(new Event("visibilitychange"));
+    }
+  });
+  await expectGame(game, "paused", "12,10");
+  expect(await panelText(page)).toBe(text);
+  await page.keyboard.press("Escape");
+  await expectGame(game, "running", "12,10");
+  await linkOf(page).click();
+  const { events } = await logLines(page);
+  expect(events.slice(3)).toEqual([
+    "move right 2 head=(12,10)",
+    "pause log",
+    "hidden",
+    "shown",
+    "resume log",
+    "pause log",
+  ]);
+});
+
+for (const how of ["Enter", "the New game button"] as const) {
+  test(`${how} with the panel open on a running game closes it and makes a new game without going on`, async ({
+    page,
+  }) => {
+    const game = await runningGame(page);
+    await linkOf(page).click();
+    await expectGame(game, "paused", "12,10");
+    if (how === "Enter") await page.keyboard.press("Enter");
+    else await page.locator("#new-game").click();
+    await expect(page.locator("#log-panel")).toBeHidden();
+    await expectGame(game, "ready", "10,10");
+    await runTicks(page, 5);
+    await expectGame(game, "ready", "10,10");
+    await linkOf(page).click();
+    const { events } = await logLines(page);
+    expect(events).toEqual([
+      how === "Enter" ? "key Enter new used" : "button New game used",
+      "level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
+    ]);
+  });
+}

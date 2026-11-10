@@ -20,6 +20,7 @@ describe("config (docs/SPEC.md 3)", () => {
       clearAheadOfHead: 2,
       bannerBlinkMs: 250,
       bannerMs: 3000,
+      copiedMs: 2000,
     });
   });
 
