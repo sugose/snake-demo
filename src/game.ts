@@ -48,6 +48,28 @@ export interface SpecialRules {
   readonly delays: Delays;
 }
 
+/** Why a turn is ignored, for the event log (docs/SPEC.md 2.13 (4)). */
+export type IgnoreReason =
+  | "same direction"
+  | "straight back"
+  | "queue full"
+  | "into a wall"
+  | "onto an obstacle"
+  | "not free"
+  | "state";
+
+/** What the last cleared level gave, for the event log (docs/SPEC.md 2.12 (8), 2.13 (5)). */
+export interface Cleared {
+  readonly level: number;
+  /** On a special level, its points and the turns, seconds and layers they counted. */
+  readonly special: {
+    readonly points: number;
+    readonly turnsLeft: number;
+    readonly secondsLeft: number;
+    readonly shieldUsed: number;
+  } | null;
+}
+
 /** Where a special level stands (docs/SPEC.md 2.12 (3), 3.1). */
 export interface SpecialRun {
   /** Turns counted on this level (2.12 (6)). */
@@ -94,6 +116,10 @@ export interface GameState {
   readonly run: SpecialRun | null;
   /** Why the game ended; `null` while it has not (docs/SPEC.md 2.8). */
   readonly ended: EndReason | null;
+  /** What the last shielded crash hit; `null` before the first (docs/SPEC.md 2.13). */
+  readonly crashed: "wall" | "obstacle" | null;
+  /** What the last cleared level gave; `null` before the first (docs/SPEC.md 2.13). */
+  readonly cleared: Cleared | null;
 }
 
 /** At most two turns wait in the queue (docs/SPEC.md 2.4 (2), 3.1). */
@@ -327,6 +353,8 @@ export function newGame(options: {
     special,
     run: runFor(1, special),
     ended: null,
+    crashed: null,
+    cleared: null,
   };
 }
 
@@ -373,6 +401,33 @@ export function specialInfo(
 }
 
 /**
+ * Why `turn` would ignore a turn in `direction`, or `null` if it takes it (docs/SPEC.md 2.13 (4)),
+ * with the first reason that applies: `state` in a state that takes no turn; in `ready`, `straight
+ * back` before `into a wall` and `onto an obstacle`; while the snake waits, only `not free`;
+ * otherwise `same direction`, then `straight back`, then `queue full`. A value that is not one of
+ * the four directions (possible only past the type checker) gives `state`.
+ */
+export function ignoredBecause(state: GameState, direction: Direction): IgnoreReason | null {
+  if (!Object.hasOwn(STEP, direction)) return "state";
+  if (state.status === "ready") {
+    if (direction === OPPOSITE[state.heading]) return "straight back";
+    const head = state.snake[0];
+    if (head === undefined) return null;
+    const next = ahead(head, direction, 1);
+    if (!onBoard(next, state.size)) return "into a wall";
+    if (state.obstacles.some((cell) => sameCell(cell, next))) return "onto an obstacle";
+    return null;
+  }
+  if (state.status !== "running") return "state";
+  if (state.run?.waiting) return freeDirections(state).includes(direction) ? null : "not free";
+  const last = state.queue[state.queue.length - 1] ?? state.heading;
+  if (direction === last) return "same direction";
+  if (direction === OPPOSITE[last]) return "straight back";
+  if (state.queue.length >= MAX_QUEUED_TURNS) return "queue full";
+  return null;
+}
+
+/**
  * A turn from a key or a swipe (docs/SPEC.md 2.1 (3), 2.4). In `ready`, a turn starts the game
  * with that heading, unless it is opposite to the heading or its next cell from the head is off the
  * board or on an obstacle. In `running`, a turn is checked
@@ -383,28 +438,13 @@ export function specialInfo(
  * direction at once, ignores any other, and does not count the turn (docs/SPEC.md 2.12 (5), (6)).
  */
 export function turn(state: GameState, direction: Direction): GameState {
-  if (!Object.hasOwn(STEP, direction)) return state;
-  if (state.status === "ready") {
-    if (direction === OPPOSITE[state.heading]) return state;
-    const head = state.snake[0];
-    if (head !== undefined) {
-      const next = ahead(head, direction, 1);
-      if (!onBoard(next, state.size) || state.obstacles.some((cell) => sameCell(cell, next))) {
-        return state;
-      }
-    }
-    return { ...state, heading: direction, status: "running" };
-  }
-  if (state.status !== "running") return state;
+  if (ignoredBecause(state, direction) !== null) return state;
+  if (state.status === "ready") return { ...state, heading: direction, status: "running" };
   if (state.run?.waiting) {
     // A snake waiting after a shielded crash takes a turn into a free direction at once, and the
     // turn is not counted (docs/SPEC.md 2.12 (5), (6)).
-    if (!freeDirections(state).includes(direction)) return state;
     return { ...state, heading: direction, run: { ...state.run, waiting: false } };
   }
-  const last = state.queue[state.queue.length - 1] ?? state.heading;
-  if (direction === last || direction === OPPOSITE[last]) return state;
-  if (state.queue.length >= MAX_QUEUED_TURNS) return state;
   return { ...state, queue: [...state.queue, direction] };
 }
 
@@ -543,6 +583,7 @@ export function tick(state: GameState, choose: Chooser): GameState {
       ...state,
       heading,
       queue: [],
+      crashed: ended,
       run: { ...run, shieldUsed: run.shieldUsed + 1, waiting: true },
     };
     if (freeDirections(waiting).length === 0) {
@@ -577,7 +618,21 @@ export function tick(state: GameState, choose: Chooser): GameState {
     dotsEaten: state.dotsEaten + 1,
   };
   if (eaten.dotsEaten >= state.dotsPerLevel) {
-    return nextLevel({ ...eaten, score: eaten.score + levelPoints(eaten) }, choose);
+    const points = levelPoints(eaten);
+    const info = specialInfo(eaten);
+    const cleared: Cleared = {
+      level: state.level,
+      special:
+        info === null || eaten.run === null
+          ? null
+          : {
+              points,
+              turnsLeft: info.turnsLeft,
+              secondsLeft: info.secondsLeft,
+              shieldUsed: eaten.run.shieldUsed,
+            },
+    };
+    return nextLevel({ ...eaten, score: eaten.score + points, cleared }, choose);
   }
   const free = freeCells(state.size, [...snake, ...state.obstacles]);
   if (free.length === 0) return { ...eaten, food: null, status: "won", ended: "full" };

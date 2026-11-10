@@ -98,6 +98,8 @@ describe("newGame", () => {
       special: null,
       run: null,
       ended: null,
+      crashed: null,
+      cleared: null,
     });
   });
 
@@ -653,6 +655,7 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
       dotsEaten: 0,
       score: 10,
       status: "ready",
+      cleared: { level: 1, special: null },
     });
     // The start, then one obstacle from 400 - 9 cells, then the dot from 400 - 2 cells.
     expect(choose.counts).toEqual([STARTS, 391, 398]);
@@ -750,6 +753,7 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         score: 2,
         status: "won",
         ended: "noRoom",
+        cleared: { level: 1, special: null },
       });
       expect(choose.counts).toEqual([]);
     });
@@ -814,6 +818,7 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         queue: [],
         status: "won",
         ended: "noRoom",
+        cleared: { level: 2, special: null },
       });
       expect(choose.counts).toEqual([]);
     });

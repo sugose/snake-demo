@@ -447,7 +447,9 @@ cleared, no queued turns, and no obstacles or dot.
    turn (2.7); every press of the Start, Pause or Resume, and New game
    buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6) is open
-   make no line. An input line says whether the input was used or
+   make no line. The New game command's line is the first stamped line
+   of the new game's log, at `[t=0 #0]`, before its level's line; the
+   page load makes no input line. An input line says whether the input was used or
    ignored, and if ignored, why, with one of these reasons:
    `same direction` (the heading, or the last queued turn), `straight
    back` (the opposite of either), `queue full` (2.4), `into a wall` or
@@ -519,8 +521,8 @@ cleared, no queued turns, and no obstacles or dot.
   (2.12), the free directions of a waiting snake (2.12 (5)), exported,
   which `turn`, the boxed-in check and `src/status.ts` use, and the
   delay of a level. It reports what each step did for the event log
-  (2.13): why a turn is ignored (`ignoredBecause`), and what the last
-  shielded crash hit. The choosers of 2.3 and 2.11 are passed in, so tests are
+  (2.13): why a turn is ignored (`ignoredBecause`), what the last
+  shielded crash hit, and what the last cleared level gave. The choosers of 2.3 and 2.11 are passed in, so tests are
   deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,

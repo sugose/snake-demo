@@ -6,6 +6,9 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- An event log of each game: every input, turn, move, dot, crash, obstacle jump, cleared level and the end, with each
+  level's layout and speed. Once the game ends, a Log link below the board opens it over the board, with Copy and
+  Close (#46). Specified in #43.
 - After a shielded crash, any turn into a free cell gets the snake moving again, the opposite of the heading included; turns
   into a wall, an obstacle or the snake itself are ignored, the status line names only the free directions, and a snake
   with none ends the game as boxed in (#45). Specified in #44.
