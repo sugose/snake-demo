@@ -114,9 +114,9 @@ arcade look of the high score list"):
   writes no best score, the parameter is read at the page load only);
 - a secret slow button, `?slow`: his request of 00:10 and "apyr" at 00:32
   to Clead's recommendation of 00:12 (the factor steps 1×, 2×, 4×, 1×; the
-  time and points rules are unchanged; a small button under the board; a
-  game started with `?slow` or `?level=N` writes no best score and enters
-  no list);
+  time and points rules are unchanged; a small button under the board; the
+  record of the decision adds that a game started with `?slow` or
+  `?level=N` writes no best score);
 - a high score list in the style of an old arcade machine: 00:34, 00:35
   ("intended for browser local high scores only") and 00:38, "apyr on all
   except swap RND for LVL", to Clead's choices of 00:34 (a top 10 in the browser only, the columns RANK,
@@ -139,7 +139,7 @@ bullet covers all of it, and a mark in the middle covers the sentence it
 opens; what has no mark is in Adam's words above. The encodings that
 carry them are Clead's technical detail, as in the first Approved
 paragraph, and Adam has not seen them: the text format and bounds of the
-stored list (2.15 (1)), the names of the keys and the parameters, and the
+stored list (2.15 (1)), the storage key names, and the
 sizes, colours and periods of 2.14 (5) and 2.16.
 
 ---
@@ -226,8 +226,15 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | Turn (key or swipe) | 2.1 (3) | 2.4 | ignored | ignored |
 | Start button | starts in the heading it has | ignored | ignored | ignored |
 | Pause (Space, P, Pause button) | ignored | `paused` | `running` | ignored |
-| New game (Enter, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, except that it does nothing while the name entry of 2.15 (4) is open, and while the scores panel of 2.15 (5) is open only the New game button gives it (Enter closes the panel) |
+| New game (Enter, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
 | Slow button (2.14 (5)) | steps the factor | steps the factor | steps the factor | ignored |
+
+**[Clead]** Three panels change the New game row in every column. While
+the name entry of 2.15 (4) is open the command does nothing. While the
+scores panel of 2.15 (5) is open, which it can be in `ready`, `paused` and
+the ended states (it pauses a `running` game), only the New game button
+gives a new game, and Enter closes the panel. While the log panel
+(2.13 (6)) is open, Enter or the button closes it and gives a new game.
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
@@ -245,7 +252,8 @@ browser's shortcuts are not taken as turns; Shift does not matter. When a
 key is held down, its repeats still turn the snake but do not pause, go
 on or start a new game again. Keys act on the game even while one of the
 buttons has the focus, and a key that does something in the game does
-not also press that button. While the log panel (2.13 (6)), the scores
+not also press that button or follow that link (Enter on the focused Scores
+link is the New game command and does not open the table). While the log panel (2.13 (6)), the scores
 panel or the name entry (2.15) is open, what the keys do is as those
 sections say.
 
@@ -786,10 +794,11 @@ Without them the page is as every other section says.
    link, or after an entry to the New game button, when it closes, and
    stays inside the panel; Enter and Space on the focused Close press it
    (as in the entry), so the table closes and Enter makes no new game from
-   it. A key already down when the table opens, and the repeats of Enter,
-   Space and Escape, do nothing, as in the entry (4). The status line of an
-   ended game keeps its words while the table is open (2.8), and Enter
-   then closes the table, so that a second Enter makes the new game. The
+   it. **[Clead]** A key already down when the table opens, and the
+   repeats of Enter, Space and Escape, do nothing, as in the entry (4).
+   **[Clead]** The status line of an ended game keeps its words while the
+   table is open (2.8), and Enter then closes the table, so that a second
+   Enter makes the new game. The
    focus of the log panel is as it is.
 6. **[Clead]** When the list is read: when a game ends (for the
    qualification), when the entry opens, when it is confirmed (before the
