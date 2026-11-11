@@ -210,36 +210,137 @@ h1 {
   color: var(--copied-fg);
 }
 
-/* The high score list's name entry and table (SPEC 2.15). Plain look; the arcade look is SPEC 2.16. */
+/*
+ * The high score list's name entry and table, in the arcade look (SPEC 2.16). Only these two panels
+ * have it. The values come from custom properties that main.ts sets from config.ts (SPEC 3); the
+ * shifts' keyframes are added by main.ts too, since a keyframe's place in the cycle cannot be a
+ * custom property. The panel is dark in light and in dark mode alike.
+ */
 .score-panel {
+  --arcade-bg: #0a0a18;
+  --arcade-title: #5fe3ff;
+  --arcade-head: #ffb000;
+  --arcade-row: #f2f2f2;
+  --arcade-mark: #ff85dc;
+  --arcade-frame: #5fe3ff;
+  /* The band at its lightest: the background mixed with 6 % white (#191926). */
+  --arcade-band: color-mix(in srgb, var(--arcade-bg), white var(--arcade-band-white));
+  /* One pixel of the font on the screen, in CSS pixels, at the scale main.ts chose. */
+  --u: calc(var(--arcade-scale, 1) * 1px);
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px;
+  align-items: center;
+  gap: calc(var(--u) * 4);
+  padding: calc(var(--u) * 4) 0;
   overflow: auto;
-  background: var(--board);
-  border: 1px solid var(--button-border);
+  color: var(--arcade-row);
+  background-color: var(--arcade-bg);
+  background-image: linear-gradient(to bottom, transparent, var(--arcade-band) 50%, transparent);
+  background-size: 100% var(--arcade-band-height);
+  background-repeat: no-repeat;
+  background-position: 0 calc(var(--arcade-band-height) * -1);
   border-radius: 6px;
+  animation:
+    arcade-roll var(--arcade-roll) linear infinite,
+    arcade-shift var(--arcade-shift-cycle) step-end infinite;
 }
 
 .score-panel[hidden] {
   display: none;
 }
 
+/* The scanlines: a layer that takes no input, a dark line every few pixels. */
+.score-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--arcade-scan-opacity);
+  background-image: linear-gradient(
+    to bottom,
+    #000 var(--arcade-scan-height),
+    transparent var(--arcade-scan-height)
+  );
+  background-size: 100% var(--arcade-scan-pitch);
+}
+
+/* The band rolls down the panel from above it to below it. */
+@keyframes arcade-roll {
+  from {
+    background-position: 0 calc(var(--arcade-band-height) * -1);
+  }
+
+  to {
+    background-position: 0 calc(100% + var(--arcade-band-height));
+  }
+}
+
+/* The cursor of the selected slot: shown half of its period, hidden the other half. */
+@keyframes arcade-cursor {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* The letter on the cursor is dark while the block shows and light while it is hidden. */
+@keyframes arcade-cursor-letter {
+  0% {
+    color: var(--arcade-bg);
+  }
+
+  50% {
+    color: var(--arcade-row);
+  }
+}
+
+/* A drawn text: squares in an SVG, with the same text visually hidden beside it (src/pixel.ts). */
+.px-text {
+  position: relative;
+  display: block;
+  width: fit-content;
+  line-height: 0;
+}
+
+.px {
+  display: block;
+  width: calc(var(--cols) * var(--u));
+  height: calc(var(--rows) * var(--u));
+  fill: currentColor;
+  filter: drop-shadow(0 0 var(--arcade-glow) currentColor);
+}
+
 .score-title {
+  display: flex;
+  justify-content: center;
   margin: 0;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-  text-align: center;
+  color: var(--arcade-title);
 }
 
 .entry-facts {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: calc(var(--u) * var(--arcade-gap));
+  row-gap: calc(var(--u) * 3);
   margin: 0;
-  font-variant-numeric: tabular-nums;
+}
+
+.fact {
+  display: contents;
+}
+
+.fact-label {
+  color: var(--arcade-head);
+}
+
+.fact-value {
+  justify-self: end;
+  font-weight: normal;
 }
 
 .entry-slots {
@@ -251,74 +352,122 @@ h1 {
 .slot-column {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: calc(var(--u) * 2);
   width: 56px;
 }
 
 .slot-column button,
 .score-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 40px;
-  border: 1px solid var(--button-border);
-  border-radius: 6px;
-  background: var(--button-bg);
-  color: var(--button-fg);
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--arcade-row);
   font: inherit;
   cursor: pointer;
 }
 
 .slot {
-  min-height: 48px;
-  font-size: 1.75rem;
-  font-weight: 700;
+  min-height: max(48px, calc(var(--u) * 7 + 16px));
 }
 
+/* The selected slot has a frame. */
 .slot-column .slot[aria-current="true"] {
-  border: 3px solid var(--focus);
+  border-color: var(--arcade-frame);
 }
 
-.slot-column button:focus-visible,
-.score-actions button:focus-visible {
-  outline: 2px solid var(--focus);
+.score-panel button:focus {
+  outline: 2px solid var(--arcade-frame);
   outline-offset: 2px;
+}
+
+.slot-face {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.slot-cursor {
+  position: absolute;
+  inset: 0;
+  color: var(--arcade-frame);
+  animation: arcade-cursor var(--arcade-cursor) step-end infinite;
+}
+
+.slot[aria-current="true"] .px-text {
+  color: var(--arcade-bg);
+  animation: arcade-cursor-letter var(--arcade-cursor) step-end infinite;
+}
+
+/* With reduced motion nothing moves: no band, no shift, and the cursor stays on. */
+@media (prefers-reduced-motion: reduce) {
+  .score-panel,
+  .slot-cursor,
+  .slot[aria-current="true"] .px-text {
+    animation: none;
+  }
 }
 
 .score-actions {
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  gap: 16px;
   margin-top: auto;
 }
 
 .score-actions button {
-  flex: 1;
+  min-width: 96px;
   min-height: 44px;
 }
 
 .scores-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
+  width: max-content;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .scores-table th,
 .scores-table td {
-  padding: 1px 4px;
+  padding: 0 0 calc(var(--u) * 2);
+  font-size: 0;
+  font-weight: normal;
+  line-height: 0;
   text-align: left;
+  vertical-align: top;
+}
+
+.scores-table th:not(:last-child),
+.scores-table td:not(:last-child) {
+  padding-right: calc(var(--u) * var(--arcade-gap));
+}
+
+/* The first column leaves room before the rank for the triangle that marks a row. */
+.scores-table th:first-child,
+.scores-table td:first-child {
+  position: relative;
+  padding-left: calc(var(--u) * var(--arcade-lead));
+}
+
+.scores-table .px-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.scores-table th {
+  color: var(--arcade-head);
 }
 
 .scores-table tr[aria-current="true"] {
-  background: var(--button-bg);
-  font-weight: 700;
-}
-
-/* A shape as well as a colour marks the new entry's row (SPEC 2.15 (5)); PR C draws the triangle. */
-.scores-table tr[aria-current="true"] td:first-child::before {
-  content: "\25b6\00a0";
+  color: var(--arcade-mark);
 }
 
 .scores-empty {
   margin: 0;
-  text-align: center;
 }
 
 .scores-empty[hidden] {

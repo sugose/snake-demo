@@ -52,4 +52,30 @@ export const config = Object.freeze({
   nameLetters: 3,
   /** The local-storage key of the high score list (docs/SPEC.md 2.15 (1)). */
   scoresStorageKey: "snake-demo.scores",
+  /** The whole-number scales of the pixel letters, CSS pixels per font pixel (docs/SPEC.md 2.16 (1)). */
+  pixelScales: Object.freeze([1, 2, 3]),
+  /** Height of the band that rolls down the panel, in CSS pixels (docs/SPEC.md 2.16 (4)). */
+  bandHeight: 40,
+  /** The band rolls down the panel once in this many ms (docs/SPEC.md 2.16 (4)). */
+  rollMs: 8000,
+  /** How far the picture shifts sideways, in CSS pixels (docs/SPEC.md 2.16 (4)). */
+  shiftPixels: 2,
+  /** How long each sideways shift lasts, in ms (docs/SPEC.md 2.16 (4)). */
+  shiftMs: 120,
+  /** The cycle of the sideways shifts, in ms (docs/SPEC.md 2.16 (4)). */
+  shiftCycleMs: 7000,
+  /** When in the cycle the picture shifts sideways, in ms (docs/SPEC.md 2.16 (4)). */
+  shiftAtMs: Object.freeze([900, 3300, 5600]),
+  /** The period of the blinking cursor, in ms: shown half of it, hidden half (docs/SPEC.md 2.16 (4)). */
+  cursorMs: 500,
+  /** Height of a scanline, in CSS pixels (docs/SPEC.md 2.16 (3)). */
+  scanlineHeight: 1,
+  /** A scanline every this many CSS pixels (docs/SPEC.md 2.16 (3)). */
+  scanlinePitch: 3,
+  /** Opacity of the scanlines, in percent (docs/SPEC.md 2.16 (3)). */
+  scanlineOpacityPercent: 25,
+  /** Blur of the glow of a drawn text, in CSS pixels (docs/SPEC.md 2.16 (3)). */
+  glowBlur: 4,
+  /** The band is the background mixed with this many percent white (docs/SPEC.md 2.16 (2), (4)). */
+  bandWhitePercent: 6,
 });

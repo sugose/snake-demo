@@ -27,11 +27,27 @@ describe("config (docs/SPEC.md 3)", () => {
       scoreEntries: 10,
       nameLetters: 3,
       scoresStorageKey: "snake-demo.scores",
+      pixelScales: [1, 2, 3],
+      bandHeight: 40,
+      rollMs: 8000,
+      shiftPixels: 2,
+      shiftMs: 120,
+      shiftCycleMs: 7000,
+      shiftAtMs: [900, 3300, 5600],
+      cursorMs: 500,
+      scanlineHeight: 1,
+      scanlinePitch: 3,
+      scanlineOpacityPercent: 25,
+      glowBlur: 4,
+      bandWhitePercent: 6,
     });
   });
 
   it("cannot be changed at run time", () => {
     expect(Object.isFrozen(config)).toBe(true);
     expect(Object.isFrozen(config.slowFactors)).toBe(true);
+    const values: Readonly<Record<string, unknown>> = config;
+    expect(Object.isFrozen(values.pixelScales)).toBe(true);
+    expect(Object.isFrozen(values.shiftAtMs)).toBe(true);
   });
 });

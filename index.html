@@ -38,16 +38,25 @@
           aria-labelledby="entry-title"
           hidden
         >
-          <h2 id="entry-title" class="score-title">ENTER YOUR NAME</h2>
+          <h2 id="entry-title" class="score-title" data-px="ENTER YOUR NAME">ENTER YOUR NAME</h2>
           <p class="entry-facts">
-            <span>SCORE <strong id="entry-score"></strong></span>
-            <span>LVL <strong id="entry-level"></strong></span>
-            <span>RANK <strong id="entry-rank"></strong></span>
+            <span class="fact">
+              <span class="fact-label" data-px="SCORE">SCORE</span>
+              <strong id="entry-score" class="fact-value"></strong>
+            </span>
+            <span class="fact">
+              <span class="fact-label" data-px="LVL">LVL</span>
+              <strong id="entry-level" class="fact-value"></strong>
+            </span>
+            <span class="fact">
+              <span class="fact-label" data-px="RANK">RANK</span>
+              <strong id="entry-rank" class="fact-value"></strong>
+            </span>
           </p>
           <div id="entry-slots" class="entry-slots"></div>
           <div class="score-actions">
-            <button type="button" id="entry-ok">OK</button>
-            <button type="button" id="entry-skip">Skip</button>
+            <button type="button" id="entry-ok" aria-label="OK" data-px="OK">OK</button>
+            <button type="button" id="entry-skip" aria-label="Skip" data-px="SKIP">Skip</button>
           </div>
         </section>
         <section
@@ -61,17 +70,17 @@
           <table class="scores-table">
             <thead>
               <tr>
-                <th scope="col">RANK</th>
-                <th scope="col">SCORE</th>
-                <th scope="col">LVL</th>
-                <th scope="col">NAME</th>
+                <th scope="col" data-px="RANK">RANK</th>
+                <th scope="col" data-px="SCORE">SCORE</th>
+                <th scope="col" data-px="LVL">LVL</th>
+                <th scope="col" data-px="NAME">NAME</th>
               </tr>
             </thead>
             <tbody id="scores-rows"></tbody>
           </table>
-          <p id="scores-empty" class="scores-empty" hidden>NO SCORES YET</p>
+          <p id="scores-empty" class="scores-empty" data-px="NO SCORES YET" hidden>NO SCORES YET</p>
           <div class="score-actions">
-            <button type="button" id="scores-close">Close</button>
+            <button type="button" id="scores-close" aria-label="Close" data-px="CLOSE">Close</button>
           </div>
         </section>
       </div>

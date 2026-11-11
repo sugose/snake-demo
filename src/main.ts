@@ -39,6 +39,16 @@ import {
   type Stamp,
   startLog,
 } from "./log";
+import {
+  COLUMN_GAP,
+  chooseScale,
+  drawShape,
+  drawText,
+  layoutColumns,
+  MARKER_LEAD,
+  shiftKeyframes,
+  textColumns,
+} from "./pixel";
 import { firstSlowFactor, readQuery, stepSlowFactor } from "./query";
 import {
   confirmEntry,
@@ -78,6 +88,19 @@ const {
   scoreEntries,
   nameLetters,
   scoresStorageKey,
+  pixelScales,
+  bandHeight,
+  rollMs,
+  shiftPixels,
+  shiftMs,
+  shiftCycleMs,
+  shiftAtMs,
+  cursorMs,
+  scanlineHeight,
+  scanlinePitch,
+  scanlineOpacityPercent,
+  glowBlur,
+  bandWhitePercent,
 } = config;
 /**
  * The best score's bound (docs/SPEC.md 2.9 (3)): at most one level per 5 cells of the board can be
@@ -93,6 +116,7 @@ const scoreRules: ScoreRules = {
   maxScore,
   maxLevel: (gridSize * gridSize) / dotsPerLevel + 1,
 };
+const SCORES_TITLE = `TOP ${scoreEntries} SCORES`;
 const delays = { first: firstDelay, step: delayStep, shortest: shortestDelay };
 const special: SpecialRules = {
   every: specialEvery,
@@ -170,6 +194,7 @@ const logCopy = element("log-copy", HTMLButtonElement);
 const logLive = element("log-live", HTMLElement);
 const logClose = element("log-close", HTMLButtonElement);
 const entryPanel = element("entry-panel", HTMLElement);
+const entryTitle = element("entry-title", HTMLElement);
 const entryScore = element("entry-score", HTMLElement);
 const entryLevel = element("entry-level", HTMLElement);
 const entryRank = element("entry-rank", HTMLElement);
@@ -177,7 +202,6 @@ const entrySlots = element("entry-slots", HTMLElement);
 const entryOk = element("entry-ok", HTMLButtonElement);
 const entrySkip = element("entry-skip", HTMLButtonElement);
 const scoresPanel = element("scores-panel", HTMLElement);
-const scoresTitle = element("scores-title", HTMLElement);
 const scoresRows = element("scores-rows", HTMLElement);
 const scoresEmpty = element("scores-empty", HTMLElement);
 const scoresClose = element("scores-close", HTMLButtonElement);
@@ -186,6 +210,76 @@ if (frame === null) throw new Error("the board has no frame");
 const drawing = canvas.getContext("2d");
 if (drawing === null) throw new Error("the browser gives no 2D canvas");
 const context: CanvasRenderingContext2D = drawing;
+
+// The arcade look of the two score panels (docs/SPEC.md 2.16): every text of the page's markup that
+// carries `data-px` is drawn as pixels, and the look's named values go to the CSS as custom properties.
+
+/** Replaces the content of `target` with `text` drawn as pixels, the text kept in a visually hidden element. */
+function drawInto(target: HTMLElement, text: string): void {
+  target.innerHTML = drawText(text);
+}
+
+for (const target of document.querySelectorAll<HTMLElement>("[data-px]")) {
+  drawInto(target, target.dataset.px ?? "");
+}
+drawInto(element("scores-title", HTMLElement), SCORES_TITLE);
+
+const LOOK: Readonly<Record<string, string>> = {
+  "--arcade-band-height": `${bandHeight}px`,
+  "--arcade-roll": `${rollMs}ms`,
+  "--arcade-shift": `${shiftPixels}px`,
+  "--arcade-shift-cycle": `${shiftCycleMs}ms`,
+  "--arcade-cursor": `${cursorMs}ms`,
+  "--arcade-scan-height": `${scanlineHeight}px`,
+  "--arcade-scan-pitch": `${scanlinePitch}px`,
+  "--arcade-scan-opacity": `${scanlineOpacityPercent}%`,
+  "--arcade-glow": `${glowBlur}px`,
+  "--arcade-band-white": `${bandWhitePercent}%`,
+  "--arcade-gap": String(COLUMN_GAP),
+  "--arcade-lead": String(MARKER_LEAD),
+};
+for (const [name, value] of Object.entries(LOOK)) root.style.setProperty(name, value);
+
+// A keyframe's place in the cycle is a percentage, which a custom property cannot give.
+const shiftRule = document.createElement("style");
+shiftRule.textContent = shiftKeyframes("arcade-shift", {
+  cycleMs: shiftCycleMs,
+  atMs: shiftAtMs,
+  lengthMs: shiftMs,
+});
+document.head.append(shiftRule);
+
+/** The widest the entry or the table gets, in pixels at scale 1: the longest title, the facts or the table. */
+const WIDEST = Math.max(
+  textColumns([...(entryTitle.dataset.px ?? "")].length),
+  textColumns([...SCORES_TITLE].length),
+  layoutColumns(
+    [
+      ["SCORE", String(maxScore)],
+      ["LVL", String(scoreRules.maxLevel)],
+      ["RANK", rankText(scoreEntries)],
+    ],
+    COLUMN_GAP,
+  ),
+  layoutColumns(
+    [
+      ["RANK", "SCORE", "LVL", "NAME"],
+      [
+        rankText(scoreEntries),
+        String(maxScore),
+        String(scoreRules.maxLevel),
+        "M".repeat(nameLetters),
+      ],
+    ],
+    COLUMN_GAP,
+    MARKER_LEAD,
+  ),
+);
+
+/** The largest scale at which the widest of the entry and the table is no wider than the board. */
+function chooseLookScale(boardWidth: number): void {
+  root.style.setProperty("--arcade-scale", String(chooseScale(WIDEST, boardWidth, pixelScales)));
+}
 
 /** The one chooser of docs/SPEC.md 2.3 and 2.11: the start, each obstacle and the dot. */
 const choose: Chooser = (count) => Math.floor(Math.random() * count);
@@ -427,14 +521,12 @@ const keysDown = new Set<string>();
 let keysBlocked = new Set<string>();
 const keyId = (event: KeyboardEvent): string => event.code || event.key;
 
-scoresTitle.textContent = `TOP ${scoreEntries} SCORES`;
-
-function makeButton(className: string, text: string, label: string): HTMLButtonElement {
+function makeButton(className: string, drawn: string, label: string): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
   button.className = className;
-  button.textContent = text;
-  if (label !== "") button.setAttribute("aria-label", label);
+  button.innerHTML = drawn;
+  button.setAttribute("aria-label", label);
   return button;
 }
 
@@ -443,9 +535,9 @@ const slotButtons: HTMLButtonElement[] = [];
 for (let index = 0; index < nameLetters; index++) {
   const column = document.createElement("div");
   column.className = "slot-column";
-  const up = makeButton("slot-step", "\u25b2", `Letter ${index + 1} up`);
-  const letter = makeButton("slot", "A", "");
-  const down = makeButton("slot-step", "\u25bc", `Letter ${index + 1} down`);
+  const up = makeButton("slot-step", drawShape("arrowUp"), `Letter ${index + 1} up`);
+  const letter = makeButton("slot", "", `Letter ${index + 1}, A`);
+  const down = makeButton("slot-step", drawShape("arrowDown"), `Letter ${index + 1} down`);
   up.addEventListener("click", () => changeLetter(index, 1, up));
   down.addEventListener("click", () => changeLetter(index, -1, down));
   letter.addEventListener("click", () => selectSlot(index));
@@ -460,7 +552,10 @@ function renderEntry(): void {
   const current = entering;
   slotButtons.forEach((button, index) => {
     const letter = current.name[index] ?? "A";
-    button.textContent = letter;
+    const selected = index === current.selected;
+    // The cursor block sits behind the letter of the selected slot (docs/SPEC.md 2.16 (1)).
+    const cursor = selected ? `<span class="slot-cursor">${drawShape("cursor")}</span>` : "";
+    button.innerHTML = `<span class="slot-face">${cursor}${drawText(letter)}</span>`;
     button.setAttribute("aria-label", `Letter ${index + 1}, ${letter}`);
     if (index === current.selected) button.setAttribute("aria-current", "true");
     else button.removeAttribute("aria-current");
@@ -490,9 +585,9 @@ function changeLetter(index: number, delta: 1 | -1, pressed: HTMLElement): void 
 /** Opens the name entry for the game that has just ended, with the rank it would have (2.15 (4)). */
 function openEntry(rank: number): void {
   entering = { score: state.score, level: state.level, name: startName(scoreRules), selected: 0 };
-  entryScore.textContent = String(entering.score);
-  entryLevel.textContent = String(entering.level);
-  entryRank.textContent = rankText(rank);
+  drawInto(entryScore, String(entering.score));
+  drawInto(entryLevel, String(entering.level));
+  drawInto(entryRank, rankText(rank));
   keysBlocked = new Set(keysDown);
   entryPanel.hidden = false;
   renderEntry();
@@ -566,11 +661,13 @@ function fillTable(entries: Parameters<typeof listAsShown>[0], rank: number | nu
         entry.level === 0 ? "--" : String(entry.level),
         entry.name,
       ];
-      for (const text of texts) {
+      texts.forEach((text, column) => {
         const cell = document.createElement("td");
-        cell.textContent = text;
+        // The triangle that marks the new entry's row stands before its rank (docs/SPEC.md 2.15 (5)).
+        const marker = column === 0 && rank === index + 1 ? drawShape("marker") : "";
+        cell.innerHTML = marker + drawText(text);
         row.append(cell);
-      }
+      });
       return row;
     }),
   );
@@ -833,6 +930,7 @@ function sizeBoard(container: HTMLElement): void {
   const cellPixels = Math.max(1, Math.floor((container.clientWidth * ratio) / gridSize));
   const side = cellPixels * gridSize;
   const cssSide = `${side / ratio}px`;
+  chooseLookScale(side / ratio);
   if (canvas.width === side && canvas.style.width === cssSide) return;
   canvas.width = side;
   canvas.height = side;
