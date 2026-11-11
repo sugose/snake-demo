@@ -17,13 +17,13 @@ const SPECIAL: SpecialRules = {
   seconds: 30,
   jumpSeconds: 3,
   clearAheadOfHead: 2,
-  delays: { first: 125, step: 5, shortest: 50 },
 };
 const BASE = newGame({
   size: 20,
   startLength: 3,
   clearAhead: 8,
   dotsPerLevel: 5,
+  delays: { first: 125, step: 5, shortest: 50 },
   special: SPECIAL,
   choose: () => 0,
 });
@@ -43,7 +43,7 @@ function game(overrides: Partial<GameState> = {}, level = 1): GameState {
     heading: "right",
     food: { x: 0, y: 19 },
     obstacles: [],
-    run: level % 5 === 0 ? { turns: 0, timeMs: 0, shieldUsed: 0, waiting: false } : null,
+    run: level % 5 === 0 ? { shieldUsed: 0, waiting: false } : null,
     ...overrides,
   };
 }
@@ -104,7 +104,9 @@ describe("ignoredBecause (docs/SPEC.md 2.13 (4))", () => {
           { x: 18, y: 10 },
           { x: 17, y: 10 },
         ],
-        run: { turns: 0, timeMs: 0, shieldUsed: 1, waiting: true },
+        turns: 0,
+        timeMs: 0,
+        run: { shieldUsed: 1, waiting: true },
       },
       5,
     );
@@ -142,16 +144,18 @@ describe("what a cleared level gave", () => {
   it("on a normal level, its number and no special points", () => {
     const next = tick(game({ food: { x: 11, y: 10 }, dotsEaten: 4, score: 19 }, 4), () => 0);
     expect(next.level).toBe(5);
-    expect(next.cleared).toEqual({ level: 4, special: null });
+    expect(next.cleared).toEqual({ level: 4, turns: 0, timeMs: 110, special: null });
   });
 
-  it("on a special level, the points and the turns, seconds and layers they counted", () => {
+  it("on a special level, the points and the turns, seconds and layers they counted, and the level's turns and time", () => {
     const before = game(
       {
         food: { x: 11, y: 10 },
         dotsEaten: 4,
         score: 20,
-        run: { turns: 15, timeMs: 17945, shieldUsed: 1, waiting: false },
+        turns: 15,
+        timeMs: 17945,
+        run: { shieldUsed: 1, waiting: false },
       },
       5,
     );
@@ -160,6 +164,8 @@ describe("what a cleared level gave", () => {
     // 18 000 ms used: 12 s left; 5 turns left; one layer used: (5 + 12) x 2/3 = 11.3, so 11.
     expect(next.cleared).toEqual({
       level: 5,
+      turns: 15,
+      timeMs: 18000,
       special: { points: 11, turnsLeft: 5, secondsLeft: 12, shieldUsed: 1 },
     });
     expect(next.score).toBe(31);

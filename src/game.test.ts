@@ -19,13 +19,14 @@ const SIZE = 20;
 const START_LENGTH = 3;
 const CLEAR_AHEAD = 8;
 const DOTS_PER_LEVEL = 5;
+const DELAYS = { first: 125, step: 5, shortest: 50 };
 const RULES = {
   size: SIZE,
   startLength: START_LENGTH,
   clearAhead: CLEAR_AHEAD,
   dotsPerLevel: DOTS_PER_LEVEL,
+  delays: DELAYS,
 };
-const DELAYS = { first: 125, step: 5, shortest: 50 };
 
 // The starts of a 20 x 20 board with 8 clear cells ahead (docs/SPEC.md 2.11 (2)). A cell has up
 // when y >= 8, right when x <= 11, down when y <= 11 and left when x >= 8. Rows 0 to 7 and 12 to 19
@@ -96,6 +97,9 @@ describe("newGame", () => {
       dotsEaten: 0,
       score: 0,
       status: "ready",
+      turns: 0,
+      timeMs: 0,
+      delays: DELAYS,
       special: null,
       run: null,
       ended: null,
@@ -141,7 +145,7 @@ describe("newGame", () => {
 
     expected.forEach(([cell, heading], index) => {
       const choose = answers(index, 0);
-      const state = newGame({ size: 9, startLength: 1, clearAhead: 8, dotsPerLevel: 5, choose });
+      const state = newGame({ ...RULES, size: 9, startLength: 1, choose });
       expect([state.snake, state.heading]).toEqual([[cell], heading]);
       expect(choose.counts).toEqual([36, 80]);
     });
@@ -392,6 +396,7 @@ describe("tick", () => {
         { x: 10, y: 10 },
         { x: 9, y: 10 },
       ],
+      timeMs: 125,
     });
     expect(choose.counts).toEqual([]);
   });
@@ -619,6 +624,7 @@ describe("tick", () => {
       food: null,
       dotsEaten: 2,
       score: 2,
+      timeMs: 125,
       status: "won",
       ended: "full",
     });
@@ -656,7 +662,10 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
       dotsEaten: 0,
       score: 10,
       status: "ready",
-      cleared: { level: 1, special: null },
+      // The tick took the queued "right" (one turn) and moved once, with level 1's 125 ms.
+      turns: 0,
+      timeMs: 0,
+      cleared: { level: 1, turns: 1, timeMs: 125, special: null },
     });
     // The start, then one obstacle from 400 - 9 cells, then the dot from 400 - 2 cells.
     expect(choose.counts).toEqual([STARTS, 391, 398]);
@@ -754,7 +763,8 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         score: 2,
         status: "won",
         ended: "noRoom",
-        cleared: { level: 1, special: null },
+        timeMs: 125,
+        cleared: { level: 1, turns: 0, timeMs: 125, special: null },
       });
       expect(choose.counts).toEqual([]);
     });
@@ -819,7 +829,8 @@ describe("clearing a level (docs/SPEC.md 2.2 step 7, 2.10, 2.11)", () => {
         queue: [],
         status: "won",
         ended: "noRoom",
-        cleared: { level: 2, special: null },
+        timeMs: 120,
+        cleared: { level: 2, turns: 0, timeMs: 120, special: null },
       });
       expect(choose.counts).toEqual([]);
     });
@@ -914,7 +925,7 @@ describe("a whole game through the commands", () => {
     // 2 x 2 with 1 cell ahead has 8 starts; 4 is (0,1) heading up. The dot goes on the first free
     // cell each time: (0,0), then (1,0), then (1,1).
     const choose = answers(4, 0);
-    let state = newGame({ size: 2, startLength: 2, clearAhead: 1, dotsPerLevel: 5, choose });
+    let state = newGame({ ...RULES, size: 2, startLength: 2, clearAhead: 1, choose });
     expect(state.snake).toEqual(stacked({ x: 0, y: 1 }, 2));
     expect(state.food).toEqual({ x: 0, y: 0 });
 
@@ -973,7 +984,6 @@ describe("newGame with a start level (docs/SPEC.md 2.14 (2), 2.10 (1), 2.11)", (
     seconds: 30,
     jumpSeconds: 3,
     clearAheadOfHead: 2,
-    delays: DELAYS,
   };
 
   it("a start level of 1 is the game of every other test: level 1, no obstacles", () => {
@@ -1031,7 +1041,9 @@ describe("newGame with a start level (docs/SPEC.md 2.14 (2), 2.10 (1), 2.11)", (
       choose: answers(CENTRE_RIGHT, 0),
     });
     expect(state.level).toBe(5);
-    expect(state.run).toEqual({ turns: 0, timeMs: 0, shieldUsed: 0, waiting: false });
+    expect(state.run).toEqual({ shieldUsed: 0, waiting: false });
+    expect(state.turns).toBe(0);
+    expect(state.timeMs).toBe(0);
     expect(specialInfo(state)).toEqual({ turnsLeft: 20, secondsLeft: 30, shieldLeft: 3 });
   });
 

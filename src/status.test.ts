@@ -9,13 +9,13 @@ const SPECIAL: SpecialRules = {
   seconds: 30,
   jumpSeconds: 3,
   clearAheadOfHead: 2,
-  delays: { first: 125, step: 5, shortest: 50 },
 };
 const BASE = newGame({
   size: 20,
   startLength: 3,
   clearAhead: 8,
   dotsPerLevel: 5,
+  delays: { first: 125, step: 5, shortest: 50 },
   special: SPECIAL,
   choose: () => 0,
 });
@@ -34,7 +34,9 @@ function ended(reason: EndReason, special: boolean): GameState {
     level: special ? 5 : 4,
     status,
     ended: reason,
-    run: special ? { turns: 20, timeMs: 30000, shieldUsed: 3, waiting: false } : null,
+    turns: special ? 20 : 0,
+    timeMs: special ? 30000 : 0,
+    run: special ? { shieldUsed: 3, waiting: false } : null,
   };
 }
 
@@ -101,7 +103,9 @@ describe("waitingText (docs/SPEC.md 2.12 (10))", () => {
       ],
       food: { x: 19, y: 19 },
       obstacles,
-      run: { turns: 3, timeMs: 1000, shieldUsed, waiting: true },
+      turns: 3,
+      timeMs: 1000,
+      run: { shieldUsed, waiting: true },
     };
   }
   const right = { x: 6, y: 5 };
