@@ -530,8 +530,9 @@ cleared, no queued turns, and no obstacles or dot.
    (2.14 (5)) buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6), the scores panel
    or the name entry of 2.15 is open make no line, except the New game
-   command while the log panel or the scores panel is open, which closes
-   the panel and makes a new game; opening and closing
+   command while the log panel is open (Enter or the button) or the scores
+   panel is open (the button only, 2.5), which closes the panel and makes
+   a new game; opening and closing
    the panels make a line only as (6) and 2.15 (5) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
@@ -873,9 +874,10 @@ section 3.
 6. The values (the scales, the size of the band, the periods, the shift,
    the cursor's period, the scanlines, the glow and the 6 %) are named
    values (section 3), which `main.ts` hands to the CSS as custom
-   properties; the one exception is the times of the sideways shifts, which
-   are percentages of a keyframe's cycle and so cannot be custom properties:
-   `main.ts` writes them as a `@keyframes` rule from the named values.
+   properties. **[Clead]** The one exception is the times and length of the
+   sideways shifts, which are percentages of a keyframe's cycle and so
+   cannot be custom properties: `main.ts` writes them as a `@keyframes`
+   rule from the named values.
    What the look looks like is Adam's to judge by playing; the
    tests of the panel check what can be measured: the texts, the colours
    and their contrast, the animation names and periods in the styles the
@@ -939,8 +941,9 @@ section 3.
   (1) (a stored level 0 among them), the three examples of (3), a best
   score equal to the game's score, and the `full` outcome of (6).
 - `src/pixel.ts`: the 5 × 7 bitmap font and the drawing of a text into
-  pixels (2.16 (1)), the gap between the table's columns (12 pixels,
-  `COLUMN_GAP`) and the lead before a row's marker (6 pixels, `MARKER_LEAD`),
+  pixels (2.16 (1)), the gap between the table's columns (12 pixels of the
+  font, `COLUMN_GAP`) and the lead before a row's marker (6 pixels of the
+  font, `MARKER_LEAD`), each times the pixel scale in CSS pixels,
   which `main.ts` hands to the CSS as `--arcade-gap` and `--arcade-lead`, and
   the text of the `@keyframes` rule of the shifts (2.16 (6)). Pure, covered by
   Jest.
