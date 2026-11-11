@@ -153,6 +153,17 @@ wording of that decision. Details Adam has not settled are marked
 **[Clead]**; a mark at the start of an item or a bullet covers all of it,
 and a mark in the middle covers the sentence it opens.
 
+Approved: Adam, 2026-11-10 23:41, in chat ("apyr"), to Clead's
+recommendation (`DECISIONS.md`, PO-171, the row "Snake demo keys on a
+focused button"), and 2026-11-11 00:41 and 00:50 (the batch, "start the
+batch, apyr"): a key pressed on a focused button does that button's job
+(Space or Enter on Log opens it, on Close closes it, on Copy copies), and
+only Enter with the focus on the board or on nothing starts a new game.
+The changes to 2.5, 2.6, 2.13 (4) and (6) and 2.14 (5) that follow from
+it are Clead's exact wording of that decision. Details Adam has not
+settled are marked **[Clead]**; a mark at the start of an item or a bullet
+covers all of it, and a mark in the middle covers the sentence it opens.
+
 ---
 
 ## 1. System overview
@@ -236,8 +247,8 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 |---|---|---|---|---|
 | Turn (key or swipe) | 2.1 (3) | 2.4 | ignored | ignored |
 | Start button | starts in the heading it has | ignored | ignored | ignored |
-| Pause (Space, P, Pause button) | ignored | `paused` | `running` | ignored |
-| New game (Enter, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
+| Pause (Space with the focus on no button, P, Pause button) | ignored | `paused` | `running` | ignored |
+| New game (Enter with the focus on no button, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
 | Slow button (2.14 (5)) | steps the factor | steps the factor | steps the factor | ignored |
 
 **[Clead]** Three panels change the New game row in every column. While
@@ -245,7 +256,12 @@ the name entry of 2.15 (4) is open the command does nothing. While the
 scores panel of 2.15 (5) is open, which it can be in `ready`, `paused` and
 the ended states (it pauses a `running` game), only the New game button
 gives a new game, and Enter closes the panel. While the log panel
-(2.13 (6)) is open, Enter or the button closes it and gives a new game. A focused Log or Scores link is the exception of 2.6: Enter on it opens its panel and is not the New game command.
+(2.13 (6)) is open, the button, or Enter with the focus on nothing,
+closes it and gives a new game; Enter with the focus on Close or Copy
+presses that button. Enter and Space with a button focused do that
+button's job (2.6) and are the New game and Pause commands only with the
+focus on no button. When the New game command closes the log panel or the
+scores panel, the focus goes to the New game button.
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
@@ -254,20 +270,49 @@ and the scores panel of 2.15 (5) can also pause a `running` game and go on.
 ### 2.6 Keys
 
 Arrow keys and W, A, S, D (either case) turn up, left, down and right.
-Space and P (either case) pause and go on; Enter starts a new game. Other
-keys do nothing. The page stops the arrow keys and Space from scrolling
+Space and P (either case) pause and go on; Enter starts a new game (Enter
+and Space are different when a button has the focus, below). Other keys do
+nothing. The page stops the arrow keys and Space from scrolling
 it while the game has the focus.
 
 A key pressed together with Ctrl, Meta (Cmd) or Alt does nothing, so the
 browser's shortcuts are not taken as turns; Shift does not matter. When a
 key is held down, its repeats still turn the snake but do not pause, go
-on or start a new game again. Keys act on the game even while one of the
-buttons has the focus, and a key that does something in the game does
-not also press that button. **[Clead]** A focused Log or Scores link is
-the exception, so that a keyboard user can reach the panels: Enter on it
-opens its panel (2.13 (6), 2.15 (5)) and is not the New game command. While the log panel (2.13 (6)), the scores
-panel or the name entry (2.15) is open, what the keys do is as those
-sections say.
+on or start a new game again. Keys act on the game even while a button
+has the focus, and a key that does something in the game does not also
+press that button, with the exception of Enter and Space below. While the
+log panel (2.13 (6)), the scores panel or the name entry (2.15) is open,
+what the keys do is as those sections say.
+
+A key pressed on a focused button does that button's job (Space or Enter
+on Log opens it, on Close closes it, on Copy copies), and only Enter with
+the focus on the board or on nothing starts a new game.
+- **[Clead]** "The focus on no button" is what the Pause and New game
+  commands need: the focus is on no button when it is on the page itself,
+  the board, or any element that is not a button. The buttons are Start,
+  Pause (Resume), New game and Slow, the Log and Scores links, Copy and
+  Close of the log panel, Close of the scores panel, and OK, Skip, Up and
+  Down of the name entry. With the focus on one of them, Enter or Space
+  presses it and is not the Pause or New game command. Space is the Pause
+  command, and Enter the New game command, only with the focus on no
+  button. A slot of the name entry is as 2.15 (4) says.
+- **[Clead]** While the log panel, the scores panel or the name entry is
+  open, a button outside it counts as no button, so what Enter and Space
+  do is as 2.5, 2.13 (6) and 2.15 say; a button inside the panel is
+  pressed as above.
+- **[Clead]** A press is a keydown of Enter or Space with `repeat` false.
+  The page does the button's job itself and stops the browser's own click,
+  so a press acts once; the repeats of a held key, and the key's release,
+  do nothing and make no line. A key already down when the focus arrives
+  on a button (when a panel opens and puts it on Close) does not press it
+  until it has been released and pressed again. With Ctrl, Meta or Alt the
+  keys do nothing, on a button too.
+- **[Clead]** The log line is the button's, as for a click (2.13 (4)):
+  `button Start ignored state`, `button Pause used`, and so on; the
+  buttons that make no line make none, and a key line is not also
+  written.
+- **[Clead]** Every other key (the arrows, W, A, S, D and P) acts on the
+  game as before, with any focus, and does not press the button.
 
 ### 2.7 Swipes
 
@@ -540,12 +585,13 @@ cleared, no queued turns, and no obstacles or dot.
 4. **[Clead]** The inputs that make a line: every key that maps to a
    command of 2.6, held repeats included; every swipe that maps to a
    turn (2.7); every press of the Start, Pause or Resume, New game and Slow
-   (2.14 (5)) buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
+   (2.14 (5)) buttons, by pointer or by Enter or Space on the focused button
+   (2.6), which then makes the button's line and no key line. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6), the scores panel
    or the name entry of 2.15 is open make no line, except the New game
-   command while the log panel is open (Enter or the button) or the scores
-   panel is open (the button only, 2.5), which closes the panel and makes
-   a new game; opening and closing
+   command while the log panel is open (the button, or Enter with the focus
+   on nothing) or the scores panel is open (the button only, 2.5), which
+   closes the panel and makes a new game; opening and closing
    the panels make a line only as (6) and 2.15 (5) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
@@ -554,7 +600,7 @@ cleared, no queued turns, and no obstacles or dot.
    back` (the opposite of either), `queue full` (2.4), `into a wall` or
    `onto an obstacle` (in `ready`, 2.1 (3)), `not free` (a direction
    that is not free while the snake waits, 2.12 (5)), `repeat` (a held
-   Space, P or Enter, 2.6), and `state` (a command the state ignores,
+   Space or Enter with the focus on no button, or a held P, 2.6), and `state` (a command the state ignores,
    2.5). When two apply, the first that applies wins: `state`, then
    `repeat`; in `ready`, `straight back` before `into a wall` and
    `onto an obstacle`; while the snake waits, only `not free`; otherwise
@@ -607,8 +653,15 @@ cleared, no queued turns, and no obstacles or dot.
    While the panel is open, game keys, swipes and the Start, Pause and
    Resume buttons do nothing, and so do the Log link and the Scores link
    of 2.15 (5), since only one panel is open at a time; Escape or Close
-   closes it, and the New game command (Enter or the button) closes it
-   and makes a new game.
+   closes it, and the New game command (the button, or Enter with the
+   focus on nothing) closes it and makes a new game. **[Clead]** The focus
+   goes to Close when the panel opens, and back to the Log link when Close
+   or Escape closes it (the New game command puts it on the New game
+   button, 2.5); Enter or Space on the focused Copy copies and on Close
+   closes it (2.6). Tab and Shift+Tab move between Copy and Close and
+   stay inside the panel while it is open: with the focus outside the
+   panel, Tab goes to Copy and Shift+Tab to Close. The log's text is not
+   a Tab stop.
    - **[Clead]** Opening the panel on a `running` game pauses it, as the
      Pause command does (2.5), so that a snake that cannot be steered
      does not crash under the panel. Closing the panel with Close or
@@ -741,7 +794,8 @@ Without them the page is as every other section says.
      readers and tests can find it.
    - **[Clead]** It is shown, and in the tab order, only while the current
      level is a special level; on a normal level it is hidden.
-   - **[Clead]** A press steps the factor in `ready`, `running` and
+   - **[Clead]** A press, or Enter or Space on the focused button (2.6),
+     steps the factor in `ready`, `running` and
      `paused`, and is ignored in `over`, `blown` and `won`. While the log
      panel, the scores panel or the name entry is open the button does
      nothing and makes no line.
