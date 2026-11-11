@@ -21,10 +21,14 @@ describe("config (docs/SPEC.md 3)", () => {
       bannerBlinkMs: 250,
       bannerMs: 3000,
       copiedMs: 2000,
+      maxStartLevel: 99,
+      slowFactors: [1, 2, 4],
+      slowButtonSize: 24,
     });
   });
 
   it("cannot be changed at run time", () => {
     expect(Object.isFrozen(config)).toBe(true);
+    expect(Object.isFrozen(config.slowFactors)).toBe(true);
   });
 });

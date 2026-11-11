@@ -6,6 +6,10 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- Playtest options for the special levels: `?level=N` (1 to 99) starts every new game of the page at level N, and `?slow`
+  adds a small, hard-to-notice button under the board on special levels that steps the speed 1×, 2×, 4× and back
+  without changing the level's time, turns or points. A page with either option never changes the best score, and the
+  first line of its log names the options (#64). Specified in #62.
 - The Log link works in every state of the game, not only once it has ended. Opening the log on a running game pauses
   it (`pause log` in the log); Close or Escape goes on only if opening it paused the game (`resume log`). While the log
   is open, keys, swipes and the Start, Pause, Resume and Log buttons do nothing (#51). Specified in #50.
