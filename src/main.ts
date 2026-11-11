@@ -32,6 +32,7 @@ import {
   logPage,
   logPanelPause,
   logPanelResume,
+  logScores,
   logSlow,
   logText,
   logTick,
@@ -39,6 +40,16 @@ import {
   startLog,
 } from "./log";
 import { firstSlowFactor, readQuery, stepSlowFactor } from "./query";
+import {
+  confirmEntry,
+  createScoreBook,
+  listAsShown,
+  qualifyingRank,
+  rankText,
+  type ScoreRules,
+  startName,
+  stepLetter,
+} from "./scores";
 import { endText, waitingText } from "./status";
 import { readBest, writeBest } from "./storage";
 
@@ -64,6 +75,9 @@ const {
   maxStartLevel,
   slowFactors,
   slowButtonSize,
+  scoreEntries,
+  nameLetters,
+  scoresStorageKey,
 } = config;
 /**
  * The best score's bound (docs/SPEC.md 2.9 (3)): at most one level per 5 cells of the board can be
@@ -72,6 +86,13 @@ const {
  */
 const maxScore =
   ((gridSize * gridSize) / dotsPerLevel) * Math.max(dotsPerLevel, maxTurns + specialSeconds);
+/** The high score list's bounds (docs/SPEC.md 2.15 (1)): the best score's bound, and a level per 5 cells plus 1. */
+const scoreRules: ScoreRules = {
+  entries: scoreEntries,
+  nameLetters,
+  maxScore,
+  maxLevel: (gridSize * gridSize) / dotsPerLevel + 1,
+};
 const delays = { first: firstDelay, step: delayStep, shortest: shortestDelay };
 const special: SpecialRules = {
   every: specialEvery,
@@ -101,9 +122,9 @@ const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {
       : `Level ${level}, special: ${maxTurns} turns, ${specialSeconds} seconds, shield of ${shieldLayers}. ${PLAY}`,
   running: (state) => (state.run?.waiting ? waitingText(state) : "Space or P to pause"),
   paused: () => "Paused. Space, P or Resume to go on",
-  over: endText,
-  blown: endText,
-  won: endText,
+  over: (state) => endText(state, entering !== null),
+  blown: (state) => endText(state, entering !== null),
+  won: (state) => endText(state, entering !== null),
 };
 
 /** The gap around a snake or obstacle cell, as a share of the cell, so the cells read as separate. */
@@ -140,6 +161,7 @@ const startButton = element("start", HTMLButtonElement);
 const pauseButton = element("pause", HTMLButtonElement);
 const newGameButton = element("new-game", HTMLButtonElement);
 const logLink = element("log-link", HTMLButtonElement);
+const scoresLink = element("scores-link", HTMLButtonElement);
 const slowRow = element("slow-row", HTMLElement);
 const slowButton = element("slow", HTMLButtonElement);
 const logPanel = element("log-panel", HTMLElement);
@@ -147,6 +169,18 @@ const logTextBox = element("log-text", HTMLElement);
 const logCopy = element("log-copy", HTMLButtonElement);
 const logLive = element("log-live", HTMLElement);
 const logClose = element("log-close", HTMLButtonElement);
+const entryPanel = element("entry-panel", HTMLElement);
+const entryScore = element("entry-score", HTMLElement);
+const entryLevel = element("entry-level", HTMLElement);
+const entryRank = element("entry-rank", HTMLElement);
+const entrySlots = element("entry-slots", HTMLElement);
+const entryOk = element("entry-ok", HTMLButtonElement);
+const entrySkip = element("entry-skip", HTMLButtonElement);
+const scoresPanel = element("scores-panel", HTMLElement);
+const scoresTitle = element("scores-title", HTMLElement);
+const scoresRows = element("scores-rows", HTMLElement);
+const scoresEmpty = element("scores-empty", HTMLElement);
+const scoresClose = element("scores-close", HTMLButtonElement);
 const frame = canvas.parentElement;
 if (frame === null) throw new Error("the board has no frame");
 const drawing = canvas.getContext("2d");
@@ -167,6 +201,8 @@ const freshGame = (): GameState =>
     choose,
   });
 const getStore = (): Storage => window.localStorage;
+
+const scoreBook = createScoreBook(getStore, scoresStorageKey, scoreRules);
 
 let state = freshGame();
 let best = readBest(getStore, storageKey, maxScore);
@@ -193,6 +229,9 @@ function newGameWithLog(input: Input): GameState {
   ticks = 0;
   log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES, input);
   hideLog();
+  hideScores();
+  entering = null;
+  entryPanel.hidden = true;
   return game;
 }
 let timer: number | undefined;
@@ -233,7 +272,10 @@ function apply(next: GameState): void {
     best = state.score;
     writeBest(getStore, storageKey, best, maxScore);
   }
-  if (justEnded) log = logEnd(log, stamp(), state, madeBest);
+  if (justEnded) {
+    log = logEnd(log, stamp(), state, madeBest);
+    askForName();
+  }
   syncTimer();
   render();
 }
@@ -298,7 +340,7 @@ function resetCopied(): void {
  * game is paused first, and the panel shows the log after that pause.
  */
 function openLog(): void {
-  if (logOpen()) return;
+  if (anyPanelOpen()) return;
   panelSession++;
   resetCopied();
   if (state.status === "running") {
@@ -307,6 +349,7 @@ function openLog(): void {
     apply(pauseIfRunning(state));
   }
   logTextBox.textContent = logText(log);
+  keysBlocked = new Set(keysDown);
   logPanel.hidden = false;
   logClose.focus();
 }
@@ -359,6 +402,331 @@ async function copyLog(): Promise<void> {
   const selection = window.getSelection();
   selection?.removeAllRanges();
   selection?.addRange(range);
+}
+
+// The high score list: the name entry, the table and their panels (docs/SPEC.md 2.15).
+
+/** The name being entered: the game's score and level, the letters and the selected slot. */
+interface Entering {
+  readonly score: number;
+  readonly level: number;
+  name: string;
+  selected: number;
+}
+/** Not `null` while the name entry is open. */
+let entering: Entering | null = null;
+/** True from an opening of the table that paused a running game until the panel closes (2.15 (5)). */
+let pausedByScores = false;
+
+const scoresOpen = (): boolean => !scoresPanel.hidden;
+/** Only one panel is open at a time: the log panel, the name entry or the table (2.13 (6), 2.15). */
+const anyPanelOpen = (): boolean => logOpen() || entering !== null || scoresOpen();
+
+/** The keys that are down now, by `KeyboardEvent.code`, and those that were down when a panel opened. */
+const keysDown = new Set<string>();
+let keysBlocked = new Set<string>();
+const keyId = (event: KeyboardEvent): string => event.code || event.key;
+
+scoresTitle.textContent = `TOP ${scoreEntries} SCORES`;
+
+function makeButton(className: string, text: string, label: string): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  button.textContent = text;
+  if (label !== "") button.setAttribute("aria-label", label);
+  return button;
+}
+
+/** The slots of the name entry: each a letter button with an Up and a Down button (2.15 (4)). */
+const slotButtons: HTMLButtonElement[] = [];
+for (let index = 0; index < nameLetters; index++) {
+  const column = document.createElement("div");
+  column.className = "slot-column";
+  const up = makeButton("slot-step", "\u25b2", `Letter ${index + 1} up`);
+  const letter = makeButton("slot", "A", "");
+  const down = makeButton("slot-step", "\u25bc", `Letter ${index + 1} down`);
+  up.addEventListener("click", () => changeLetter(index, 1, up));
+  down.addEventListener("click", () => changeLetter(index, -1, down));
+  letter.addEventListener("click", () => selectSlot(index));
+  column.append(up, letter, down);
+  entrySlots.append(column);
+  slotButtons.push(letter);
+}
+
+/** Shows the letters and the selection of the name being entered. */
+function renderEntry(): void {
+  if (entering === null) return;
+  const current = entering;
+  slotButtons.forEach((button, index) => {
+    const letter = current.name[index] ?? "A";
+    button.textContent = letter;
+    button.setAttribute("aria-label", `Letter ${index + 1}, ${letter}`);
+    if (index === current.selected) button.setAttribute("aria-current", "true");
+    else button.removeAttribute("aria-current");
+  });
+}
+
+/** Selects a slot and gives it the focus (2.15 (4)). */
+function selectSlot(index: number): void {
+  if (entering === null) return;
+  entering.selected = index;
+  renderEntry();
+  slotButtons[index]?.focus();
+}
+
+/**
+ * Changes the letter of a slot, which a press on its Up or Down button selects first; the focus
+ * stays on the button pressed (2.15 (4)).
+ */
+function changeLetter(index: number, delta: 1 | -1, pressed: HTMLElement): void {
+  if (entering === null) return;
+  entering.selected = index;
+  entering.name = stepLetter(entering.name, index, delta);
+  renderEntry();
+  pressed.focus();
+}
+
+/** Opens the name entry for the game that has just ended, with the rank it would have (2.15 (4)). */
+function openEntry(rank: number): void {
+  entering = { score: state.score, level: state.level, name: startName(scoreRules), selected: 0 };
+  entryScore.textContent = String(entering.score);
+  entryLevel.textContent = String(entering.level);
+  entryRank.textContent = rankText(rank);
+  keysBlocked = new Set(keysDown);
+  entryPanel.hidden = false;
+  renderEntry();
+  slotButtons[0]?.focus();
+}
+
+/**
+ * A game that has ended on a page that is not a playtest page asks for a name when it qualifies
+ * (2.15 (3)). The list is read now, with the best score as it is (2.15 (6)); the opening of the entry
+ * is the same moment, so one read serves both.
+ */
+function askForName(): void {
+  if (options.playtest) return;
+  const rank = qualifyingRank(
+    scoreBook.read(),
+    { score: state.score, level: state.level },
+    best,
+    scoreRules,
+  );
+  if (rank !== null) openEntry(rank);
+}
+
+/** Closes the name entry and gives the focus to the New game button (2.15 (4)). */
+function closeEntry(): void {
+  entering = null;
+  entryPanel.hidden = true;
+  newGameButton.focus();
+}
+
+/** Skip and Escape: nothing is stored, the entry closes (2.15 (4)). */
+function skipEntry(): void {
+  if (entering === null) return;
+  log = logScores(log, stamp(), { kind: "skipped" });
+  closeEntry();
+  render();
+}
+
+/**
+ * OK and Enter: the list is read again, so that the entries another tab stored in the meantime are
+ * kept, and the entry is stored or found no longer to fit; the panel then turns into the table
+ * (2.15 (4), (6)).
+ */
+function confirmName(): void {
+  if (entering === null) return;
+  const { score, level, name } = entering;
+  const fresh = scoreBook.read();
+  const result = confirmEntry(fresh, { score, level, name }, best, scoreRules);
+  entering = null;
+  entryPanel.hidden = true;
+  if (result.kind === "stored") {
+    scoreBook.write(result.stored);
+    log = logScores(log, stamp(), { kind: "name", name, rank: result.rank });
+    showTable(result.stored, result.rank);
+  } else {
+    log = logScores(log, stamp(), { kind: "full", name });
+    showTable(fresh, null);
+  }
+  render();
+}
+
+/** Fills the table from `entries` and the best score, marking the row of `rank` (2.15 (5)). */
+function fillTable(entries: Parameters<typeof listAsShown>[0], rank: number | null): void {
+  const { list } = listAsShown(entries, null, best, scoreRules);
+  scoresRows.replaceChildren(
+    ...list.map((entry, index) => {
+      const row = document.createElement("tr");
+      if (rank === index + 1) row.setAttribute("aria-current", "true");
+      const texts = [
+        rankText(index + 1),
+        String(entry.score),
+        entry.level === 0 ? "--" : String(entry.level),
+        entry.name,
+      ];
+      for (const text of texts) {
+        const cell = document.createElement("td");
+        cell.textContent = text;
+        row.append(cell);
+      }
+      return row;
+    }),
+  );
+  scoresEmpty.hidden = list.length > 0;
+}
+
+/** Shows the table, with the focus on Close (2.15 (5)). */
+function showTable(entries: Parameters<typeof listAsShown>[0], rank: number | null): void {
+  fillTable(entries, rank);
+  keysBlocked = new Set(keysDown);
+  scoresPanel.hidden = false;
+  scoresClose.focus();
+}
+
+/**
+ * Opens the table over the board, in every state of the game, from the Scores link. A running game is
+ * paused first (2.15 (5)). The list is read as it is now.
+ */
+function openScores(): void {
+  if (anyPanelOpen()) return;
+  if (state.status === "running") {
+    pausedByScores = true;
+    log = logPanelPause(log, stamp(), "scores");
+    apply(pauseIfRunning(state));
+  }
+  showTable(scoreBook.read(), null);
+}
+
+/** Hides the table; the game is left as it is. */
+function hideScores(): void {
+  pausedByScores = false;
+  scoresPanel.hidden = true;
+}
+
+/**
+ * Close, Escape and Enter: hides the table, gives the focus to the New game button and goes on, but
+ * only if opening it paused the game (2.15 (5)).
+ */
+function closeScores(): void {
+  const goOn = pausedByScores && state.status === "paused";
+  hideScores();
+  newGameButton.focus();
+  if (goOn) {
+    log = logPanelResume(log, stamp(), "scores");
+    apply(togglePause(state));
+  }
+}
+
+/** Keeps Tab inside the name entry's dialog (2.15 (4)). */
+function keepFocusInEntry(event: KeyboardEvent): void {
+  const buttons = [...entryPanel.querySelectorAll("button")];
+  const first = buttons[0];
+  const last = buttons[buttons.length - 1];
+  const active = document.activeElement;
+  const outside = !(active instanceof HTMLElement) || !entryPanel.contains(active);
+  if (outside || (event.shiftKey && active === first)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first)?.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first?.focus();
+  }
+}
+
+const hasModifier = (event: KeyboardEvent): boolean =>
+  event.ctrlKey || event.metaKey || event.altKey;
+
+/**
+ * The keys while the name entry is open (docs/SPEC.md 2.15 (4)): arrows change the letter or move the
+ * selection, Enter confirms (or presses the focused button other than a slot), Space presses the
+ * focused button other than a slot, Escape skips. A key already down when the entry opened does
+ * nothing until it is released, and a repeat of Enter, Space or Escape does nothing.
+ */
+function entryKey(event: KeyboardEvent): void {
+  if (keysBlocked.has(keyId(event))) {
+    event.preventDefault();
+    return;
+  }
+  if (hasModifier(event) || entering === null) return;
+  const active = document.activeElement;
+  const onButton =
+    active instanceof HTMLButtonElement &&
+    entryPanel.contains(active) &&
+    !slotButtons.includes(active);
+  switch (event.key) {
+    case "Escape":
+      event.preventDefault();
+      if (!event.repeat) skipEntry();
+      return;
+    case "ArrowUp":
+    case "ArrowDown":
+      event.preventDefault();
+      entering.name = stepLetter(
+        entering.name,
+        entering.selected,
+        event.key === "ArrowUp" ? 1 : -1,
+      );
+      renderEntry();
+      return;
+    case "ArrowLeft":
+    case "ArrowRight": {
+      event.preventDefault();
+      const next = Math.min(
+        nameLetters - 1,
+        Math.max(0, entering.selected + (event.key === "ArrowRight" ? 1 : -1)),
+      );
+      if (next !== entering.selected) selectSlot(next);
+      return;
+    }
+    case "Enter":
+    case " ":
+      event.preventDefault();
+      if (event.repeat) return;
+      if (onButton) active.click();
+      else if (event.key === "Enter") confirmName();
+      return;
+    case "Tab":
+      keepFocusInEntry(event);
+      return;
+    default:
+  }
+}
+
+/**
+ * The keys while the table is open (docs/SPEC.md 2.15 (5)): Escape and Enter close it, Space presses
+ * the focused Close, Tab stays on Close, and no game key does anything. A key already down when it
+ * opened does nothing until it is released, and a repeat of Enter, Space or Escape does nothing.
+ */
+function scoresKey(event: KeyboardEvent): void {
+  if (keysBlocked.has(keyId(event))) {
+    event.preventDefault();
+    return;
+  }
+  if (hasModifier(event)) return;
+  switch (event.key) {
+    case "Escape":
+    case "Enter":
+      event.preventDefault();
+      if (!event.repeat) closeScores();
+      return;
+    case " ":
+      event.preventDefault();
+      if (!event.repeat && document.activeElement === scoresClose) closeScores();
+      return;
+    case "Tab":
+      event.preventDefault();
+      scoresClose.focus();
+      return;
+    case "ArrowUp":
+    case "ArrowDown":
+    case "ArrowLeft":
+    case "ArrowRight":
+      event.preventDefault();
+      return;
+    default:
+  }
 }
 
 const KEY_NAMES: Readonly<Record<string, string>> = { " ": "Space" };
@@ -477,6 +845,15 @@ function sizeBoard(container: HTMLElement): void {
 
 // Keys (docs/SPEC.md 2.5, 2.6), whichever button has the focus.
 document.addEventListener("keydown", (event) => {
+  keysDown.add(keyId(event));
+  if (entering !== null) {
+    entryKey(event);
+    return;
+  }
+  if (scoresOpen()) {
+    scoresKey(event);
+    return;
+  }
   // While the log panel is open, Escape closes it and a new game closes it too; other game keys do
   // nothing and make no line (docs/SPEC.md 2.13 (4), (6)).
   if (logOpen() && event.key === "Escape") {
@@ -491,6 +868,18 @@ document.addEventListener("keydown", (event) => {
   });
   if (command === null) return;
   if (logOpen() && command.type !== "newGame") return;
+  // While the log panel is open a repeat, or a key that was already down when it opened, does
+  // nothing and makes no line (docs/SPEC.md 2.13 (4)); a held Enter that opened it from the focused
+  // Log link would otherwise write a line for every repeat.
+  if (logOpen() && (event.repeat || keysBlocked.has(keyId(event)))) {
+    event.preventDefault();
+    return;
+  }
+  // A focused Log or Scores link opens its panel on Enter, and Enter is not a new game there; the
+  // browser presses the link (docs/SPEC.md 2.6).
+  if (command.type === "newGame" && (event.target === logLink || event.target === scoresLink)) {
+    return;
+  }
   // Keeps the arrows and Space from scrolling the page, and keeps a focused button from also
   // acting on Space or Enter (its click), so each key acts once.
   event.preventDefault();
@@ -519,6 +908,15 @@ document.addEventListener("keydown", (event) => {
   apply(newGameWithLog(input));
 });
 
+document.addEventListener("keyup", (event) => {
+  keysDown.delete(keyId(event));
+  keysBlocked.delete(keyId(event));
+});
+window.addEventListener("blur", () => {
+  keysDown.clear();
+  keysBlocked.clear();
+});
+
 // Swipes on the board (docs/SPEC.md 2.7). A mouse drag is not a swipe.
 let swipeStart: { pointerId: number; point: Point } | null = null;
 canvas.addEventListener("pointerdown", (event) => {
@@ -530,7 +928,7 @@ canvas.addEventListener("pointerup", (event) => {
   const from = swipeStart.point;
   swipeStart = null;
   const direction = swipeToDirection(from, { x: event.clientX, y: event.clientY }, minSwipe);
-  if (direction === null || logOpen()) return;
+  if (direction === null || anyPanelOpen()) return;
   onInput({ kind: "swipe", direction }, turn(state, direction), ignoredBecause(state, direction));
 });
 canvas.addEventListener("pointercancel", () => {
@@ -539,23 +937,25 @@ canvas.addEventListener("pointercancel", () => {
 
 // Buttons (docs/SPEC.md 2.5, 2.7).
 startButton.addEventListener("click", () => {
-  if (logOpen()) return;
+  if (anyPanelOpen()) return;
   const next = start(state);
   onInput({ kind: "button", label: "Start" }, next, next === state ? "state" : null);
 });
 pauseButton.addEventListener("click", () => {
-  if (logOpen()) return;
+  if (anyPanelOpen()) return;
   const next = togglePause(state);
   const label = pauseButton.textContent ?? "Pause";
   onInput({ kind: "button", label }, next, next === state ? "state" : null);
 });
-newGameButton.addEventListener("click", () =>
-  apply(newGameWithLog({ kind: "button", label: "New game" })),
-);
+// The New game button does nothing while the name entry is open (docs/SPEC.md 2.5).
+newGameButton.addEventListener("click", () => {
+  if (entering !== null) return;
+  apply(newGameWithLog({ kind: "button", label: "New game" }));
+});
 // The Slow button (docs/SPEC.md 2.14 (5)): steps the factor in `ready`, `running` and `paused`; in an
-// ended game the press is ignored and logged so; with the log panel open it does nothing.
+// ended game the press is ignored and logged so; with a panel open it does nothing.
 slowButton.addEventListener("click", () => {
-  if (logOpen()) return;
+  if (anyPanelOpen()) return;
   if (ended(state)) {
     onInput({ kind: "button", label: "Slow" }, state, "state");
     return;
@@ -567,6 +967,11 @@ slowButton.addEventListener("click", () => {
 
 // The event log's link and panel (docs/SPEC.md 2.13 (6)).
 logLink.addEventListener("click", openLog);
+// The high score list's links and buttons (docs/SPEC.md 2.15).
+scoresLink.addEventListener("click", openScores);
+scoresClose.addEventListener("click", closeScores);
+entryOk.addEventListener("click", confirmName);
+entrySkip.addEventListener("click", skipEntry);
 logClose.addEventListener("click", closeLog);
 logCopy.addEventListener("click", () => {
   void copyLog();

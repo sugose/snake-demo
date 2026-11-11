@@ -148,8 +148,10 @@ h1 {
 }
 
 .log-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
   margin: 0;
-  text-align: right;
 }
 
 .log-link {
@@ -206,6 +208,121 @@ h1 {
   border-color: var(--copied-bg);
   background: var(--copied-bg);
   color: var(--copied-fg);
+}
+
+/* The high score list's name entry and table (SPEC 2.15). Plain look; the arcade look is SPEC 2.16. */
+.score-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  overflow: auto;
+  background: var(--board);
+  border: 1px solid var(--button-border);
+  border-radius: 6px;
+}
+
+.score-panel[hidden] {
+  display: none;
+}
+
+.score-title {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.entry-facts {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.entry-slots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.slot-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 56px;
+}
+
+.slot-column button,
+.score-actions button {
+  min-height: 40px;
+  border: 1px solid var(--button-border);
+  border-radius: 6px;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.slot {
+  min-height: 48px;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.slot-column .slot[aria-current="true"] {
+  border: 3px solid var(--focus);
+}
+
+.slot-column button:focus-visible,
+.score-actions button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.score-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.score-actions button {
+  flex: 1;
+  min-height: 44px;
+}
+
+.scores-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.scores-table th,
+.scores-table td {
+  padding: 1px 4px;
+  text-align: left;
+}
+
+.scores-table tr[aria-current="true"] {
+  background: var(--button-bg);
+  font-weight: 700;
+}
+
+/* A shape as well as a colour marks the new entry's row (SPEC 2.15 (5)); PR C draws the triangle. */
+.scores-table tr[aria-current="true"] td:first-child::before {
+  content: "\25b6\00a0";
+}
+
+.scores-empty {
+  margin: 0;
+  text-align: center;
+}
+
+.scores-empty[hidden] {
+  display: none;
 }
 
 .visually-hidden {

@@ -274,8 +274,11 @@ test("control: a game with the score 3 on a page with no option saves it as the 
   await playThreeDots(page, game, 125);
   await expect(page.locator("#best")).toHaveText("3");
   expect(await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY)).toBe("3");
+  // The score of 3 qualifies for the high score list: skip the name entry, which the log then notes.
+  await page.keyboard.press("Escape");
   const { events } = await readLog(page);
-  expect(events.at(-1)).toBe("end over wall score=3 best=yes");
+  expect(events.at(-2)).toBe("end over wall score=3 best=yes");
+  expect(events.at(-1)).toBe("scores skipped");
 });
 
 test("a game on a ?level=N page leaves the best score as it was, shown and stored; best=no", async ({

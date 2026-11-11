@@ -24,6 +24,9 @@ describe("config (docs/SPEC.md 3)", () => {
       maxStartLevel: 99,
       slowFactors: [1, 2, 4],
       slowButtonSize: 24,
+      scoreEntries: 10,
+      nameLetters: 3,
+      scoresStorageKey: "snake-demo.scores",
     });
   });
 

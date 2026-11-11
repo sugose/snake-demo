@@ -68,6 +68,23 @@ describe("endText (docs/SPEC.md 2.8)", () => {
   it("throws a RangeError for a game that has not ended", () => {
     expect(() => endText(BASE)).toThrow(RangeError);
   });
+
+  it.each<[EndReason, boolean, string]>([
+    ["wall", false, "Game over: you hit the wall. Enter your name"],
+    ["wall", true, "Game over: you hit the wall. No shield left. Enter your name"],
+    ["turns", true, "Blown up: no turns left. Enter your name"],
+    ["full", false, "You won! The board is full. Enter your name"],
+    ["self", false, "Game over: you ran into yourself. Enter your name"],
+  ])(
+    "while the name entry is open, %s (special level: %s) ends in Enter your name (docs/SPEC.md 2.8)",
+    (reason, special, text) => {
+      expect(endText(ended(reason, special), true)).toBe(text);
+    },
+  );
+
+  it("with the name entry not open, the line is as before", () => {
+    expect(endText(ended("wall", false), false)).toBe(`Game over: you hit the wall. ${PLAY_AGAIN}`);
+  });
 });
 
 describe("waitingText (docs/SPEC.md 2.12 (10))", () => {

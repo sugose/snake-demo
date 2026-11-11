@@ -17,6 +17,7 @@ import {
   logPage,
   logPanelPause,
   logPanelResume,
+  logScores,
   logSlow,
   logText,
   logTick,
@@ -519,5 +520,53 @@ describe("the log panel's pause and resume (docs/SPEC.md 2.13 (5), (6))", () => 
 
   it("resume log writes resume log and nothing else", () => {
     expect(logPanelResume(EMPTY, at(900, 1)).lines).toEqual(["[t=900 #1] resume log"]);
+  });
+});
+
+describe("the scores panel's pause and resume (docs/SPEC.md 2.13 (5), 2.15 (5))", () => {
+  it("pause scores ends the open stretch and writes pause scores", () => {
+    const running = game();
+    const moved = logTick(EMPTY, at(125, 1), running, tick(running, ZERO));
+    const log = logPanelPause(moved, at(200, 1), "scores");
+    expect(added(moved, log)).toEqual([
+      "[t=200 #1] move right 1 head=(11,10)",
+      "[t=200 #1] pause scores",
+    ]);
+    expect(log.stretch).toBeNull();
+  });
+
+  it("resume scores writes resume scores and nothing else", () => {
+    expect(logPanelResume(EMPTY, at(900, 1), "scores").lines).toEqual(["[t=900 #1] resume scores"]);
+  });
+
+  it("the log panel's lines are unchanged when no panel is named", () => {
+    expect(logPanelPause(EMPTY, at(5, 0), "log").lines).toEqual(["[t=5 #0] pause log"]);
+    expect(logPanelResume(EMPTY, at(5, 0), "log").lines).toEqual(["[t=5 #0] resume log"]);
+  });
+});
+
+describe("logScores: the name entry's outcome (docs/SPEC.md 2.13 (5), 2.15 (4), (6))", () => {
+  it("a name entered with its rank", () => {
+    expect(logScores(EMPTY, at(4000, 12), { kind: "name", name: "ABC", rank: 3 }).lines).toEqual([
+      "[t=4000 #12] scores name=ABC rank=3",
+    ]);
+  });
+
+  it("a name entered when the list had no room left at the confirmation", () => {
+    expect(logScores(EMPTY, at(4000, 12), { kind: "full", name: "ABC" }).lines).toEqual([
+      "[t=4000 #12] scores name=ABC full",
+    ]);
+  });
+
+  it("an entry skipped", () => {
+    expect(logScores(EMPTY, at(4000, 12), { kind: "skipped" }).lines).toEqual([
+      "[t=4000 #12] scores skipped",
+    ]);
+  });
+
+  it("keeps the lines before it", () => {
+    const first = logScores(EMPTY, at(1, 1), { kind: "skipped" });
+    const second = logScores(first, at(2, 1), { kind: "name", name: "XYZ", rank: 1 });
+    expect(second.lines).toEqual(["[t=1 #1] scores skipped", "[t=2 #1] scores name=XYZ rank=1"]);
   });
 });

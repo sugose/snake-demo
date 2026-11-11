@@ -6,6 +6,10 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- A browser-local high score list: a game that ends with a score of at least 1 and makes the top 10 asks for a name of
+  3 letters (arrow keys, or the Up and Down buttons under each letter), and a Scores link next to Log opens the table
+  of rank, score, level reached and name, with the best score as a `--` / `---` row ahead of the entries. The list is
+  kept in this browser only; a playtest page never enters it (#65). Specified in #62.
 - Playtest options for the special levels: `?level=N` (1 to 99) starts every new game of the page at level N, and `?slow`
   adds a small, hard-to-notice button under the board on special levels that steps the speed 1×, 2×, 4× and back
   without changing the level's time, turns or points. A page with either option never changes the best score, and the

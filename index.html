@@ -30,11 +30,58 @@
             <button type="button" id="log-close">Close</button>
           </div>
         </section>
+        <section
+          id="entry-panel"
+          class="score-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="entry-title"
+          hidden
+        >
+          <h2 id="entry-title" class="score-title">ENTER YOUR NAME</h2>
+          <p class="entry-facts">
+            <span>SCORE <strong id="entry-score"></strong></span>
+            <span>LVL <strong id="entry-level"></strong></span>
+            <span>RANK <strong id="entry-rank"></strong></span>
+          </p>
+          <div id="entry-slots" class="entry-slots"></div>
+          <div class="score-actions">
+            <button type="button" id="entry-ok">OK</button>
+            <button type="button" id="entry-skip">Skip</button>
+          </div>
+        </section>
+        <section
+          id="scores-panel"
+          class="score-panel"
+          role="dialog"
+          aria-labelledby="scores-title"
+          hidden
+        >
+          <h2 id="scores-title" class="score-title">TOP 10 SCORES</h2>
+          <table class="scores-table">
+            <thead>
+              <tr>
+                <th scope="col">RANK</th>
+                <th scope="col">SCORE</th>
+                <th scope="col">LVL</th>
+                <th scope="col">NAME</th>
+              </tr>
+            </thead>
+            <tbody id="scores-rows"></tbody>
+          </table>
+          <p id="scores-empty" class="scores-empty" hidden>NO SCORES YET</p>
+          <div class="score-actions">
+            <button type="button" id="scores-close">Close</button>
+          </div>
+        </section>
       </div>
       <div id="slow-row" class="slow-row" hidden>
         <button type="button" id="slow" class="slow-button" aria-label="Slow down"></button>
       </div>
-      <p class="log-row"><button type="button" id="log-link" class="log-link">Log</button></p>
+      <p class="log-row">
+        <button type="button" id="scores-link" class="log-link">Scores</button>
+        <button type="button" id="log-link" class="log-link">Log</button>
+      </p>
       <p id="status" class="status" role="status"></p>
       <div class="controls">
         <button type="button" id="start">Start</button>

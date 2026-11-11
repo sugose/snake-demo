@@ -24,14 +24,15 @@ const END_REASON: Readonly<Record<EndReason, string>> = {
 
 /**
  * The status line of an ended game: its reason, then "No shield left." for a wall or an obstacle on
- * a special level, then how to play again (docs/SPEC.md 2.8). Throws a RangeError for a game that
- * has not ended.
+ * a special level, then how to play again, or, while the name entry of docs/SPEC.md 2.15 (4) is
+ * open, "Enter your name" (2.8). Throws a RangeError for a game that has not ended.
  */
-export function endText(state: GameState): string {
+export function endText(state: GameState, nameEntryOpen = false): string {
   if (state.ended === null) throw new RangeError(`the game has not ended (${state.status})`);
   const crashed = state.ended === "wall" || state.ended === "obstacle";
   const noShield = crashed && state.run !== null ? " No shield left." : "";
-  return `${END_REASON[state.ended]}${noShield} Enter or New game to play again`;
+  const next = nameEntryOpen ? "Enter your name" : "Enter or New game to play again";
+  return `${END_REASON[state.ended]}${noShield} ${next}`;
 }
 
 /** Names directions as the waiting line does: "up", "up or left", "up, down or left". */
