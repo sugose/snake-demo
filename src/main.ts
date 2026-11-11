@@ -323,10 +323,14 @@ function newGameWithLog(input: Input): GameState {
   gameMadeAt = performance.now();
   ticks = 0;
   log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES, input);
+  const closesPanel = logOpen() || scoresOpen();
   hideLog();
   hideScores();
   entering = null;
   entryPanel.hidden = true;
+  // The New game command that closes the log panel or the scores panel puts the focus on the
+  // New game button (docs/SPEC.md 2.5).
+  if (closesPanel) newGameButton.focus();
   return game;
 }
 let timer: number | undefined;
@@ -828,6 +832,19 @@ function scoresKey(event: KeyboardEvent): void {
   }
 }
 
+/**
+ * Tab and Shift+Tab in the log panel (docs/SPEC.md 2.13 (6)): between Copy and Close, and with
+ * two buttons each leads to the other; from outside the panel Tab goes to Copy and Shift+Tab to
+ * Close. The log's text is never reached, so it is not a Tab stop.
+ */
+function keepFocusInLog(event: KeyboardEvent): void {
+  const active = document.activeElement;
+  event.preventDefault();
+  if (active === logCopy) logClose.focus();
+  else if (active === logClose) logCopy.focus();
+  else (event.shiftKey ? logClose : logCopy).focus();
+}
+
 const KEY_NAMES: Readonly<Record<string, string>> = { " ": "Space" };
 const COMMAND_WORDS = { pause: "pause", newGame: "new" } as const;
 
@@ -862,6 +879,8 @@ function render(): void {
   specialRow.hidden = info === null;
   // The Slow button is shown only on a special level (docs/SPEC.md 2.14 (5)).
   slowRow.hidden = !options.slow || info === null;
+  // A hidden Slow button gives up the focus at once, so Space then pauses (docs/SPEC.md 2.6).
+  if (slowRow.hidden && document.activeElement === slowButton) slowButton.blur();
   if (info !== null) {
     turnsText.textContent = String(info.turnsLeft);
     secondsText.textContent = String(info.secondsLeft);
@@ -961,6 +980,22 @@ document.addEventListener("keydown", (event) => {
     closeLog();
     return;
   }
+  if (logOpen() && event.key === "Tab" && !hasModifier(event)) {
+    keepFocusInLog(event);
+    return;
+  }
+  // Enter or Space on a focused button does that button's job (docs/SPEC.md 2.6): the page presses
+  // it itself, once, and stops the browser's own click. A repeat, a key that was already down when
+  // the focus arrived, and Ctrl, Meta or Alt press nothing. With the log panel open a button
+  // outside it counts as no button: the key goes on as the command it is.
+  const focused = document.activeElement;
+  if ((event.key === "Enter" || event.key === " ") && focused instanceof HTMLButtonElement) {
+    event.preventDefault();
+    if (!logOpen() || logPanel.contains(focused)) {
+      if (!hasModifier(event) && !event.repeat && !keysBlocked.has(keyId(event))) focused.click();
+      return;
+    }
+  }
   const command = keyToCommand(event.key, {
     ctrl: event.ctrlKey,
     meta: event.metaKey,
@@ -975,13 +1010,8 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     return;
   }
-  // A focused Log or Scores link opens its panel on Enter, and Enter is not a new game there; the
-  // browser presses the link (docs/SPEC.md 2.6).
-  if (command.type === "newGame" && (event.target === logLink || event.target === scoresLink)) {
-    return;
-  }
   // Keeps the arrows and Space from scrolling the page, and keeps a focused button from also
-  // acting on Space or Enter (its click), so each key acts once.
+  // being pressed by a key that does something in the game.
   event.preventDefault();
   const key = KEY_NAMES[event.key] ?? event.key;
   if (command.type === "turn") {

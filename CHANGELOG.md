@@ -77,6 +77,13 @@ All notable changes to Snake demo are documented here.
   exactly (#19); the special levels idea in the backlog (#21, #22, #24); PBI-2.6 recorded done (#23).
 - The changelog's own record of #28, #35 and #36 (#37); the end status line moved to the pure `src/status.ts` (#42); PBI-2.11 to 2.17 recorded as published (#47). The special levels recorded as published (#28), and the follow-ups from Adam's play (#35); the specification records
   Adam's acceptance of the level cleared at 30 seconds and of 0 points with all shield layers used (#36).
+- A key pressed on a focused button does that button's job: Enter or Space on Log or Scores opens the panel, on Copy copies,
+  on Close closes it, on Start, Pause or Resume, New game and the Slow button presses it, with that button's line in the log
+  and no key line. Enter and Space are the New game and Pause commands only with the focus on no button (the page or the
+  board); a held key, a key already down when a panel puts the focus on Close, and Ctrl, Meta or Alt press nothing. The log
+  panel keeps Tab and Shift+Tab between Copy and Close, and the New game command that closes the log or scores panel puts the
+  focus on the New game button. After a click on a button or a panel closing the focus stays on a button, so Space or Enter
+  then presses it; P, the arrow keys and W, A, S, D act on the game as before (#76, PBI-2.24). Specified in #72.
 
 ### Removed
 
