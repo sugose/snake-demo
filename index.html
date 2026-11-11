@@ -60,6 +60,23 @@
           </div>
         </section>
         <section
+          id="history-panel"
+          class="log-panel history-panel"
+          role="dialog"
+          aria-labelledby="history-title"
+          hidden
+        >
+          <h2 id="history-title" class="history-title">Version history</h2>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the scrolling text is a Tab stop so the keys can scroll it (SPEC 2.19 (4)) -->
+          <section id="history-scroll" class="history-scroll" tabindex="0" aria-label="Version history text">
+            <div id="history-entries"></div>
+          </section>
+          <div class="log-actions">
+            <button type="button" id="history-full" hidden>Show full history</button>
+            <button type="button" id="history-close">Close</button>
+          </div>
+        </section>
+        <section
           id="entry-panel"
           class="score-panel"
           role="dialog"
@@ -120,6 +137,7 @@
         <button type="button" id="scores-link" class="log-link">Scores</button>
         <button type="button" id="records-link" class="log-link">Records</button>
         <button type="button" id="log-link" class="log-link">Log</button>
+        <button type="button" id="history-link" class="log-link">Version history</button>
       </p>
       <p id="status" class="status" role="status"></p>
       <div class="controls">

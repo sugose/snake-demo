@@ -202,12 +202,12 @@ export function logPage(
   return pauseLines(add(log, at, hidden ? "hidden" : "shown"), at, before, after);
 }
 
-/** The panels that can pause a running game as they open: the log, scores and records panels. */
-export type PausingPanel = "log" | "scores" | "records";
+/** The panels that can pause a running game as they open: the log, scores, records and history panels. */
+export type PausingPanel = "log" | "scores" | "records" | "history";
 
 /**
- * A panel pausing a running game as it opens (2.13 (5), (6), 2.15 (5)): the open stretch ends, then
- * `pause log`, `pause scores` or `pause records`.
+ * A panel pausing a running game as it opens (2.13 (5), (6), 2.15 (5), 2.18 (7), 2.19 (4)): the open stretch ends, then
+ * `pause log`, `pause scores`, `pause records` or `pause history`.
  */
 export function logPanelPause(log: Log, at: Stamp, panel: PausingPanel = "log"): Log {
   return add(flush(log, at), at, `pause ${panel}`);
@@ -215,7 +215,7 @@ export function logPanelPause(log: Log, at: Stamp, panel: PausingPanel = "log"):
 
 /**
  * A panel going on as it closes, when its opening paused the game (2.13 (5), (6), 2.15 (5)):
- * `resume log`, `resume scores` or `resume records`.
+ * `resume log`, `resume scores`, `resume records` or `resume history`.
  */
 export function logPanelResume(log: Log, at: Stamp, panel: PausingPanel = "log"): Log {
   return add(log, at, `resume ${panel}`);

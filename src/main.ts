@@ -22,6 +22,15 @@ import {
   togglePause,
   turn,
 } from "./game";
+import {
+  HISTORY,
+  type HistoryEntry,
+  historyHeading,
+  isValidList,
+  openOnLoad,
+  TITLE_FULL,
+  TITLE_NEW,
+} from "./history";
 import { keyToCommand, type Point, swipeToDirection } from "./input";
 import {
   firstLine,
@@ -101,6 +110,7 @@ const {
   nameLetters,
   scoresStorageKey,
   recordsStorageKey,
+  seenVersionStorageKey,
   maxRecordTurns,
   maxRecordTimeMs,
   pixelScales,
@@ -210,6 +220,7 @@ const newGameButton = element("new-game", HTMLButtonElement);
 const logLink = element("log-link", HTMLButtonElement);
 const scoresLink = element("scores-link", HTMLButtonElement);
 const recordsLink = element("records-link", HTMLButtonElement);
+const historyLink = element("history-link", HTMLButtonElement);
 const recordsLineText = element("records-line", HTMLElement);
 const slowRow = element("slow-row", HTMLElement);
 const slowButton = element("slow", HTMLButtonElement);
@@ -235,6 +246,12 @@ const recordsScroll = element("records-scroll", HTMLElement);
 const recordsRows = element("records-rows", HTMLElement);
 const recordsEmpty = element("records-empty", HTMLElement);
 const recordsClose = element("records-close", HTMLButtonElement);
+const historyPanel = element("history-panel", HTMLElement);
+const historyTitle = element("history-title", HTMLElement);
+const historyScroll = element("history-scroll", HTMLElement);
+const historyEntries = element("history-entries", HTMLElement);
+const historyFull = element("history-full", HTMLButtonElement);
+const historyClose = element("history-close", HTMLButtonElement);
 // The version line (docs/SPEC.md 2.17): the build-time version and build, as text.
 versionLine.textContent = versionText(__VERSION__, __BUILD__);
 const frame = canvas.parentElement;
@@ -371,15 +388,16 @@ function newGameWithLog(input: Input): GameState {
   gameMadeAt = performance.now();
   ticks = 0;
   log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES, input);
-  const closesPanel = logOpen() || scoresOpen() || recordsOpen();
+  const closesPanel = logOpen() || scoresOpen() || recordsOpen() || historyOpen();
   hideLog();
   hideScores();
   hideRecords();
+  hideHistory();
   showRecordsLine(game.level);
   entering = null;
   entryPanel.hidden = true;
-  // The New game command that closes the log panel, the scores panel or the records panel puts the
-  // focus on the New game button (docs/SPEC.md 2.5).
+  // The New game command that closes the log, scores, records or history panel puts the focus on the
+  // New game button (docs/SPEC.md 2.5).
   if (closesPanel) newGameButton.focus();
   return game;
 }
@@ -587,8 +605,9 @@ let entering: Entering | null = null;
 let pausedByScores = false;
 
 const scoresOpen = (): boolean => !scoresPanel.hidden;
-/** Only one panel is open at a time: the log panel, the name entry, the scores table or the records table. */
-const anyPanelOpen = (): boolean => logOpen() || entering !== null || scoresOpen() || recordsOpen();
+/** Only one panel is open at a time: the log panel, the name entry, the scores, records or history panel. */
+const anyPanelOpen = (): boolean =>
+  logOpen() || entering !== null || scoresOpen() || recordsOpen() || historyOpen();
 
 /** The keys that are down now, by `KeyboardEvent.code`, and those that were down when a panel opened. */
 const keysDown = new Set<string>();
@@ -909,6 +928,167 @@ function recordsKey(event: KeyboardEvent): void {
   }
 }
 
+// The version history: the Version history link, its panel, and its opening by itself after an
+// upgrade (docs/SPEC.md 2.19).
+
+/** The name of the property of `window` that gives an automated browser's test a list (below). */
+const TEST_HISTORY = "__snakeDemoTestHistory";
+
+/**
+ * The list of the version history. This is the bundled list, with one test-only exception: an
+ * automated browser (`navigator.webdriver` is true, as in the Playwright tests of `e2e/`) may give the
+ * page another list, as the `window` property above set before the page loads, so that a browser
+ * test can show a line with `<` in it and several entries. It is used only if `isValidList` accepts
+ * it, is read once at the page load, and is never available to a player's browser.
+ */
+function historyList(): readonly HistoryEntry[] {
+  if (!navigator.webdriver) return HISTORY;
+  const given: unknown = Reflect.get(window, TEST_HISTORY);
+  return isValidList(given) ? given : HISTORY;
+}
+const versionHistory = historyList();
+
+/** True from an opening of the panel that paused a running game until it closes (2.19 (4)). */
+let pausedByHistory = false;
+const historyOpen = (): boolean => !historyPanel.hidden;
+
+/**
+ * Fills the panel with `entries`, each a heading and its lines as list items, all as text (2.19 (4)).
+ * `byItself` is the opening after an upgrade: the title "What's new" and the button to the full history.
+ */
+function fillHistory(entries: readonly HistoryEntry[], byItself: boolean): void {
+  historyTitle.textContent = byItself ? TITLE_NEW : TITLE_FULL;
+  historyEntries.replaceChildren(
+    ...entries.map((entry) => {
+      const block = document.createElement("div");
+      block.className = "history-entry";
+      const head = document.createElement("h3");
+      head.textContent = historyHeading(entry);
+      const items = document.createElement("ul");
+      items.append(
+        ...entry.lines.map((line) => {
+          const item = document.createElement("li");
+          item.textContent = line;
+          return item;
+        }),
+      );
+      block.append(head, items);
+      return block;
+    }),
+  );
+  historyFull.hidden = !byItself;
+  historyScroll.scrollTop = 0;
+}
+
+/** Shows the panel with the focus on Close; a key already down does nothing until it is released. */
+function showHistory(): void {
+  keysBlocked = new Set(keysDown);
+  historyPanel.hidden = false;
+  historyClose.focus();
+}
+
+/**
+ * Opens the panel over the board, in every state of the game, from the Version history link. A running
+ * game is paused first (2.19 (4)). It shows every entry.
+ */
+function openHistory(): void {
+  if (anyPanelOpen()) return;
+  if (state.status === "running") {
+    pausedByHistory = true;
+    log = logPanelPause(log, stamp(), "history");
+    apply(pauseIfRunning(state));
+  }
+  fillHistory(versionHistory, false);
+  showHistory();
+}
+
+/** Show full history: every entry, under the title Version history, the button gone and the focus on Close (2.19 (4)). */
+function showFullHistory(): void {
+  if (!historyOpen()) return;
+  fillHistory(versionHistory, false);
+  showHistory();
+}
+
+/** Hides the panel; the game is left as it is. */
+function hideHistory(): void {
+  pausedByHistory = false;
+  historyPanel.hidden = true;
+}
+
+/** Close and Escape: hides the panel, gives the focus to the Version history link and goes on, but only if opening it paused the game. */
+function closeHistory(): void {
+  const goOn = pausedByHistory && state.status === "paused";
+  hideHistory();
+  historyLink.focus();
+  if (goOn) {
+    log = logPanelResume(log, stamp(), "history");
+    apply(togglePause(state));
+  }
+}
+
+/**
+ * Tab and Shift+Tab in the history panel (docs/SPEC.md 2.19 (4)): between the text, the button Show
+ * full history when there is one, and Close, round and round; from outside the panel Tab goes to the
+ * text and Shift+Tab to Close.
+ */
+function keepFocusInHistory(event: KeyboardEvent): void {
+  event.preventDefault();
+  const stops = [historyScroll, ...(historyFull.hidden ? [] : [historyFull]), historyClose];
+  const at = stops.indexOf(document.activeElement as HTMLElement);
+  if (at < 0) (event.shiftKey ? historyClose : historyScroll).focus();
+  else stops[(at + (event.shiftKey ? stops.length - 1 : 1)) % stops.length]?.focus();
+}
+
+/** Presses the focused button of the history panel (Show full history or Close), if one has the focus. */
+function pressInHistory(): void {
+  const active = document.activeElement;
+  if (active instanceof HTMLButtonElement && historyPanel.contains(active)) active.click();
+}
+
+/**
+ * The keys while the history panel is open (docs/SPEC.md 2.19 (4)), as the records panel's: Escape
+ * closes it from anywhere; Enter and Space press the focused button of the panel and do nothing
+ * otherwise; Tab stays inside; no game key does anything. With the focus on the text the arrow keys,
+ * Space, Page Up, Page Down, Home and End are left to the browser, which scrolls it. A key already
+ * down when the panel opened, and the repeats of Enter, Space and Escape, do nothing.
+ */
+function historyKey(event: KeyboardEvent): void {
+  const onText = document.activeElement === historyScroll;
+  if (
+    keysBlocked.has(keyId(event)) ||
+    (event.repeat && ["Enter", " ", "Escape"].includes(event.key))
+  ) {
+    if (!onText || event.key !== " ") event.preventDefault();
+    return;
+  }
+  if (hasModifier(event)) return;
+  switch (event.key) {
+    case "Escape":
+      event.preventDefault();
+      closeHistory();
+      return;
+    case "Enter":
+      event.preventDefault();
+      pressInHistory();
+      return;
+    case " ":
+      if (onText) return;
+      event.preventDefault();
+      pressInHistory();
+      return;
+    case "Tab":
+      keepFocusInHistory(event);
+      return;
+    case "ArrowUp":
+    case "ArrowDown":
+    case "ArrowLeft":
+    case "ArrowRight":
+      if (!onText) event.preventDefault();
+      return;
+    default:
+  }
+}
+
 /** Keeps Tab inside the name entry's dialog (2.15 (4)). */
 function keepFocusInEntry(event: KeyboardEvent): void {
   const buttons = [...entryPanel.querySelectorAll("button")];
@@ -1178,6 +1358,10 @@ document.addEventListener("keydown", (event) => {
     recordsKey(event);
     return;
   }
+  if (historyOpen()) {
+    historyKey(event);
+    return;
+  }
   // While the log panel is open, Escape closes it and a new game closes it too; other game keys do
   // nothing and make no line (docs/SPEC.md 2.13 (4), (6)).
   if (logOpen() && event.key === "Escape") {
@@ -1307,6 +1491,10 @@ scoresLink.addEventListener("click", openScores);
 // The level records' link and panel (docs/SPEC.md 2.18 (7)).
 recordsLink.addEventListener("click", openRecords);
 recordsClose.addEventListener("click", closeRecords);
+// The version history's link and panel (docs/SPEC.md 2.19).
+historyLink.addEventListener("click", openHistory);
+historyClose.addEventListener("click", closeHistory);
+historyFull.addEventListener("click", showFullHistory);
 scoresClose.addEventListener("click", closeScores);
 entryOk.addEventListener("click", confirmName);
 entrySkip.addEventListener("click", skipEntry);
@@ -1331,3 +1519,11 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dra
 root.style.setProperty("--slow-size", `${slowButtonSize}px`);
 sizeBoard(frame);
 render();
+
+// The page has loaded: the history opens by itself after an upgrade, and the stored version becomes
+// the build's (docs/SPEC.md 2.19 (3)). It is opened in `ready`, so it pauses nothing and writes no line.
+const opening = openOnLoad(getStore, seenVersionStorageKey, __VERSION__, versionHistory);
+if (opening.length > 0) {
+  fillHistory(opening, true);
+  showHistory();
+}
