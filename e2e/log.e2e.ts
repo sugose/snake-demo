@@ -448,7 +448,7 @@ for (const how of ["Enter", "the New game button"] as const) {
     await expect(page.locator("#log-panel")).toBeHidden();
     await expectGame(game, "ready", "10,10");
     await linkOf(page).click();
-    const lines = (await panelText(page)).split("\n");
+    const lines = splitPanel(await panelText(page)).lines;
     expect(lines).toHaveLength(3);
     expect(lines[1]).toBe(
       `[t=0 #0] ${how === "Enter" ? "key Enter new used" : "button New game used"}`,
