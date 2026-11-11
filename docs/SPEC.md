@@ -140,6 +140,18 @@ paragraph, and Adam has not seen them: the text format and bounds of the
 stored list (2.15 (1)), the storage key names, and the
 sizes, colours and periods of 2.14 (5) and 2.16.
 
+Approved: Adam, 2026-11-10 23:57, in chat ("apyr"), to Clead's
+recommendation of 23:56, after his request of 23:56 for a checksum in the
+event log "to prevent tampering" (`DECISIONS.md`, PO-171, the row "Snake
+demo, the event log carries a checksum"): the log ends with a line
+`sha256 <64 hex digits>`, the SHA-256 of the log text up to its last line,
+in the panel and in what Copy copies; `npm run verify-log` checks a pasted
+log; it makes accidental and casual changes visible and does not prevent
+tampering, because the game runs in the browser. 2.13 (7), and the changes
+to 2.13 (2), (5), (6) and section 3 that follow from it, are Clead's exact
+wording of that decision. Details Adam has not settled are marked
+**[Clead]**; a mark at the start of an item or a bullet covers all of it.
+
 ---
 
 ## 1. System overview
@@ -513,7 +525,7 @@ cleared, no queued turns, and no obstacles or dot.
    made. It stays readable after the game ends. It is kept in the
    page's memory only and is not saved; a reload clears it.
 2. The log is plain text, one event per line. **[Clead]** Every line but
-   the first starts with `[t=T #K] `, where T is the time since the game
+   the first and the checksum line of (7) starts with `[t=T #K] `, where T is the time since the game
    was made in whole milliseconds of the page's clock, and K the number
    of ticks of the tick timer so far in this game while it was
    `running`, ticks of a waiting snake (2.12 (5)) included. K counts the
@@ -565,6 +577,7 @@ cleared, no queued turns, and no obstacles or dot.
 | a slow step (2.14 (5)) | `slow x2`, `slow x4`, `slow x1`, after the input line `button Slow used`; a press the state ignores is `button Slow ignored state` |
 | a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped`; when the list had no room left at the confirmation (2.15 (6)) `scores name=ABC full` |
 | the page hidden or shown | `hidden`, `shown` |
+| the checksum (7) | `sha256 ` and 64 lowercase hexadecimal digits; the last line of what the panel shows, never in the log kept in memory |
 | the end of the game | `end over boxed score=43 best=yes`; `best=no` when the score did not become the best score |
 
    The words used: commands `up`, `down`, `left`, `right`, `pause`,
@@ -585,7 +598,8 @@ cleared, no queued turns, and no obstacles or dot.
    always be skipped, so while it is open the Log link does nothing.
    **[Clead]** The panel's text is the log as
    it is when the panel has opened, the pause of its opening (below)
-   included; Copy puts that text on the clipboard. **[Clead]** The
+   included, followed by its checksum line (7); Copy puts that text on the
+   clipboard. **[Clead]** The
    link's place and look, the Close button, and that, if the browser
    refuses Copy, the log's text is selected so it can be copied by hand.
    While the panel is open, game keys, swipes and the Start, Pause and
@@ -620,6 +634,40 @@ cleared, no queued turns, and no obstacles or dot.
      readers: the panel holds a polite live region that reads "Copied"
      when a copy has succeeded; it is emptied when the button goes back
      and when a copy starts, so that a repeated copy is announced again.
+7. The checksum. **[Clead]** The log text is the lines of the log in
+   order, each followed by one line feed (U+000A), as UTF-8. The text the
+   panel shows and Copy copies (6) is the log text followed by one more
+   line, the checksum line: `sha256 `, a space, and the 64 lowercase
+   hexadecimal digits of the SHA-256 (FIPS 180-4) of the log text, then a
+   line feed. The page makes it each time the panel opens, from the log as
+   it is then; the log kept in memory has none, so a later line is covered
+   by the checksum of the next opening and not by an earlier one. The
+   checksum line has no stamp (2).
+   - **[Clead]** The page computes the SHA-256 with a function written for
+     this project (section 3), not the browser's `crypto.subtle`, which is
+     asynchronous and needs a secure context; no third-party code is used.
+   - `npm run verify-log` checks a log. **[Clead]** It reads the log from a
+     file named on its command line or, with none, from the standard input;
+     reads CR LF as LF; ignores empty lines at the end; takes the last
+     remaining line as the checksum line and every line before it, each
+     followed by a line feed, as the log text; and uses Node's own SHA-256,
+     so that it is independent of the page's. It prints `match` and exits
+     with 0 when the digits are those of the log text, `mismatch` and 1 when
+     they are not, and `no checksum` and 2 when the input is empty or its
+     last line is not of the form of the checksum line (capital letters in
+     the digits included).
+   - It makes accidental and casual changes visible. It does not prevent
+     tampering: the game runs in the browser, so anyone can change a log
+     and compute its checksum again, and a secret key would be readable in
+     the page.
+   - **[Clead]** Tests: the SHA-256 against the published test vectors
+     (the empty message, "abc", the 56-byte message of FIPS 180-4, and a
+     message of one million "a"), multi-block and multi-byte UTF-8 inputs
+     and Node's result for the same inputs; the checksum line for a given
+     log; the command's three outcomes with the exit codes, a changed
+     character, a removed or added line, a missing checksum line and CR LF
+     input; and, in the browser, that the panel's last line and the copied
+     text carry the checksum of the text above them.
 
 ### 2.14 Playtest options
 
@@ -961,6 +1009,14 @@ section 3.
   own small state (the open stretch of moves) and works out no game
   rule itself. Pure, covered by Jest: every kind of line of 2.13 (5)
   whole.
+- `src/sha256.ts`: SHA-256 of a string as UTF-8, written for this project
+  (2.13 (7)). Pure, covered by Jest against published test vectors and
+  Node's own result.
+- `src/logsum.ts`: the log text and the checksum line of 2.13 (7), and the
+  judgement of a pasted log (`match`, `mismatch`, `no checksum`), with the
+  hash function passed in; `scripts/verify-log` reads the input and calls it
+  with Node's SHA-256, `main.ts` calls it with `src/sha256.ts`. Pure,
+  covered by Jest.
 - `src/main.ts`: draws the board, the obstacles and the level on a
   canvas, shows a special level's turns, seconds and shield (2.12 (10)),
   shows the "Special Level" text (2.12 (11)), shows the status line
