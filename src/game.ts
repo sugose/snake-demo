@@ -297,24 +297,30 @@ function layOut(
 }
 
 /**
- * A new game in `ready` at level 1 (docs/SPEC.md 2.1 (2), 2.11): score 0, no dots eaten, no
- * queued turns, the snake's `startLength` segments all on a start the chooser picks, then the dot.
- * Throws a RangeError if `size`, `startLength` or `dotsPerLevel` is not a whole number of at least
- * 1, if `clearAhead` is not a whole number of at least 0, if the board is too small for a start
- * (fewer than `clearAhead + 1` cells a side), if `startLength` is `size × size` or more, if a
- * special levels' value is out of range (docs/SPEC.md 2.12), or if the chooser returns an index out
- * of range.
+ * A new game in `ready` at level `startLevel`, 1 by default (docs/SPEC.md 2.1 (2), 2.11, 2.14 (2)):
+ * score 0, no dots eaten, no queued turns, the snake's `startLength` segments all on a start the
+ * chooser picks, then the level's `startLevel - 1` obstacles, then the dot. On a special level
+ * (docs/SPEC.md 2.12) the game starts with its fresh run: no turns counted, no time, no shield
+ * layer used. Throws a RangeError if `size`, `startLength` or `dotsPerLevel` is not a whole number
+ * of at least 1, if `startLevel` is not one, if `clearAhead` is not a whole number of at least 0,
+ * if the board is too small for a start (fewer than `clearAhead + 1` cells a side), if the level's
+ * obstacles, the dot and the snake do not fit on the board (the same count as when a level is
+ * cleared: `startLength` of `size × size` or more on level 1), if a special levels' value is out of
+ * range (docs/SPEC.md 2.12), or if the chooser returns an index out of range.
  */
 export function newGame(options: {
   size: number;
   startLength: number;
   clearAhead: number;
   dotsPerLevel: number;
+  /** The level the game starts at (docs/SPEC.md 2.14 (2)); level 1 without it. */
+  startLevel?: number;
   /** The special levels' values (docs/SPEC.md 2.12); without them no level is special. */
   special?: SpecialRules;
   choose: Chooser;
 }): GameState {
   const { size, startLength, clearAhead, dotsPerLevel, choose } = options;
+  const startLevel = options.startLevel ?? 1;
   const special = options.special ?? null;
   if (special !== null) checkSpecial(special);
   if (!isWholeNumber(size, 1)) {
@@ -334,10 +340,15 @@ export function newGame(options: {
   if (!isWholeNumber(dotsPerLevel, 1)) {
     throw new RangeError(`dots per level ${dotsPerLevel}; expected a whole number of at least 1`);
   }
-  const layout = layOut(size, clearAhead, 1, startLength, choose);
+  if (!isWholeNumber(startLevel, 1)) {
+    throw new RangeError(`start level ${startLevel}; expected a whole number of at least 1`);
+  }
+  const layout = layOut(size, clearAhead, startLevel, startLength, choose);
   if (layout === null) {
     throw new RangeError(
-      `start length ${startLength}; expected less than ${size * size}, the cells of a board of ${size}`,
+      startLevel === 1
+        ? `start length ${startLength}; expected less than ${size * size}, the cells of a board of ${size}`
+        : `start level ${startLevel} with a snake of ${startLength}; its obstacles, the dot and the snake do not fit on a board of ${size}`,
     );
   }
   return {
@@ -346,12 +357,12 @@ export function newGame(options: {
     dotsPerLevel,
     ...layout,
     queue: [],
-    level: 1,
+    level: startLevel,
     dotsEaten: 0,
     score: 0,
     status: "ready",
     special,
-    run: runFor(1, special),
+    run: runFor(startLevel, special),
     ended: null,
     crashed: null,
     cleared: null,

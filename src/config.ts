@@ -40,4 +40,10 @@ export const config = Object.freeze({
   bannerMs: 3000,
   /** The Copy button shows "✓ Copied!" this long after a copy, in ms (docs/SPEC.md 2.13 (6)). */
   copiedMs: 2000,
+  /** The highest start level `?level=N` accepts (docs/SPEC.md 2.14 (2)). */
+  maxStartLevel: 99,
+  /** The factors the Slow button steps through, in order, then round to the first (docs/SPEC.md 2.14 (5)). */
+  slowFactors: Object.freeze([1, 2, 4]),
+  /** Width and height of the Slow button, in CSS pixels (docs/SPEC.md 2.14 (5)). */
+  slowButtonSize: 24,
 });

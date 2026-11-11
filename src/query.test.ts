@@ -1,4 +1,4 @@
-import { readQuery, stepSlowFactor } from "./query";
+import { firstSlowFactor, readQuery, stepSlowFactor } from "./query";
 
 // The playtest options of the query string (docs/SPEC.md 2.14); the module takes the highest start
 // level and the factors as parameters (docs/SPEC.md 3).
@@ -155,5 +155,16 @@ describe("stepSlowFactor (docs/SPEC.md 2.14 (5))", () => {
 
   it("throws a RangeError for no factors", () => {
     expect(() => stepSlowFactor(1, [])).toThrow(RangeError);
+  });
+});
+
+describe("firstSlowFactor (docs/SPEC.md 2.14 (5))", () => {
+  it("is the first of the factors", () => {
+    expect(firstSlowFactor(FACTORS)).toBe(1);
+    expect(firstSlowFactor([3, 1])).toBe(3);
+  });
+
+  it("throws a RangeError for no factors", () => {
+    expect(() => firstSlowFactor([])).toThrow(RangeError);
   });
 });

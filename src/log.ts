@@ -26,6 +26,13 @@ export interface LogValues {
   readonly special: SpecialRules | null;
 }
 
+/** The playtest options of the page, for the first line (docs/SPEC.md 2.13 (3), 2.14). */
+export interface PlaytestWords {
+  /** The valid start level of the page, or `null`. */
+  readonly startLevel: number | null;
+  readonly slow: boolean;
+}
+
 /** The time since the game was made, in whole milliseconds, and the tick count (2.13 (2)). */
 export interface Stamp {
   readonly t: number;
@@ -73,19 +80,27 @@ function flush(log: Log, at: Stamp): Log {
   return cells > 0 ? add(closed, at, `move ${heading} ${cells} head=${cellText(head)}`) : closed;
 }
 
-/** The first line: the build and the named values (2.13 (3)). */
-export function firstLine(build: string, values: LogValues): string {
+/**
+ * The first line: the build and the named values (2.13 (3)). On a playtest page it ends with the
+ * options: `playtest start-level=5 slow`, `playtest start-level=5` or `playtest slow` (2.14 (4)).
+ */
+export function firstLine(build: string, values: LogValues, playtest?: PlaytestWords): string {
   const { delays, special } = values;
   const common =
     `snake-demo build=${build} size=${values.size} start-length=${values.startLength}` +
     ` clear-ahead=${values.clearAhead} dots=${values.dotsPerLevel}` +
     ` delays=${delays.first}/${delays.step}/${delays.shortest}`;
-  if (special === null) return `${common} special=none`;
-  return (
-    `${common} special-every=${special.every} shield=${special.shieldLayers}` +
-    ` turns=${special.maxTurns} seconds=${special.seconds} jump=${special.jumpSeconds}` +
-    ` clear-head=${special.clearAheadOfHead}`
-  );
+  const rules =
+    special === null
+      ? `${common} special=none`
+      : `${common} special-every=${special.every} shield=${special.shieldLayers}` +
+        ` turns=${special.maxTurns} seconds=${special.seconds} jump=${special.jumpSeconds}` +
+        ` clear-head=${special.clearAheadOfHead}`;
+  const options = [
+    ...(playtest?.startLevel == null ? [] : [`start-level=${playtest.startLevel}`]),
+    ...(playtest?.slow ? ["slow"] : []),
+  ];
+  return options.length === 0 ? rules : `${rules} playtest ${options.join(" ")}`;
 }
 
 /** The line of a level laid out (2.13 (5)). */
@@ -164,6 +179,15 @@ export function logInput(
     next = add(next, at, `turn ${after.heading} free`);
   }
   return pauseLines(next, at, before, after);
+}
+
+/**
+ * A press of the Slow button that stepped the factor (2.13 (4), (5), 2.14 (5)): the input line,
+ * then `slow x2`, `slow x4` or `slow x1`. It ends no stretch of moves. A press the state ignores
+ * is `logInput`'s `button Slow ignored state`.
+ */
+export function logSlow(log: Log, at: Stamp, factor: number): Log {
+  return add(log, at, "button Slow used", `slow x${factor}`);
 }
 
 /** The page hidden or shown (2.13 (4)); hiding pauses a running game. */
