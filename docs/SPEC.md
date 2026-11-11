@@ -1361,7 +1361,7 @@ section 3.
      one this browser saw last): nothing opens, and V is written.
    - S is lower than V: the history opens by itself with the entries of
      versions higher than S and not higher than V, newest first, and V is
-     stored. If there is no such entry, nothing opens.
+     written. If there is no such entry, nothing opens.
    So while the storage works a version opens by itself at most once in a
    browser, whatever the player does with the panel. A write that fails is
    ignored, and then the history may open again at the next load. The case
@@ -1416,9 +1416,9 @@ section 3.
    - **[Clead]** The buttons of the panel, "Show full history" and Close,
      are buttons in the sense of 2.6.
 5. **[Clead]** Tests. Jest: the shape of the list (not empty; each entry's
-   version a SemVer 2.0.0 version, different from the others and in
-   descending order; each date well formed; at least one line, none
-   empty); the version of `package.json` is the first entry's; the
+   version a SemVer 2.0.0 version, no two with the same precedence
+   (`1.0.0+a` and `1.0.0+b` are the same) and in descending order; each
+   date a real calendar date; at least one line, none empty); the version of `package.json` is the first entry's; the
    precedence function on the examples of SemVer 2.0.0 section 11
    (`1.0.0-alpha` < `1.0.0-alpha.1` < `1.0.0-alpha.beta` < `1.0.0-beta` <
    `1.0.0-beta.2` < `1.0.0-beta.11` < `1.0.0-rc.1` < `1.0.0`, and
@@ -1433,16 +1433,17 @@ section 3.
    S lower than a prerelease V (`0.3.0-rc.1`), a prerelease S below a
    release V, S with build metadata equal to the same version without it,
    and a leading `v` or a space invalid; a date that is not a real
-   calendar date refused; a line with `<` shown as text; the log lines
-   `pause history` and `resume history` in the cases of 2.13 (5). Browser: the link opens
+   calendar date refused; the log lines
+   `pause history` and `resume history` in the cases of 2.13 (5). Browser: a
+   line with `<` in it is shown as text, not as HTML; the link opens
    the panel with every entry and the title "Version history"; with
    `snake-demo.seen-version` set to `0.0.1` before the page loads, the
    panel opens by itself with the title "What's new", the entry of the
    build's version and the button, and after the page has loaded the key
    holds the build's version; the button changes the title to "Version
    history", shows every entry, is gone afterwards and the focus is on
-   Close; the opening by itself pauses nothing, writes no log line and puts
-   the focus on Close; with the key
+   Close; the opening by itself pauses nothing, writes no log line (read after
+   the panel is closed) and puts the focus on Close; with the key
    missing, equal to the build's version or higher, nothing opens and the
    key holds the build's version; Close and Escape close it and put the
    focus on the link; the New game button closes it and makes a new game;
