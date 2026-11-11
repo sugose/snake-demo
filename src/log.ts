@@ -201,17 +201,23 @@ export function logPage(
   return pauseLines(add(log, at, hidden ? "hidden" : "shown"), at, before, after);
 }
 
+/** The panels that can pause a running game as they open: the log panel and the scores panel. */
+export type PausingPanel = "log" | "scores";
+
 /**
- * The log panel pausing a running game as it opens (2.13 (5), (6)): the open stretch ends, then
- * `pause log`.
+ * A panel pausing a running game as it opens (2.13 (5), (6), 2.15 (5)): the open stretch ends, then
+ * `pause log` or `pause scores`.
  */
-export function logPanelPause(log: Log, at: Stamp): Log {
-  return add(flush(log, at), at, "pause log");
+export function logPanelPause(log: Log, at: Stamp, panel: PausingPanel = "log"): Log {
+  return add(flush(log, at), at, `pause ${panel}`);
 }
 
-/** The log panel going on as it closes, when its opening paused the game (2.13 (5), (6)). */
-export function logPanelResume(log: Log, at: Stamp): Log {
-  return add(log, at, "resume log");
+/**
+ * A panel going on as it closes, when its opening paused the game (2.13 (5), (6), 2.15 (5)):
+ * `resume log` or `resume scores`.
+ */
+export function logPanelResume(log: Log, at: Stamp, panel: PausingPanel = "log"): Log {
+  return add(log, at, `resume ${panel}`);
 }
 
 /**
@@ -295,4 +301,20 @@ export function logEnd(log: Log, at: Stamp, game: GameState, madeBest: boolean):
     at,
     `end ${game.status} ${reason} score=${game.score} best=${madeBest ? "yes" : "no"}`,
   );
+}
+
+/** What became of the name entry (2.13 (5), 2.15 (4), (6)). */
+export type ScoresOutcome =
+  | { readonly kind: "name"; readonly name: string; readonly rank: number }
+  | { readonly kind: "full"; readonly name: string }
+  | { readonly kind: "skipped" };
+
+/**
+ * The line of the name entry's outcome (2.13 (5)): `scores name=ABC rank=3`, `scores skipped`, or,
+ * when the list had no room left at the confirmation, `scores name=ABC full`.
+ */
+export function logScores(log: Log, at: Stamp, outcome: ScoresOutcome): Log {
+  if (outcome.kind === "skipped") return add(log, at, "scores skipped");
+  const tail = outcome.kind === "full" ? "full" : `rank=${outcome.rank}`;
+  return add(log, at, `scores name=${outcome.name} ${tail}`);
 }

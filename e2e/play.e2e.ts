@@ -378,6 +378,8 @@ test.describe("best score", () => {
     await expect(game).toHaveAttribute("data-score", "1");
     await expect(game).toHaveAttribute("data-best", "1");
     await expect(page.locator("#best")).toHaveText("1");
+    // The score of 1 qualifies for the high score list: Enter would confirm the name, so skip it.
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Enter");
     await expectGame(game, "ready", "10,10");
     await expect(page.locator("#best")).toHaveText("1");

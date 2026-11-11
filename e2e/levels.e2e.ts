@@ -148,6 +148,11 @@ test("hitting an obstacle ends the game", async ({ page }) => {
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 1, LEVEL_2_TICK_MS);
   await expectGame(game, "over", "10,9");
+  // The score of 5 qualifies for the high score list, so the name entry is open (docs/SPEC.md 2.8).
+  await expect(page.locator("#status")).toHaveText(
+    "Game over: you hit an obstacle. Enter your name",
+  );
+  await page.keyboard.press("Escape");
   await expect(page.locator("#status")).toHaveText(
     "Game over: you hit an obstacle. Enter or New game to play again",
   );

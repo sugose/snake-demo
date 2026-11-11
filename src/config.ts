@@ -46,4 +46,10 @@ export const config = Object.freeze({
   slowFactors: Object.freeze([1, 2, 4]),
   /** Width and height of the Slow button, in CSS pixels (docs/SPEC.md 2.14 (5)). */
   slowButtonSize: 24,
+  /** Entries the high score list holds (docs/SPEC.md 2.15 (1)). */
+  scoreEntries: 10,
+  /** Letters in a name of the high score list, each from A to Z (docs/SPEC.md 2.15 (1)). */
+  nameLetters: 3,
+  /** The local-storage key of the high score list (docs/SPEC.md 2.15 (1)). */
+  scoresStorageKey: "snake-demo.scores",
 });

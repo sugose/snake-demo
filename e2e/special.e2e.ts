@@ -135,6 +135,9 @@ test("the 21st turn on level 5 blows the snake up, and the best score is saved",
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 1, LEVEL_5_DELAY);
   await expectGame(game, "blown", "10,8");
+  // The score of 20 qualifies for the high score list, so the name entry is open (docs/SPEC.md 2.8).
+  await expect(page.locator("#status")).toHaveText("Blown up: no turns left. Enter your name");
+  await page.keyboard.press("Escape");
   await expect(page.locator("#status")).toHaveText(
     "Blown up: no turns left. Enter or New game to play again",
   );
@@ -253,6 +256,11 @@ test("a crash with no shield layer left says so (docs/SPEC.md 2.8)", async ({ pa
   await page.keyboard.press("ArrowLeft");
   await runTicks(page, 1, LEVEL_5_DELAY); // the left wall, with no layer left
   await expectGame(game, "over", "0,2");
+  // The score qualifies for the high score list, so the name entry is open (docs/SPEC.md 2.8).
+  await expect(page.locator("#status")).toHaveText(
+    "Game over: you hit the wall. No shield left. Enter your name",
+  );
+  await page.keyboard.press("Escape");
   await expect(page.locator("#status")).toHaveText(
     "Game over: you hit the wall. No shield left. Enter or New game to play again",
   );
