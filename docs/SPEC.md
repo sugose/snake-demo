@@ -1035,34 +1035,43 @@ section 3.
 
 ### 2.17 Version line
 
-1. The page shows one line of small text under the board: the letter `v`,
-   the version, a space, the middle dot `·` (U+00B7), a space and the
-   build, as `v0.2.0 · abc1234`. The version is the `version` of
-   `package.json` when the page was built, whatever it is then. The build
-   is the one of 2.13 (3): the first 7 characters of the commit the page
-   was built from, or `dev` for a local build, so a local build shows
-   `v0.2.0 · dev`.
+1. The page shows one line of small text under the board: `v0.2.0 ·
+   abc1234`, the version of `package.json` and the build's commit.
+   **[Clead]** The text is the letter `v`, the version, a space, the
+   middle dot `·` (U+00B7), a space and the build. The version is the
+   `version` of `package.json` when the page was built, whatever it is
+   then (a prerelease such as `0.3.0-rc.1` included). The build is the one
+   of 2.13 (3): the first 7 characters of the commit the page was built
+   from, or `dev` for a local build, so a local build shows `v0.2.0 · dev`.
 2. **[Clead]** The line is the last thing in the page's column, below the
    controls; it is not a button or a link, is not in the tab order, takes
    no key or pointer input, and is read by screen readers as the text it
-   is. Its text is in the muted colour of the page, at least 4.5:1 against
-   the page's background in light and in dark mode, in the page's font at
-   0.75 of the size of the status line, and centred under the board. It
-   is on every page, a playtest page (2.14) included.
+   is. Its text is in the muted colour of the page (`--muted`), which is at
+   least 4.5:1 against the page's background in light and in dark mode, in
+   the page's font at 0.75 of the size of the status line, and centred
+   under the board. It is on every page, a playtest page (2.14) included.
 3. **[Clead]** The version and the build are fixed when the page is built,
    by the build tool, from `package.json` and from the commit; nothing is
-   read from the network or at run time. The text is made by one function
-   of the version and the build (section 3), which the log's first line
-   uses for the same two values, so the page and the log cannot differ.
-4. **[Clead]** Tests. Jest: the function, with a given version and build
-   (`v0.2.0 · abc1234`, `v1.10.3 · dev`) and the first line of the log
-   with the version in it. Browser: the line is under the board and below
-   the controls, has the form `v<digits>.<digits>.<digits> · ` and 7
-   lowercase hexadecimal digits or `dev`, and its version is `package.json`'s;
-   the first line of the log opens `snake-demo version=<that version>
-   build=<that build> `; the same build in both; the line is not a Tab
-   stop, and a click or key on it does nothing; the contrast of its text
-   in both colour modes is at least 4.5:1.
+   read from the network or at run time. They reach the page as two
+   build-time constants. The text of (1) is made by one function of the
+   version and the build, `versionText` in `src/version.ts` (section 3),
+   and the log's first line takes the same two constants as parameters
+   (`firstLine` gets the version in front of the build), so the page and
+   the log cannot differ.
+4. **[Clead]** Tests. Jest: `versionText` with a given version and build
+   (`v0.2.0 · abc1234`, `v1.10.3 · dev`, `v0.3.0-rc.1 · abc1234`) and the
+   first line of the log with the version in it, with and without the
+   playtest options. Browser: the line is under the board and below the
+   controls; its text is `v`, the version of `package.json`, ` · ` and 7
+   lowercase hexadecimal digits or `dev`; the first line of the log opens
+   `snake-demo version=<that version> build=<that build> `, with the build
+   the same in both, also on a playtest page, where the line is shown too
+   and the first line ends with the options; the line is not reached by
+   Tab, and a click on it makes no log line and changes nothing in the
+   game; its computed colour is the page's `--muted` in both colour
+   modes and the contrast of it against the page's background is at least
+   4.5:1; its font size is 0.75 of the status line's and its centre is the
+   board's centre; its text is in the page's accessibility tree.
 
 ## 3. Architecture
 
@@ -1136,11 +1145,11 @@ section 3.
   own small state (the open stretch of moves) and works out no game
   rule itself. Pure, covered by Jest: every kind of line of 2.13 (5)
   whole, except the checksum line, which `src/logsum.ts` makes.
-- `src/version.ts`: the text of 2.17 (1) from a version and a build, a pure
-  function covered by Jest; the log's first line (2.13 (3)) uses the same
-  two values. `vite.config.mts` hands the version of `package.json` and
-  the build to the page as build-time constants, as it does for the build
-  today.
+- `src/version.ts`: `versionText`, the text of 2.17 (1) from a version and
+  a build, a pure function covered by Jest. `vite.config.mts` hands the
+  version of `package.json` and the build to the page as two build-time
+  constants, as it does for the build today, and `src/log.ts`'s
+  `firstLine` takes the version and the build as parameters (2.13 (3)).
 - `src/sha256.ts`: SHA-256 of a string as UTF-8, written for this project
   (2.13 (7)). Pure, covered by Jest against published test vectors and
   Node's own result.
