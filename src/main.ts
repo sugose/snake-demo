@@ -34,11 +34,11 @@ import {
   logPanelResume,
   logScores,
   logSlow,
-  logText,
   logTick,
   type Stamp,
   startLog,
 } from "./log";
+import { panelText } from "./logsum";
 import {
   COLUMN_GAP,
   chooseScale,
@@ -60,6 +60,7 @@ import {
   startName,
   stepLetter,
 } from "./scores";
+import { sha256 } from "./sha256";
 import { endText, waitingText } from "./status";
 import { readBest, writeBest } from "./storage";
 
@@ -431,7 +432,8 @@ function resetCopied(): void {
 
 /**
  * Opens the log panel over the board, in every state of the game (docs/SPEC.md 2.13 (6)). A running
- * game is paused first, and the panel shows the log after that pause.
+ * game is paused first, and the panel shows the log after that pause, then its checksum line, made
+ * now and not kept (2.13 (7)).
  */
 function openLog(): void {
   if (anyPanelOpen()) return;
@@ -442,7 +444,7 @@ function openLog(): void {
     log = logPanelPause(log, stamp());
     apply(pauseIfRunning(state));
   }
-  logTextBox.textContent = logText(log);
+  logTextBox.textContent = panelText(log.lines, sha256);
   keysBlocked = new Set(keysDown);
   logPanel.hidden = false;
   logClose.focus();
