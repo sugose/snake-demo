@@ -10,6 +10,7 @@ import {
   togglePause,
   turn,
 } from "./game";
+import { type Log, logTick } from "./log";
 
 // The turns and the time of every level (docs/SPEC.md 2.18 (1), (2)), with the spec's values; the
 // module takes them as parameters (docs/SPEC.md 3).
@@ -137,13 +138,18 @@ describe("the turns of a level (docs/SPEC.md 2.18 (1))", () => {
   });
 
   it("the turn that ends the wait after a shielded crash is not counted, and the crash tick's turn is", () => {
-    // Level 5, heading up along the left of the board, the wall ahead: the queued turn left is
-    // taken and counted in the same tick that crashes into the wall.
-    const atWall = running(5, { snake: LINE.map((c) => ({ x: c.x - 10, y: c.y })), heading: "up" });
+    // Level 5, heading up along the left edge, the queued turn left is taken and counted in the
+    // same tick that crashes it into the wall; the snake is on the board.
+    const edge: Cell[] = [
+      { x: 0, y: 5 },
+      { x: 0, y: 6 },
+      { x: 0, y: 7 },
+    ];
+    const atWall = running(5, { snake: edge, heading: "up" });
     const crashed = turnAndTick(atWall, "left");
     expect(crashed.run?.waiting).toBe(true);
     expect(crashed.turns).toBe(1);
-    const freed = turn(crashed, "down");
+    const freed = turn(crashed, "up");
     expect(freed.run?.waiting).toBe(false);
     expect(freed.turns).toBe(1);
     expect(tick(freed, answers(0)).turns).toBe(1);
@@ -334,5 +340,109 @@ describe("the time of a level (docs/SPEC.md 2.18 (2))", () => {
     expect(late.timeMs).toBe(29_055);
     expect(late.status).toBe("running");
     expect(tick(running(5, { timeMs: 29_945 }), answers(0)).status).toBe("blown");
+  });
+});
+
+describe("a turn taken by a tick that ends the game by a crash (docs/SPEC.md 2.2 step 1, 2.18 (1), 2.12 (4))", () => {
+  const VALUES = {
+    size: 20,
+    startLength: 3,
+    clearAhead: 8,
+    dotsPerLevel: 5,
+    delays: DELAYS,
+    special: SPECIAL,
+  };
+  const EMPTY: Log = { lines: [], stretch: null, values: VALUES };
+
+  /** The head at (10,0) heading right: a queued "up" takes it off the top of the board. */
+  const wall: Partial<GameState> = {
+    snake: [
+      { x: 10, y: 0 },
+      { x: 9, y: 0 },
+      { x: 8, y: 0 },
+    ],
+  };
+  /** A queued "up" takes the head onto the obstacle at (10,9). */
+  const obstacle: Partial<GameState> = { obstacles: [{ x: 10, y: 9 }] };
+  /** Heading left, a queued "up" takes the head onto the snake's own segment at (10,9). */
+  const body: Partial<GameState> = {
+    snake: [
+      { x: 10, y: 10 },
+      { x: 11, y: 10 },
+      { x: 11, y: 9 },
+      { x: 10, y: 9 },
+      { x: 9, y: 9 },
+    ],
+    heading: "left",
+  };
+
+  // A normal level, and a special level with no shield layer left (the crash then ends the game).
+  const levels: Array<[string, number, Partial<GameState>, string]> = [
+    ["a normal level", 4, {}, "turn up counted 8"],
+    [
+      "a special level with no shield left",
+      5,
+      { run: { shieldUsed: 3, waiting: false } },
+      "turn up counted 8/20",
+    ],
+  ];
+  const crashes: Array<[string, Partial<GameState>, string]> = [
+    ["a wall", wall, "wall"],
+    ["an obstacle", obstacle, "obstacle"],
+    ["the body", body, "self"],
+  ];
+
+  for (const [levelName, level, levelOverrides, counted] of levels) {
+    for (const [crashName, crashOverrides, reason] of crashes) {
+      describe(`${levelName}, into ${crashName}`, () => {
+        const before = running(level, {
+          turns: 7,
+          timeMs: 400,
+          ...levelOverrides,
+          ...crashOverrides,
+          queue: ["up"],
+        });
+        const after = tick(before, answers(0));
+
+        it("ends the game and counts the turn the tick took", () => {
+          expect(after.status).toBe("over");
+          expect(after.ended).toBe(reason);
+          expect(after.turns).toBe(8);
+        });
+
+        it("leaves the heading and the queue as step 1 left them: the turn is the heading, the queue empty", () => {
+          expect(after.heading).toBe("up");
+          expect(after.queue).toEqual([]);
+        });
+
+        it("adds no time and does not move the snake", () => {
+          expect(after.timeMs).toBe(400);
+          expect(after.snake).toEqual(before.snake);
+        });
+
+        it("is logged with a counted line that gives the number the state shows", () => {
+          const lines = logTick(EMPTY, { t: 125, k: 1 }, before, after).lines;
+          expect(lines).toEqual([`[t=125 #1] ${counted}`]);
+          expect(counted).toContain(`counted ${after.turns}`);
+        });
+      });
+    }
+  }
+
+  it("a crash tick with no queued turn counts nothing", () => {
+    const after = tick(running(4, { ...wall, heading: "up", turns: 7 }), answers(0));
+    expect(after.ended).toBe("wall");
+    expect(after.turns).toBe(7);
+  });
+
+  it("the 21st turn is the exception: the state is unchanged and the turns stay 20", () => {
+    const before = running(5, { ...wall, turns: 20, queue: ["up"] });
+    const after = tick(before, answers(0));
+    expect(after.status).toBe("blown");
+    expect(after.ended).toBe("turns");
+    expect(after.turns).toBe(20);
+    expect(after.heading).toBe("right");
+    expect(after.queue).toEqual(["up"]);
+    expect(logTick(EMPTY, { t: 55, k: 1 }, before, after).lines).toEqual([]);
   });
 });

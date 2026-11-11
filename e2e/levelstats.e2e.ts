@@ -178,6 +178,32 @@ test("a game that ends keeps its last turns and time; the crash tick adds no tim
   await expect(shown(page, "Time 0s")).toBeVisible();
 });
 
+test("a turn queued for the tick that hits the wall is counted: the game ends with it, the time of the crash tick is not", async ({
+  page,
+}) => {
+  const game = await openGame(page);
+  await page.keyboard.press("ArrowUp"); // starts the level, not counted
+  await runTicks(page, 10);
+  await expectGame(game, "running", "10,0");
+  await page.keyboard.press("ArrowRight");
+  await runTicks(page, 1);
+  await expectGame(game, "running", "11,0");
+  expect(await stats(game)).toEqual(["1", "1375"]);
+  await page.keyboard.press("ArrowUp"); // queued; the next tick takes it into the wall
+  await expect(shown(page, "Turns 1")).toBeVisible();
+  await runTicks(page, 1);
+  await expect(game).toHaveAttribute("data-status", "over");
+  await expect(page.locator("#status")).toContainText("Game over: you hit the wall.");
+  expect(await stats(game)).toEqual(["2", "1375"]);
+  await expect(shown(page, "Turns 2")).toBeVisible();
+  await expect(shown(page, "Time 1s")).toBeVisible();
+
+  // The log says the same: the counted turn, then the end.
+  const events = await logEvents(page);
+  expect(events).toContain("turn up counted 2");
+  expect(events.at(-1)).toMatch(/^end over wall /);
+});
+
 test("a cleared level gives its turns and time to the log, and the next level starts at 0 and 0s", async ({
   page,
 }) => {

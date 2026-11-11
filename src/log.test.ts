@@ -416,7 +416,7 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
         dotsEaten: 4,
         score: 20,
         turns: 15,
-        timeMs: 17945,
+        timeMs: 17985,
         run: { shieldUsed: 1, waiting: false },
       },
       5,
@@ -425,7 +425,7 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     expect(log.lines.slice(0, 3)).toEqual([
       "[t=55 #1] move right 1 head=(11,10)",
       "[t=55 #1] dot +0 score=20",
-      "[t=55 #1] cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=18000 score=31",
+      "[t=55 #1] cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=18040 score=31",
     ]);
     expect(log.lines[3]).toMatch(/^\[t=55 #1\] level 6 normal delay=105 start=/);
   });

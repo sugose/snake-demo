@@ -154,18 +154,18 @@ describe("what a cleared level gave", () => {
         dotsEaten: 4,
         score: 20,
         turns: 15,
-        timeMs: 17945,
+        timeMs: 17985,
         run: { shieldUsed: 1, waiting: false },
       },
       5,
     );
     const next = tick(before, () => 0);
     expect(next.level).toBe(6);
-    // 18 000 ms used: 12 s left; 5 turns left; one layer used: (5 + 12) x 2/3 = 11.3, so 11.
+    // 18 040 ms used: 12 s left (11.96 rounded up); 5 turns left; one layer used: (5 + 12) x 2/3 = 11.3, so 11.
     expect(next.cleared).toEqual({
       level: 5,
       turns: 15,
-      timeMs: 18000,
+      timeMs: 18040,
       special: { points: 11, turnsLeft: 5, secondsLeft: 12, shieldUsed: 1 },
     });
     expect(next.score).toBe(31);
