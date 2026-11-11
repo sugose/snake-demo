@@ -6,6 +6,14 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- Every level counts its turns and its time. The page shows "Turns 7" and "Time 12s" next to the level, the score and the
+  best score, in every state: a turn counts when a tick takes it from the queue (not the turn or the Start button that
+  starts the level, not the turn that ends a wait after a shielded crash, not one ignored or only queued), and the time
+  is the level's delay added for each tick in which the snake moved (not in `ready`, in `paused`, in a crash tick or
+  with the Slow factor; the tick that clears the level counts). Both start at 0 on each level. The special level's row
+  now reads "Turns left", "Seconds left" and "Shield left". In the event log a turn on a normal level is
+  `turn up counted 5` and the `cleared` line of both kinds carries `turns=N time=MS` before `score=`. The limits of
+  20 turns and 30 seconds stay on special levels only. Specified in #80.
 - A version line under the controls, `v0.1.0 · abc1234` (the `version` of `package.json` and the first 7 characters of the
   commit the page was built from, or `dev` for a local build), in small muted text, centred under the board, on every page and
   not a button or in the tab order. Both are fixed at build time, and the event log's first line now starts `snake-demo
