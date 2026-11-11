@@ -152,6 +152,9 @@ test("hitting an obstacle ends the game", async ({ page }) => {
   await expect(page.locator("#status")).toHaveText(
     "Game over: you hit an obstacle. Enter your name",
   );
+  // The entry shows the score and the level the game reached (docs/SPEC.md 2.15 (4)).
+  await expect(page.locator("#entry-score")).toHaveText("5");
+  await expect(page.locator("#entry-level")).toHaveText("2");
   await page.keyboard.press("Escape");
   await expect(page.locator("#status")).toHaveText(
     "Game over: you hit an obstacle. Enter or New game to play again",

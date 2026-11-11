@@ -137,6 +137,9 @@ test("the 21st turn on level 5 blows the snake up, and the best score is saved",
   await expectGame(game, "blown", "10,8");
   // The score of 20 qualifies for the high score list, so the name entry is open (docs/SPEC.md 2.8).
   await expect(page.locator("#status")).toHaveText("Blown up: no turns left. Enter your name");
+  // A blown game qualifies as an over one does, and the entry shows its level (docs/SPEC.md 2.15 (3), (4)).
+  await expect(page.locator("#entry-score")).toHaveText("20");
+  await expect(page.locator("#entry-level")).toHaveText("5");
   await page.keyboard.press("Escape");
   await expect(page.locator("#status")).toHaveText(
     "Blown up: no turns left. Enter or New game to play again",
