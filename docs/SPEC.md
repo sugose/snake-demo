@@ -247,8 +247,8 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 |---|---|---|---|---|
 | Turn (key or swipe) | 2.1 (3) | 2.4 | ignored | ignored |
 | Start button | starts in the heading it has | ignored | ignored | ignored |
-| Pause (Space, P, Pause button) | ignored | `paused` | `running` | ignored |
-| New game (Enter, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
+| Pause (Space with the focus on no button, P, Pause button) | ignored | `paused` | `running` | ignored |
+| New game (Enter with the focus on no button, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
 | Slow button (2.14 (5)) | steps the factor | steps the factor | steps the factor | ignored |
 
 **[Clead]** Three panels change the New game row in every column. While
@@ -260,7 +260,8 @@ gives a new game, and Enter closes the panel. While the log panel
 closes it and gives a new game; Enter with the focus on Close or Copy
 presses that button. Enter and Space with a button focused do that
 button's job (2.6) and are the New game and Pause commands only with the
-focus on the board or on nothing.
+focus on no button. When the New game command closes the log panel or the
+scores panel, the focus goes to the New game button.
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
@@ -285,27 +286,33 @@ what the keys do is as those sections say.
 
 A key pressed on a focused button does that button's job (Space or Enter
 on Log opens it, on Close closes it, on Copy copies), and only Enter with
-the focus on the board or on nothing starts a new game. **[Clead]** The
-details:
-- The buttons are Start, Pause (Resume), New game and Slow, the Log and
-  Scores links, Copy and Close of the log panel, Close of the scores panel,
-  and OK and Skip of the name entry. Enter or Space with one of them
-  focused presses it, as a click does, and is not the Pause or New game
-  command. Enter with a slot of the name entry focused is as 2.15 (4)
-  says. Space is the Pause command, and Enter the New game command, only
-  with the focus on the board or on nothing (the page itself).
-- The log line is the button's, as for a click (2.13 (4)): `button Start
-  used`, `button New game ignored state`, and so on; the buttons that make
-  no line make none, and a key line is not also written. A button that
-  does nothing while a panel is open (2.13 (6), 2.15) does nothing for
-  these keys too.
-- A press acts once: the repeats of a held Enter or Space do nothing and
-  make no line. A key already down when the focus arrives on a button
-  (when a panel opens and puts it on Close) does not press it until it has
-  been released and pressed again. With Ctrl, Meta or Alt the keys do
-  nothing, on a button too.
-- Every other key (the arrows, W, A, S, D and P) acts on the game as
-  before and does not press the button.
+the focus on the board or on nothing starts a new game.
+- **[Clead]** "The focus on no button" is what the Pause and New game
+  commands need: the focus is on no button when it is on the page itself,
+  the board, or any element that is not a button. The buttons are Start,
+  Pause (Resume), New game and Slow, the Log and Scores links, Copy and
+  Close of the log panel, Close of the scores panel, and OK, Skip, Up and
+  Down of the name entry. With the focus on one of them, Enter or Space
+  presses it and is not the Pause or New game command. Space is the Pause
+  command, and Enter the New game command, only with the focus on no
+  button. A slot of the name entry is as 2.15 (4) says.
+- **[Clead]** While the log panel, the scores panel or the name entry is
+  open, a button outside it counts as no button, so what Enter and Space
+  do is as 2.5, 2.13 (6) and 2.15 say; a button inside the panel is
+  pressed as above.
+- **[Clead]** A press is a keydown of Enter or Space with `repeat` false.
+  The page does the button's job itself and stops the browser's own click,
+  so a press acts once; the repeats of a held key, and the key's release,
+  do nothing and make no line. A key already down when the focus arrives
+  on a button (when a panel opens and puts it on Close) does not press it
+  until it has been released and pressed again. With Ctrl, Meta or Alt the
+  keys do nothing, on a button too.
+- **[Clead]** The log line is the button's, as for a click (2.13 (4)):
+  `button Start ignored state`, `button Pause used`, and so on; the
+  buttons that make no line make none, and a key line is not also
+  written.
+- **[Clead]** Every other key (the arrows, W, A, S, D and P) acts on the
+  game as before, with any focus, and does not press the button.
 
 ### 2.7 Swipes
 
@@ -593,7 +600,7 @@ cleared, no queued turns, and no obstacles or dot.
    back` (the opposite of either), `queue full` (2.4), `into a wall` or
    `onto an obstacle` (in `ready`, 2.1 (3)), `not free` (a direction
    that is not free while the snake waits, 2.12 (5)), `repeat` (a held
-   Space, P or Enter, 2.6), and `state` (a command the state ignores,
+   Space or Enter with the focus on no button, or a held P, 2.6), and `state` (a command the state ignores,
    2.5). When two apply, the first that applies wins: `state`, then
    `repeat`; in `ready`, `straight back` before `into a wall` and
    `onto an obstacle`; while the snake waits, only `not free`; otherwise
@@ -648,10 +655,13 @@ cleared, no queued turns, and no obstacles or dot.
    of 2.15 (5), since only one panel is open at a time; Escape or Close
    closes it, and the New game command (the button, or Enter with the
    focus on nothing) closes it and makes a new game. **[Clead]** The focus
-   goes to Close when the panel opens and back to the Log link when it
-   closes; Enter or Space on the focused Copy copies and on Close closes
-   it (2.6); Tab and Shift+Tab move between Copy and Close and stay inside
-   the panel while it is open.
+   goes to Close when the panel opens, and back to the Log link when Close
+   or Escape closes it (the New game command puts it on the New game
+   button, 2.5); Enter or Space on the focused Copy copies and on Close
+   closes it (2.6). Tab and Shift+Tab move between Copy and Close and
+   stay inside the panel while it is open: with the focus outside the
+   panel, Tab goes to Copy and Shift+Tab to Close. The log's text is not
+   a Tab stop.
    - **[Clead]** Opening the panel on a `running` game pauses it, as the
      Pause command does (2.5), so that a snake that cannot be steered
      does not crash under the panel. Closing the panel with Close or
