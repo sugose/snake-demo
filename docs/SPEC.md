@@ -1337,10 +1337,15 @@ section 3.
 2. **The list.** **[Clead]** The list is in `src/history.ts` as data,
    newest first. An entry has a version (the text of `package.json`'s
    `version`, which is a SemVer 2.0.0 version), a date written
-   `YYYY-MM-DD`, and one or more lines, each a non-empty text of plain
-   words with no markup. The versions are all different and the list is
-   in descending order of precedence, as SemVer 2.0.0 section 11 defines
-   it (compared by this project's own function, `src/history.ts`; no
+   `YYYY-MM-DD` that is a real calendar date (`2026-02-30` is not), and one
+   or more lines, each a non-empty text of plain words, shown as text and
+   never as HTML. A text is a SemVer 2.0.0 version if it matches the
+   regular expression that semver.org gives for it, so build metadata
+   (`0.2.0+abc`) is valid and ignored by the precedence, and a leading
+   `v` or a space is not valid; numeric identifiers are compared as digit
+   strings, so any length works. No two entries have the same precedence
+   and the list is in descending order of precedence, as SemVer 2.0.0
+   section 11 defines it (compared by this project's own function, `src/history.ts`; no
    third-party code). The version of `package.json` has an entry and it is
    the first, so a version cannot be set without writing what it brings;
    a Jest test checks it. The text is read from nothing at run time.
@@ -1348,16 +1353,21 @@ section 3.
    the browser's local storage under the key `snake-demo.seen-version`,
    as the version text. When the page loads, with S the stored text and V
    the build's version (the one 2.17 shows):
-   - S is missing or is not a SemVer 2.0.0 version, or the storage cannot
-     be used: nothing opens. V is stored when the storage works.
-   - S is V, or higher than V (a build older than the one this browser
-     saw last): nothing opens, and V is stored.
+   - S is missing, or is not a SemVer 2.0.0 version, or reading it throws,
+     or the storage cannot be got hold of: nothing opens. In each of
+     these cases V is written; the write is always tried, inside the error
+     handling, and a failure of it is ignored.
+   - S has the precedence of V or a higher one (a build older than the
+     one this browser saw last): nothing opens, and V is written.
    - S is lower than V: the history opens by itself with the entries of
      versions higher than S and not higher than V, newest first, and V is
      stored. If there is no such entry, nothing opens.
-   So a version opens by itself at most once in a browser, whatever the
-   player does with the panel. A write that fails is ignored, and then the
-   history may open again at the next load. Every access to the storage,
+   So while the storage works a version opens by itself at most once in a
+   browser, whatever the player does with the panel. A write that fails is
+   ignored, and then the history may open again at the next load. The case
+   "no such entry" cannot happen with the list as built (2.19 (2) puts the
+   build's version in it), and is a case of the function only, with no
+   browser test. Every access to the storage,
    including getting hold of it, happens inside the module's error
    handling (as 2.9 (4) says), and the game goes on. A playtest page
    (2.14) follows the same rules.
@@ -1366,8 +1376,10 @@ section 3.
    in a panel over the board with a Close button. The panel works as the
    records panel of 2.18 (7) does, apart from its content and the
    button below: it can be used in every state, and opening it from the
-   link on a `running` game pauses it and closing it goes on (the lines
-   `pause history` and `resume history`); while it is open, game keys,
+   link on a `running` game pauses it, and closing it with Close or
+   Escape goes on if opening paused the game (the lines `pause history`
+   and `resume history`); in `ready`, `paused` and the ended states
+   opening and closing change nothing in the game; while it is open, game keys,
    swipes, the Start, Pause and Resume buttons and the Log, Scores and
    Records links do nothing, and the New game button closes it and makes
    a new game; while the name entry of 2.15 (4) is open the Version
@@ -1376,7 +1388,9 @@ section 3.
    New game button when the New game command closes it; a key already
    down when it opens, and the repeats of Enter, Space and Escape, do
    nothing; the status line of an ended game keeps its words while it is
-   open (2.8). The text of the history is a Tab stop, so that a long
+   open (2.8). The four links wrap onto another line when they do not fit the
+   width (no sideways scrolling, section 3). The text of the history is a
+   Tab stop, so that a long
    history can be scrolled with the keys, and the keys on it are as the
    records table's (2.18 (7)): the browser scrolls it, nothing turns,
    Enter does nothing, Escape closes the panel. Tab and Shift+Tab stay
@@ -1386,7 +1400,7 @@ section 3.
    - **[Clead]** Opened from the link, the panel has the title "Version
      history" and shows every entry, newest first.
    - **[Clead]** Opened by itself (3), the panel has the title "What's
-     new", shows the entries of (3) newest first, and has a button "Show
+     new" (with the apostrophe U+0027), shows the entries of (3) newest first, and has a button "Show
      full history" below them. Pressing it (a click, or Enter or Space on
      it, 2.6) shows every entry under the title "Version history",
      removes the button and puts the focus on Close. It is opened in
@@ -1412,21 +1426,38 @@ section 3.
    missing, an invalid and a prerelease-looking invalid S, an unusable
    store, S equal to V, S higher than V, S lower than V with one, several
    and no entry in between, and the entries given newest first; the
-   stored text made and read back; a store that returns nothing, throws on
-   getting hold of it, on reading and on writing. Browser: the link opens
+   stored text made and read back; a store that returns nothing (V
+   written, nothing opens), throws on getting hold of it (nothing opens,
+   the write tried and its failure ignored), throws on reading (nothing
+   opens, V written) and throws on writing (the decision still given);
+   S lower than a prerelease V (`0.3.0-rc.1`), a prerelease S below a
+   release V, S with build metadata equal to the same version without it,
+   and a leading `v` or a space invalid; a date that is not a real
+   calendar date refused; a line with `<` shown as text; the log lines
+   `pause history` and `resume history` in the cases of 2.13 (5). Browser: the link opens
    the panel with every entry and the title "Version history"; with
    `snake-demo.seen-version` set to `0.0.1` before the page loads, the
    panel opens by itself with the title "What's new", the entry of the
    build's version and the button, and after the page has loaded the key
-   holds the build's version; the button shows every entry; with the key
+   holds the build's version; the button changes the title to "Version
+   history", shows every entry, is gone afterwards and the focus is on
+   Close; the opening by itself pauses nothing, writes no log line and puts
+   the focus on Close; with the key
    missing, equal to the build's version or higher, nothing opens and the
    key holds the build's version; Close and Escape close it and put the
    focus on the link; the New game button closes it and makes a new game;
    the keys on the text (the arrow keys and Space scroll it, nothing
    turns, Enter does nothing); Tab and Shift+Tab inside the panel and
    from outside it; a running game is paused by opening it from the link
-   and goes on when it closes; the Version history link does nothing with
-   the name entry open; the plain look; a failing storage.
+   and goes on when it closes with Close or Escape, a game paused by the
+   player stays paused, and `ready` and the ended states are unchanged;
+   the log lines `pause history` and `resume history` and no line for the
+   opening by itself, the "Show full history" press or any input while the
+   panel is open; with the history panel open the Log, Scores and Records
+   links do nothing, and with the log, scores or records panel open the
+   Version history link does nothing; the Version history link does nothing
+   with the name entry open; the links wrapping at a width of 375 px; the
+   plain look; a failing storage.
 
 ## 3. Architecture
 
