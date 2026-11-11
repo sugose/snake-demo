@@ -218,7 +218,7 @@ test("the log's first line names the options of the page", async ({ page }) => {
   await openGame(page, waiting(5), "/?level=5&slow");
   const { first, events } = await readLog(page);
   expect(first).toMatch(
-    /^snake-demo build=\S+ size=20 start-length=3 clear-ahead=8 dots=5 delays=125\/5\/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2 playtest start-level=5 slow$/,
+    /^snake-demo version=\S+ build=\S+ size=20 start-length=3 clear-ahead=8 dots=5 delays=125\/5\/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2 playtest start-level=5 slow$/,
   );
   expect(events[0]).toMatch(/^level 5 special delay=55 /);
 });

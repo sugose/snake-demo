@@ -492,6 +492,14 @@ h1 {
   color: var(--muted);
 }
 
+/* The version line (docs/SPEC.md 2.17): small, muted, centred, last in the column. */
+.version {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75em;
+  text-align: center;
+}
+
 .controls {
   display: flex;
   gap: 8px;

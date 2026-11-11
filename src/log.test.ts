@@ -79,22 +79,30 @@ const added = (before: Log, after: Log): readonly string[] =>
   after.lines.slice(before.lines.length);
 
 describe("firstLine (docs/SPEC.md 2.13 (3))", () => {
-  it("names the build and the named values", () => {
-    expect(firstLine("abc1234", VALUES)).toBe(
-      "snake-demo build=abc1234 size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2",
+  it("names the version, the build and the named values", () => {
+    expect(firstLine("0.2.0", "abc1234", VALUES)).toBe(
+      "snake-demo version=0.2.0 build=abc1234 size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2",
     );
   });
 
+  it("puts the version in front of the build, a prerelease version whole", () => {
+    expect(
+      firstLine("0.3.0-rc.1", "abc1234", VALUES).startsWith(
+        "snake-demo version=0.3.0-rc.1 build=abc1234 size=20 ",
+      ),
+    ).toBe(true);
+  });
+
   it("says special=none without special levels", () => {
-    expect(firstLine("dev", { ...VALUES, special: null })).toBe(
-      "snake-demo build=dev size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special=none",
+    expect(firstLine("1.10.3", "dev", { ...VALUES, special: null })).toBe(
+      "snake-demo version=1.10.3 build=dev size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special=none",
     );
   });
 });
 
 describe("firstLine on a playtest page (docs/SPEC.md 2.13 (3), 2.14 (4))", () => {
   const PLAIN =
-    "snake-demo build=abc1234 size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2";
+    "snake-demo version=0.2.0 build=abc1234 size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2";
 
   it.each([
     [{ startLevel: 5, slow: true }, "playtest start-level=5 slow"],
@@ -103,17 +111,19 @@ describe("firstLine on a playtest page (docs/SPEC.md 2.13 (3), 2.14 (4))", () =>
     [{ startLevel: 1, slow: false }, "playtest start-level=1"],
     [{ startLevel: 99, slow: true }, "playtest start-level=99 slow"],
   ])("%o ends the line with %p", (options, words) => {
-    expect(firstLine("abc1234", VALUES, options)).toBe(`${PLAIN} ${words}`);
+    expect(firstLine("0.2.0", "abc1234", VALUES, options)).toBe(`${PLAIN} ${words}`);
   });
 
   it("a page with no option has the plain first line", () => {
-    expect(firstLine("abc1234", VALUES, { startLevel: null, slow: false })).toBe(PLAIN);
-    expect(firstLine("abc1234", VALUES, undefined)).toBe(PLAIN);
+    expect(firstLine("0.2.0", "abc1234", VALUES, { startLevel: null, slow: false })).toBe(PLAIN);
+    expect(firstLine("0.2.0", "abc1234", VALUES, undefined)).toBe(PLAIN);
   });
 
   it("the options come after the special=none words too", () => {
-    expect(firstLine("dev", { ...VALUES, special: null }, { startLevel: 5, slow: true })).toBe(
-      "snake-demo build=dev size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special=none playtest start-level=5 slow",
+    expect(
+      firstLine("1.10.3", "dev", { ...VALUES, special: null }, { startLevel: 5, slow: true }),
+    ).toBe(
+      "snake-demo version=1.10.3 build=dev size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special=none playtest start-level=5 slow",
     );
   });
 });
