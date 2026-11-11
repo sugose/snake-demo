@@ -177,6 +177,24 @@ Details Adam has not settled are marked **[Clead]**; a mark at the start
 of an item or a bullet covers all of it, and a mark in the middle covers
 the sentence it opens.
 
+Approved: Adam, 2026-11-11 12:08, in chat, his request: "i want to
+maintain a per level highscore  Fewest turns: 12 turns (25s) and Fastest:
+18s (14 turns). this is browser local only. also, during a level it
+should be visible #turns made and for how long time it has been going
+on"; and 12:12, "1. apyr 2. both the table is brought up when clicking a
+link, it is not visible during game play", to Clead's recommendations of
+12:09 (the time is the game's time, the sum of the level's delay over the
+moves, as the special levels count it; the records show as a line on the
+page for the current level and in a table of all levels) (`DECISIONS.md`,
+PO-171, the row "Snake demo, per-level records"). 2.18, and the changes
+to 2.4, 2.5, 2.6, 2.12, 2.13, 2.14, 2.15, 3, 3.1 and 5 that follow from
+it, are Clead's exact wording of that decision. Details Adam has not
+settled are marked **[Clead]**; a mark at the start of an item or a
+bullet covers all of it, and a mark in the middle covers the sentence it
+opens. The encodings Adam has not seen are Clead's technical detail: the
+text format and bounds of the stored records (2.18 (5)) and the storage
+key name.
+
 ---
 
 ## 1. System overview
@@ -251,8 +269,8 @@ number minus one; the game uses a random one, and tests pass a fixed one.
    second turn pressed within one tick is kept for the next tick.
 4. In `paused`, `over`, `blown` and `won`, a turn is ignored. In `ready`,
    2.1 (3) applies.
-5. On a special level, turns are counted, and a snake waiting after a
-   shielded crash takes its turn as 2.12 (5) says.
+5. Turns are counted on every level (2.18 (1)), and a snake waiting after
+   a shielded crash takes its turn as 2.12 (5) says.
 
 ### 2.5 States and commands
 
@@ -264,21 +282,23 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | New game (Enter with the focus on no button, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
 | Slow button (2.14 (5)) | steps the factor | steps the factor | steps the factor | ignored |
 
-**[Clead]** Three panels change the New game row in every column. While
+**[Clead]** Four panels change the New game row in every column. While
 the name entry of 2.15 (4) is open the command does nothing. While the
-scores panel of 2.15 (5) is open, which it can be in `ready`, `paused` and
-the ended states (it pauses a `running` game), only the New game button
-gives a new game, and Enter closes the panel. While the log panel
+scores panel of 2.15 (5) or the records panel of 2.18 (7) is open, which
+either can be in `ready`, `paused` and the ended states (each pauses a
+`running` game), only the New game button gives a new game, and Enter
+closes the panel. While the log panel
 (2.13 (6)) is open, the button, or Enter with the focus on nothing,
 closes it and gives a new game; Enter with the focus on Close or Copy
 presses that button. Enter and Space with a button focused do that
 button's job (2.6) and are the New game and Pause commands only with the
-focus on no button. When the New game command closes the log panel or the
-scores panel, the focus goes to the New game button.
+focus on no button. When the New game command closes the log panel, the
+scores panel or the records panel, the focus goes to the New game button.
 
 The queued turns are cleared by a new game. When the page is hidden (the
-browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
-and the scores panel of 2.15 (5) can also pause a `running` game and go on.
+browser tab is left), a `running` game is paused. The log panel of 2.13 (6),
+the scores panel of 2.15 (5) and the records panel of 2.18 (7) can also
+pause a `running` game and go on.
 
 ### 2.6 Keys
 
@@ -294,8 +314,9 @@ key is held down, its repeats still turn the snake but do not pause, go
 on or start a new game again. Keys act on the game even while a button
 has the focus, and a key that does something in the game does not also
 press that button, with the exception of Enter and Space below. While the
-log panel (2.13 (6)), the scores panel or the name entry (2.15) is open,
-what the keys do is as those sections say.
+log panel (2.13 (6)), the scores panel or the name entry (2.15) or the
+records panel (2.18 (7)) is open, what the keys do is as those sections
+say.
 
 A key pressed on a focused button does that button's job (Space or Enter
 on Log opens it, on Close closes it, on Copy copies), and only Enter with
@@ -303,14 +324,14 @@ the focus on the board or on nothing starts a new game.
 - **[Clead]** "The focus on no button" is what the Pause and New game
   commands need: the focus is on no button when it is on the page itself,
   the board, or any element that is not a button. The buttons are Start,
-  Pause (Resume), New game and Slow, the Log and Scores links, Copy and
-  Close of the log panel, Close of the scores panel, and OK, Skip, Up and
-  Down of the name entry. With the focus on one of them, Enter or Space
+  Pause (Resume), New game and Slow, the Log, Scores and Records links,
+  Copy and Close of the log panel, Close of the scores panel, Close of the
+  records panel, and OK, Skip, Up and Down of the name entry. With the focus on one of them, Enter or Space
   presses it and is not the Pause or New game command. Space is the Pause
   command, and Enter the New game command, only with the focus on no
   button. A slot of the name entry is as 2.15 (4) says.
-- **[Clead]** While the log panel, the scores panel or the name entry is
-  open, a button outside it counts as no button, so what Enter and Space
+- **[Clead]** While the log panel, the scores panel, the records panel or
+  the name entry is open, a button outside it counts as no button, so what Enter and Space
   do is as 2.5, 2.13 (6) and 2.15 say; a button inside the panel is
   pressed as above.
 - **[Clead]** A press is a keydown of Enter or Space with `repeat` false.
@@ -466,12 +487,7 @@ cleared, no queued turns, and no obstacles or dot.
 3. At its start (when it is laid out), a special level has a shield of
    3 layers, 20 turns and 30 seconds. **[Clead]** Each special level
    starts with a full shield; no layer carries over from an earlier
-   special level. Its time is the sum, over the ticks in which the snake
-   moved (step 6 of 2.2), of the level's delay (2), whatever the tick
-   really took (2.14 (6)), kept in whole milliseconds;
-   so the time runs only while the snake moves, and not in `ready`, in
-   `paused`, while the snake waits after a shielded crash (5), or in the
-   tick of the crash itself.
+   special level. Its time is the level's time of 2.18 (2).
 4. A tick on a special level is 2.2 with these changes:
    - If the snake is waiting (5), the tick does nothing.
    - Step 1: a turn taken from the queue is counted (6). If that would
@@ -507,10 +523,7 @@ cleared, no queued turns, and no obstacles or dot.
    The used layer is the crash's cost: it lowers the multiplier of the
    level's points (8).
    A crash with no layer left ends the game (`over`).
-6. A turn counts when a tick takes it from the queue and it becomes
-   the heading (step 1). The turn that starts the level from `ready`
-   (2.1 (3)), the Start button, and the turn that ends a wait after a
-   shielded crash (5) are not turns. At most 20 turns are allowed; **[Clead]** the 21st turn ends
+6. A turn counts as 2.18 (1) says. At most 20 turns are allowed; **[Clead]** the 21st turn ends
    the game as `blown` at the moment it would become the heading,
    before the snake moves. Only the state changes: the turns counted stay 20 (so
    the page shows 0 turns left), the heading stays as it was, and the
@@ -549,7 +562,8 @@ cleared, no queued turns, and no obstacles or dot.
    do not jump while the snake waits after a crash.
 10. **[Clead]** What the page shows on a special level: next to the
     level, the score and the best score, three more values: the turns
-    left, the seconds left (8) and the shield layers left. They are
+    left, the seconds left (8) and the shield layers left, labelled
+    "Turns left", "Seconds left" and "Shield left" (2.18 (3)). They are
     hidden on a normal level. The status line in `ready` says it is a
     special level and names its limits ("Level 5, special: 20 turns,
     30 seconds, shield of 3. …"); when the game is `blown` it gives the
@@ -569,7 +583,7 @@ cleared, no queued turns, and no obstacles or dot.
     shown first for 250 ms, then hidden for 250 ms, and so on. It goes
     when 3 seconds of real time have passed since the level was laid out
     (the page's clock, which runs on while the page is hidden; not the
-    level's time of 2.12 (3), which does not run in `ready`), or as soon as the level starts (a turn or the
+    level's time of 2.18 (2), which does not run in `ready`), or as soon as the level starts (a turn or the
     Start button, 2.1 (3)), or with a new game, whichever comes first.
     It takes no input: keys, swipes and buttons work as they do without
     it. **[Clead]** The look: large bold text centred on the board, in
@@ -602,10 +616,11 @@ cleared, no queued turns, and no obstacles or dot.
    (2.14 (5)) buttons, by pointer or by Enter or Space on the focused button
    (2.6), which then makes the button's line and no key line. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6), the scores panel
-   or the name entry of 2.15 is open make no line, except the New game
-   command while the log panel is open (the button, or Enter with the focus
-   on nothing) or the scores panel is open (the button only, 2.5), which
-   closes the panel and makes a new game; opening and closing
+   or the name entry of 2.15 or the records panel of 2.18 (7) is open make
+   no line, except the New game command while the log panel is open (the
+   button, or Enter with the focus on nothing) or the scores panel or the
+   records panel is open (the button only, 2.5), which closes the panel
+   and makes a new game; opening and closing
    the panels make a line only as (6) and 2.15 (5) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
@@ -628,14 +643,15 @@ cleared, no queued turns, and no obstacles or dot.
 |---|---|
 | a level laid out (2.11) | `level 5 special delay=55 start=(3,4) up obstacles=(1,2),(7,9),(0,0),(4,4) dot=(5,5) turns=20 seconds=30 shield=3`; on a normal level `level 4 normal delay=110 start=… obstacles=… dot=…`, without the last three |
 | an input | `key ArrowUp up used`, `key a left ignored straight back`, `swipe right used`, `button Start used`, `key p pause used` |
-| a turn becoming the heading | `turn up counted 5/20` on a special level, `turn up` on a normal one, `turn left free` when it ends a wait, `turn up start` for the turn that starts a level from `ready` |
+| a turn becoming the heading | `turn up counted 5/20` on a special level, `turn up counted 5` on a normal one, `turn left free` when it ends a wait, `turn up start` for the turn that starts a level from `ready` |
 | a stretch of moves | `move right 7 head=(10,4)`: the heading, the number of cells, and the head's cell at the end; a line is written when the stretch ends (a turn, a dot, a crash, a level cleared, a pause or the end of the game) and has at least one move |
 | a dot eaten | `dot +1 score=12`; on a special level `dot +0 score=20` |
 | a new dot | `dot at (5,9)` |
 | a shielded crash | `crash wall shield=2 free=up,left` |
 | an obstacle jump | `jump obstacles=(1,2),(7,9),(0,0),(4,4)` |
-| a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31`; on a normal level `cleared level 4 score=20` |
-| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores` |
+| a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=17800 score=31`; on a normal level `cleared level 4 turns=12 time=25300 score=20`; `turns` and `time` (in milliseconds) are the level's turns and time (2.18 (1), (2)) |
+| a record set (2.18 (4)) | `record fewest level=4 turns=12 time=25300`, `record fastest level=4 time=18200 turns=14`; one line for each record the cleared level set, the fewest first, right after the `cleared` line, also when the write to the storage fails; none on a playtest page |
+| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores`; made by the records panel (2.18 (7)): `pause records`, `resume records` |
 | a slow step (2.14 (5)) | `slow x2`, `slow x4`, `slow x1`, after the input line `button Slow used`; a press the state ignores is `button Slow ignored state` |
 | a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped`; when the list had no room left at the confirmation (2.15 (6)) `scores name=ABC full` |
 | the page hidden or shown | `hidden`, `shown` |
@@ -665,8 +681,9 @@ cleared, no queued turns, and no obstacles or dot.
    link's place and look, the Close button, and that, if the browser
    refuses Copy, the log's text is selected so it can be copied by hand.
    While the panel is open, game keys, swipes and the Start, Pause and
-   Resume buttons do nothing, and so do the Log link and the Scores link
-   of 2.15 (5), since only one panel is open at a time; Escape or Close
+   Resume buttons do nothing, and so do the Log link, the Scores link
+   of 2.15 (5) and the Records link of 2.18 (7), since only one panel is
+   open at a time; Escape or Close
    closes it, and the New game command (the button, or Enter with the
    focus on nothing) closes it and makes a new game. **[Clead]** The focus
    goes to Close when the panel opens, and back to the Log link when Close
@@ -791,8 +808,9 @@ Without them the page is as every other section says.
    with no value is the use.
 4. A page with a valid `level` is a playtest page. **[Clead]** So is a page
    with `slow`, since a slowed game is not comparable with others. On a playtest page,
-   no game changes the best score (2.9 (2)) and none enters the high
-   score list (2.15 (3)); both keep showing what they hold. The end line
+   no game changes the best score (2.9 (2)), none enters the high
+   score list (2.15 (3)) and none sets a record (2.18 (4)); all three keep
+   showing what they hold. The end line
    of the log says `best=no`. **[Clead]** The page shows no sign of a
    playtest page apart from the Slow button of (5); the first line of
    every log names the options (2.13 (3)).
@@ -811,8 +829,8 @@ Without them the page is as every other section says.
    - **[Clead]** A press, or Enter or Space on the focused button (2.6),
      steps the factor in `ready`, `running` and
      `paused`, and is ignored in `over`, `blown` and `won`. While the log
-     panel, the scores panel or the name entry is open the button does
-     nothing and makes no line.
+     panel, the scores panel, the records panel or the name entry is open
+     the button does nothing and makes no line.
    - **[Clead]** The factor is 1× when a level is laid out and when a new
      game is made, so a special level always starts at its normal speed
      and the factor does not carry from one level to the next.
@@ -823,7 +841,7 @@ Without them the page is as every other section says.
    waiting keeps its delay, so a press changes the delay of the ticks
    scheduled after it (from 1× to 2× on a level of 55 ms, the waiting tick
    comes after 55 ms and the next one after 110 ms). The rules of a tick,
-   and the game's time of 2.12 (3), are not changed: each tick in which the
+   and the level's time of 2.18 (2), are not changed: each tick in which the
    snake moves adds the level's delay of 2.12 (2) to the time, whatever
    the factor. So a game played slowed has the same budget of moves,
    seconds and turns, the obstacles jump after the same number of moves
@@ -914,8 +932,8 @@ Without them the page is as every other section says.
      nothing, writes `scores skipped` and closes the panel; the entry can
      be skipped so that nobody is held up by it.
    - **[Clead]** While the entry is open, game keys, swipes, the Start,
-     Pause and Resume buttons, the New game button, the Log link and the
-     Scores link do nothing, Enter confirms instead of making a new game
+     Pause and Resume buttons, the New game button, the Log link, the
+     Scores link and the Records link do nothing, Enter confirms instead of making a new game
      (2.6), and the status line says so (2.8). The panel is a dialog: the
      focus goes to the first slot when it opens, Tab and Shift+Tab stay
      inside it, and the focus goes back to the New game button when it
@@ -926,8 +944,8 @@ Without them the page is as every other section says.
    panel works as the log panel does: opening it on a `running` game
    pauses it, closing it with Close or Escape goes on if opening paused
    the game (the lines `pause scores` and `resume scores`); while it is
-   open, game keys, swipes, the Start, Pause and Resume buttons and both
-   links do nothing, and the New game button closes it and makes a new
+   open, game keys, swipes, the Start, Pause and Resume buttons and the Log and
+   Records links do nothing, and the New game button closes it and makes a new
    game; Enter does not, since the focus is on Close and Enter presses it. The panel has the title TOP 10 SCORES, the headings RANK, SCORE,
    LVL and NAME, and a row for each entry of the list as shown, read when
    the panel opens: its rank written 1ST, 2ND, 3RD, 4TH and so on to
@@ -1073,6 +1091,160 @@ section 3.
    4.5:1; its font size is 0.75 of the status line's and its centre is the
    board's centre; its text is in the page's accessibility tree.
 
+### 2.18 Level turns, level time and level records
+
+1. **Turns.** A level's turns are the turns counted on it. A turn counts
+   when a tick takes it from the queue and it becomes the heading
+   (2.2 step 1). The turn that starts the level from `ready` (2.1 (3)),
+   the Start button, and the turn that ends a wait after a shielded crash
+   (2.12 (5)) are not counted, and nor is a turn that is ignored or only
+   queued. The turns start at 0 when a level is laid out (2.11). This holds
+   on every level; the limit of 20 turns (2.12 (6)) is on special levels
+   only.
+2. **Time.** A level's time is the sum, over the ticks in which the snake
+   moved (step 6 of 2.2), of the level's delay (2.10 (2), 2.12 (2)),
+   whatever the tick really took (2.14 (6)), kept in whole milliseconds.
+   It starts at 0 when a level is laid out. So the time runs only while
+   the snake moves, and not in `ready`, in `paused`, while the snake waits
+   after a shielded crash (2.12 (5)), or in the tick of the crash itself;
+   the tick that eats the 5th dot counts. **[Clead]** It is the game's
+   time, as the special levels count it (2.12 (3)), not the clock on the
+   wall: on a machine whose ticks run later than their delay it is less
+   than a stopwatch shows. The page's clock and the log's stamps (2.13 (2))
+   are not the level's time.
+3. **On the page.** On every level the page shows two values next to the
+   level, the score and the best score: the level's turns as a whole
+   number ("Turns 7") and the level's time in whole seconds, rounded down
+   ("Time 12s" for 12000 to 12999 ms). **[Clead]** They are shown in every
+   state; they are 0 and 0s when a level is laid out (a new game
+   included), change when the turn is counted or the tick is run, and keep
+   their last values when the game ends. The page does not announce their
+   changes to screen readers. **[Clead]** The values of a special level
+   (2.12 (10)) are labelled "Turns left", "Seconds left" and "Shield
+   left", so that no two labels read alike; on a special level the seconds
+   left (rounded up, 2.12 (8)) and the time (rounded down) add up to 30.
+4. **Records.** For each level the page keeps up to two records: the
+   fewest turns, with the time that level took, and the fastest time, with
+   the turns that level took; they come from different plays of the level
+   when they differ. A level is cleared when its 5th dot is eaten (2.2
+   step 7), also when the next level then cannot be laid out and the game
+   is `won` (2.11). When a level is cleared on a page that is not a
+   playtest page (2.14 (4)), its turns T and its time S, as they are after
+   that tick, are compared with the records of that level:
+   - the fewest-turns record becomes (T, S) when the level has none, or
+     when T is fewer than its turns, or when T is equal to its turns and S
+     is shorter than its time;
+   - the fastest-time record becomes (S, T) when the level has none, or
+     when S is shorter than its time, or when S is equal to its time and T
+     is fewer than its turns.
+   A cleared level can set both records, one or none: one that equals both
+   changes nothing. The first clear of a level sets both. A game that ends
+   on a level without clearing it sets no record, and no game of a
+   playtest page sets one.
+5. **Stored.** The records are kept in the browser's local storage, for
+   this browser only, under the key `snake-demo.records`, as text: one
+   entry for each level that has records, in ascending order of level,
+   joined by `,`. An entry is written `LEVEL:A:B:C:D`: the level, the
+   turns A and the time B in milliseconds of its fewest-turns record, then
+   the time C in milliseconds and the turns D of its fastest-time record,
+   for example `4:12:25300:18200:14,5:15:17800:15200:16`. Numbers are
+   written with the digits 0 to 9 and no leading zero (zero is `0`).
+   **[Clead]** The bounds, named values of section 3: the level from 1 to
+   80 (`main.ts` works it out as the number of cells divided by the dots
+   per level, 20 × 20 / 5, as 2.9 (3) does), the turns from 0 to 99999 and
+   the times from 1 to 99999999 ms. A missing value, or any other value (an
+   entry that is not of that form, a level twice or not rising along the
+   list, a number outside its bound), reads as no records, the whole value
+   and not an entry at a time. A level whose turns or time are above their
+   bound sets no record. **[Clead]** The records are read from the storage
+   each time they are shown or compared: when a level is laid out (for the
+   line of (6)), when the panel of (7) opens, and when a level is cleared,
+   before the comparison, so that the records another tab stored in the
+   meantime are kept; the whole text is then written. A read that fails
+   reads as no records. Every access to the storage, including getting
+   hold of it, happens inside the module's error handling, and the game
+   goes on; after a failed write the page keeps its records in memory and
+   uses them for the rest of the page's life, with no further read (as
+   2.15 (6) says of the list). **[Clead]** These bounds are no rule of the
+   game, so the first line of the log (2.13 (3)) does not name them.
+6. **The line.** The page shows the records of the current level as one
+   line of text under the values of (3) and above the board: `Fewest
+   turns: 12 turns (25s) · Fastest: 18s (14 turns)`. **[Clead]** The text
+   is `Fewest turns: `, the fewest text, ` · ` (a space, the middle dot
+   U+00B7 and a space, as 2.17 (1)), `Fastest: ` and the fastest text. The
+   fewest text is the record's turns, a space, `turn` when the turns are 1
+   and `turns` otherwise, a space and in parentheses its time in whole
+   seconds, rounded down, and `s`: `12 turns (25s)`, `1 turn (9s)`,
+   `0 turns (7s)`. The fastest text is the time in whole seconds, rounded
+   down, and `s`, a space and in parentheses its turns with the same word:
+   `18s (14 turns)`. A level with no records shows `–` (U+2013) in place
+   of each text: `Fewest turns: – · Fastest: –`. **[Clead]** The line is
+   shown in every state, from when the level is laid out, and on a
+   playtest page too, where it shows the records as they are stored. It
+   changes when a level is laid out, so a record set on a level shows in
+   its line the next time that level is laid out. It is not announced to
+   screen readers when it changes, is in the muted colour of the page
+   (`--muted`), and wraps between its two texts when it does not fit, so
+   that the page does not scroll sideways at 375 px.
+7. **The table.** A "Records" link below the board, next to the Log and
+   Scores links, opens the table of the records in a panel over the board
+   with a Close button. **[Clead]** The panel works as the scores panel
+   of 2.15 (5) does, apart from its content:
+   - it can be used in every state; opening it on a `running` game pauses
+     it, and closing it with Close or Escape goes on if opening paused the
+     game (the lines `pause records` and `resume records`); in `ready`,
+     `paused` and the ended states it changes nothing, on opening or on
+     closing;
+   - while it is open, game keys, swipes, the Start, Pause and Resume
+     buttons and the Log and Scores links do nothing; the New game button
+     closes it and makes a new game, and Enter does not, since the focus
+     is on Close, which Enter presses; while the name entry of 2.15 (4) is
+     open the Records link does nothing;
+   - the focus goes to Close when it opens, back to the Records link when
+     Close or Escape closes it, and to the New game button when the New
+     game command closes it; Tab and Shift+Tab stay inside the panel,
+     between the table, which is a Tab stop so that a long table can be
+     scrolled with the keys, and Close;
+   - a key already down when it opens, and the repeats of Enter, Space
+     and Escape, do nothing; Enter or Space on the focused Close closes it
+     (2.6), and on the focused table does nothing; the status line of an ended game keeps its words while it is
+     open (2.8).
+   The panel's title is "Level records". It shows a table with the
+   headings "Level", "Fewest turns" and "Fastest" and a row for each level
+   that has records, in ascending order of level, read when the panel
+   opens: the level number, the fewest text and the fastest text of (6).
+   With no records it says "No records yet" instead of the rows.
+   **[Clead]** The panel has the plain look of the log panel and not the
+   arcade look, which is for the scores panel only (2.16); the table
+   scrolls inside the panel when its rows do not fit.
+8. **[Clead]** Tests. Jest, game: the turns of a level count a turn a tick
+   takes from the queue, on a normal and on a special level, and not the
+   turn that starts the level, the Start button, the turn that ends a
+   wait, a turn ignored or one only queued; they and the time start at 0
+   on each level; the time is the sum of the level's delay over the ticks
+   in which the snake moved, and is not changed in `ready`, in `paused`,
+   by a crash, or by the Slow factor; the tick that clears a level counts;
+   the time of a special level is what it was before this change. Jest,
+   records: each rule of (4) (the first clear sets both; fewer turns;
+   equal turns and a shorter time; equal on both changes nothing; faster;
+   equal time and fewer turns; one record set and the other kept), the
+   text of (5) made and read back, every malformed text (a leading zero,
+   a number outside its bound, a level twice or not rising, a missing
+   field, an extra comma, an empty entry, a sign, a space), the reads and
+   writes through fake stores that return nothing, throw on getting hold
+   of the store, on reading and on writing (the records then kept in
+   memory), a level whose turns are above the bound, and the texts of (6)
+   and (7) (`1 turn`, `0 turns`, `24999 ms` as `24s`, `–`). Jest, log: the
+   changed and new lines of 2.13 (5). Browser: the values of (3) in every
+   state, their labels and those of a special level; the line of (6)
+   from records stored before the page loads, with and without records,
+   on a playtest page too; a level cleared on a normal page sets and
+   shows its records the next time that level is laid out, and one cleared
+   on a playtest page sets none; the panel of (7): its content, pause and
+   resume, the focus in each case, Tab, Escape, the New game button, the
+   Records link with the name entry open, and the status line; a failing
+   storage; the log lines.
+
 ## 3. Architecture
 
 - `src/config.ts`: the named values: grid size 20, start length 3,
@@ -1085,27 +1257,31 @@ section 3.
   2000 ms the Copy button of the log panel shows "✓ Copied!" (2.13 (6));
   the playtest options' highest start level 99 and their slow factors
   1, 2 and 4 (2.14); the list's 10 entries, name of 3 letters and storage
-  key `snake-demo.scores` (2.15); and the arcade look's pixel scales 1, 2
+  key `snake-demo.scores` (2.15); the records' storage key
+  `snake-demo.records`, highest turns 99999 and longest time 99999999 ms
+  (2.18 (5)); and the arcade look's pixel scales 1, 2
   and 3, band of 40 pixels, roll of 8000 ms, shift of 2 pixels for 120 ms
   in a cycle of 7000 ms at 900, 3300 and 5600 ms, and cursor period of
   500 ms, the scanlines, the glow and the 6 % of the band, and the
   Slow button's 24 pixels (2.16, 2.14 (5)); `main.ts` hands the look's
   values to the CSS as custom properties. The best score's
   bound of 2.9 (3) is not a value of its own: `main.ts` works it out
-  from these, as (20 × 20 / 5) × the larger of 5 and 20 + 30. No other
+  from these, as (20 × 20 / 5) × the larger of 5 and 20 + 30, and the
+  highest level of a record (2.18 (5)) as 20 × 20 / 5. No other
   module writes these numbers
   (product-office Process P-11 § 5 (2)): `game.ts`, `input.ts`,
-  `storage.ts`, `query.ts`, `scores.ts` and `pixel.ts` take the values
+  `storage.ts`, `query.ts`, `scores.ts`, `records.ts` and `pixel.ts` take the values
   they need as parameters, and `main.ts`
   passes them from here.
 - `src/game.ts`: the game rules as pure functions over a game state (no
   DOM, no timers): a new game, a turn, a tick, pause, the commands of
   2.5, levels and laying out a level (2.10, 2.11), special levels
-  (2.12), the free directions of a waiting snake (2.12 (5)), exported,
+  (2.12), the turns and the time of a level (2.18 (1), (2)), the free directions of a waiting snake (2.12 (5)), exported,
   which `turn`, the boxed-in check and `src/status.ts` use, and the
   delay of a level. It reports what each step did for the event log
   (2.13): why a turn is ignored (`ignoredBecause`), what the last
-  shielded crash hit, and what the last cleared level gave. The choosers of 2.3 and 2.11 are passed in, so tests are
+  shielded crash hit, and what the last cleared level gave (its points,
+  turns and time). The choosers of 2.3 and 2.11 are passed in, so tests are
   deterministic. Covered by Jest.
 - `src/input.ts`: maps a key name (`KeyboardEvent.key`) to a command, and
   a swipe's start and end points to a turn or nothing (2.6, 2.7). Pure,
@@ -1124,6 +1300,13 @@ section 3.
   by Jest with fake stores, also ones that throw, every malformed text of
   (1) (a stored level 0 among them), the three examples of (3), a best
   score equal to the game's score, and the `full` outcome of (6).
+- `src/records.ts`: the level records (2.18) as pure functions: reading
+  and writing their text through a function passed in that returns the
+  store and may throw, the records after a cleared level (the rules of
+  (4)), and the texts of the line and of the table's cells (2.18 (6),
+  (7)) from a record, so that the page shows no text of its own. Covered
+  by Jest with fake stores, also ones that throw, every malformed text of
+  2.18 (5), and each rule of 2.18 (4).
 - `src/pixel.ts`: the 5 × 7 bitmap font and the drawing of a text into
   pixels (2.16 (1)), the gap between the table's columns (12 pixels of the
   font, `COLUMN_GAP`) and the lead before a row's marker (6 pixels of the
@@ -1159,7 +1342,9 @@ section 3.
   with Node's SHA-256, `main.ts` calls it with `src/sha256.ts`. Pure,
   covered by Jest.
 - `src/main.ts`: draws the board, the obstacles and the level on a
-  canvas, shows a special level's turns, seconds and shield (2.12 (10)),
+  canvas, shows a special level's turns left, seconds left and shield
+  (2.12 (10)), every level's turns and time (2.18 (3)), the line of its
+  records and the Records link with its table (2.18 (6), (7)),
   shows the "Special Level" text (2.12 (11)), shows the status line
   (the ended game's from `src/status.ts`), keeps the event log and
   shows its panel and the Copy feedback (2.13), runs the tick timer with the delay of the current level
@@ -1179,8 +1364,9 @@ The game state holds at least: the snake's segments (head first; several
 may share a cell), the heading, the queued turns (at most two), the
 food's cell (none when `won`), the obstacles' cells, the level, the dots
 eaten on it, the score and the state (`ready`, `running`, `paused`,
-`over`, `blown`, `won`) with the reason an ended game ended (2.8), and on a special level its turns counted, its
-time, the shield layers used and whether the snake waits after a crash.
+`over`, `blown`, `won`) with the reason an ended game ended (2.8), its
+turns counted and its time (2.18 (1), (2)), and on a special level the
+shield layers used and whether the snake waits after a crash.
 Directions are the strings `"up"`, `"down"`, `"left"` and
 `"right"`.
 
@@ -1197,8 +1383,9 @@ Pages source to "GitHub Actions" once (a repository setting).
 
 ## 5. Out of scope
 
-Sound, several players, online scores (the high score list of 2.15 is
-kept in the browser only; a server for a global list is PBI-2.30, later).
+Sound, several players, online scores (the high score list of 2.15 and
+the level records of 2.18 are kept in the browser only; a server for a
+global list is PBI-2.30, later).
 Power-ups: Adam, 2026-11-09,
 "will be added later"; not specified yet.
 
