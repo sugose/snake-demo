@@ -559,7 +559,8 @@ cleared, no queued turns, and no obstacles or dot.
    `repeat`; in `ready`, `straight back` before `into a wall` and
    `onto an obstacle`; while the snake waits, only `not free`; otherwise
    `same direction`, then `straight back`, then `queue full`.
-5. **[Clead]** The kinds of line, after the stamp of (2), with cells
+5. **[Clead]** The kinds of line, after the stamp of (2) (the checksum line
+   has none), with cells
    written `(x,y)`, directions as `up`, `down`, `left`, `right`, and
    lists of cells joined by `,`:
 
@@ -638,7 +639,7 @@ cleared, no queued turns, and no obstacles or dot.
 7. The checksum. The text the panel shows and Copy copies (6) ends with
    the checksum line, the SHA-256 of the log text above it, and
    `npm run verify-log` checks a log (the decision recorded at the top of
-   this file). The rest of this item is **[Clead]**'s exact wording.
+   this file). The rest of this item is Clead's exact wording.
    - **[Clead]** The log text is the lines of the log in order, each
      followed by one line feed (U+000A), as UTF-8. The checksum line is the
      word `sha256`, one space (U+0020) and the 64 digits of the SHA-256
@@ -656,18 +657,18 @@ cleared, no queued turns, and no obstacles or dot.
    - **[Clead]** `npm run verify-log` reads the log from the one file named
      on its command line or, with no argument, from the standard input. It
      decodes the bytes as UTF-8 (a leading byte order mark is removed and
-     an invalid byte becomes U+FFFD, so that the text then fails to match),
-     reads CR LF as LF, and ignores the lines at the end that are empty or
-     hold only spaces and tabs. It takes the last remaining line as the
+     an invalid byte becomes U+FFFD, so that the text then does not match),
+     reads CR LF as LF (a lone CR stays in its line), and ignores the lines
+     at the end that are empty or hold only spaces and tabs. It takes the last remaining line as the
      checksum line and every line before it, each followed by a line feed,
      as the log text, and computes the SHA-256 with Node's own function, so
-     that it does not depend on the page's. It writes one word and a line
-     feed to the standard output and exits: `match` and 0 when the digits
+     that it does not depend on the page's. It writes one of the three lines
+     below and a line feed to the standard output and exits: `match` and 0 when the digits
      are those of the log text; `mismatch` and 1 when they are not; `no
      checksum` and 2 when no line is left or the last one is not exactly of
      the form of the checksum line (capital letters, extra spaces and any
-     other text make it not of that form). For a file that cannot be read,
-     or more than one argument, it writes a message to the standard error,
+     other text make it not of that form). For a file or the standard
+     input that cannot be read, or more than one argument, it writes a message to the standard error,
      nothing to the standard output, and exits 3.
    - It makes accidental and casual changes visible. It does not prevent
      tampering: the game runs in the browser, so anyone can change a log
@@ -680,15 +681,21 @@ cleared, no queued turns, and no obstacles or dot.
      text and the checksum line for a given log, with the expected line
      worked out outside the code; the judgement of a pasted log: match, a
      changed character, a removed line, an added line, no checksum line,
-     capital letters in the digits, a last line of another shape, an empty
-     input, trailing empty lines, a byte order mark, CR LF input. The
-     command, run as a process: the same outcomes with the exit codes, from
-     a file and from the standard input, and exit 3 for a missing file and
-     for two arguments. Browser: with a game running, open the panel, and
-     again after more play; each time the panel's last line is the
-     checksum line of the text above it (CR LF read as LF, the expected
-     digits computed in the test), and Copy puts the same text on the
-     clipboard.
+     capital letters in the digits, extra spaces on the checksum line, a
+     last line of another shape, an empty input, an input of only line
+     feeds, an input of only lines of spaces and tabs, trailing empty lines,
+     trailing lines of spaces and tabs, a lone CR, a byte order mark, CR LF
+     input, an invalid byte in a log line (`mismatch`) and in the checksum
+     line (`no checksum`). The command, run as a process: the same
+     outcomes with the exit codes, from a file and from the standard
+     input, and exit 3 for a missing file and for two arguments. Browser:
+     with a game running, open the panel, and again after more play; each
+     time the panel's last line is the checksum line of the text above it
+     (CR LF read as LF, the expected digits computed in the test), the
+     panel's text holds exactly one line that starts with `sha256 `, the
+     last one (so the second opening shows that the first opening's
+     checksum line was not kept in the log), and Copy puts the same text on
+     the clipboard.
 
 ### 2.14 Playtest options
 
