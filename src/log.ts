@@ -232,14 +232,11 @@ export function logTick(log: Log, at: Stamp, before: GameState, after: GameState
   const cleared = after.cleared !== before.cleared;
   if (taken !== undefined && !(after.status === "blown" && after.ended === "turns")) {
     next = flush(next, at);
-    const counted = before.run !== null && before.special !== null;
-    next = add(
-      next,
-      at,
-      counted
-        ? `turn ${taken} counted ${(before.run?.turns ?? 0) + 1}/${before.special?.maxTurns}`
-        : `turn ${taken}`,
-    );
+    // The turn is counted on every level (2.18 (1)); a special level also gives the limit.
+    const count = before.turns + 1;
+    const limit =
+      before.run !== null && before.special !== null ? `/${before.special.maxTurns}` : "";
+    next = add(next, at, `turn ${taken} counted ${count}${limit}`);
   }
   const shielded =
     !newLevel &&
@@ -275,13 +272,16 @@ export function logTick(log: Log, at: Stamp, before: GameState, after: GameState
   }
   if (cleared) {
     const special = after.cleared?.special;
+    const level = `cleared level ${before.level}`;
+    const levelValues = `turns=${after.cleared?.turns ?? 0} time=${after.cleared?.timeMs ?? 0}`;
     next = add(
       next,
       at,
       special == null
-        ? `cleared level ${before.level} score=${after.score}`
-        : `cleared level ${before.level} points=${special.points} turns-left=${special.turnsLeft}` +
-            ` seconds-left=${special.secondsLeft} shield-used=${special.shieldUsed} score=${after.score}`,
+        ? `${level} ${levelValues} score=${after.score}`
+        : `${level} points=${special.points} turns-left=${special.turnsLeft}` +
+            ` seconds-left=${special.secondsLeft} shield-used=${special.shieldUsed}` +
+            ` ${levelValues} score=${after.score}`,
     );
     // A level that cannot be laid out ends the game (2.11): no next level's line.
     return newLevel ? add(next, at, levelLine(after, next.values)) : next;

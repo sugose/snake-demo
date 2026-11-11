@@ -24,9 +24,15 @@ const SPECIAL: SpecialRules = {
   seconds: 30,
   jumpSeconds: 3,
   clearAheadOfHead: 2,
-  delays: DELAYS,
 };
-const RULES = { size: 20, startLength: 3, clearAhead: 8, dotsPerLevel: 5, special: SPECIAL };
+const RULES = {
+  size: 20,
+  startLength: 3,
+  clearAhead: 8,
+  dotsPerLevel: 5,
+  delays: DELAYS,
+  special: SPECIAL,
+};
 
 /** The start (10,10) heading right in the list of 960 starts (docs/SPEC.md 2.11 (2)). */
 const CENTRE_RIGHT = 513;
@@ -56,7 +62,7 @@ function frozen(state: GameState): GameState {
   return Object.freeze(state);
 }
 
-const FRESH_RUN: SpecialRun = { turns: 0, timeMs: 0, shieldUsed: 0, waiting: false };
+const FRESH_RUN: SpecialRun = { shieldUsed: 0, waiting: false };
 
 /** A snake laid out in a line, head at the centre heading right, body to its left. */
 const LINE: Cell[] = [
@@ -67,9 +73,13 @@ const LINE: Cell[] = [
 
 /**
  * Level 5, `running`, the snake in `LINE` heading right, the dot at (0,0) and no obstacles, with
- * `run` and `overrides` on top.
+ * `run` (its `turns` and `timeMs` are the level's, 2.18) and `overrides` on top.
  */
-function special(run: Partial<SpecialRun> = {}, overrides: Partial<GameState> = {}): GameState {
+function special(
+  run: Partial<SpecialRun> & { turns?: number; timeMs?: number } = {},
+  overrides: Partial<GameState> = {},
+): GameState {
+  const { turns = 0, timeMs = 0, ...shield } = run;
   return frozen({
     ...newGame({ ...RULES, choose: answers(CENTRE_RIGHT, 0) }),
     level: 5,
@@ -78,7 +88,9 @@ function special(run: Partial<SpecialRun> = {}, overrides: Partial<GameState> = 
     heading: "right",
     food: { x: 0, y: 0 },
     obstacles: [],
-    run: { ...FRESH_RUN, ...run },
+    turns,
+    timeMs,
+    run: { ...FRESH_RUN, ...shield },
     ...overrides,
   });
 }
@@ -182,8 +194,11 @@ describe("going to and from a special level (docs/SPEC.md 2.12 (1), (3))", () =>
   });
 
   it("level 10 starts with a full shield again, whatever level 5 used", () => {
-    const used: SpecialRun = { turns: 19, timeMs: 29000, shieldUsed: 3, waiting: false };
-    const level6 = tick(lastDot(5, used, 20), answers(CENTRE_RIGHT, 0));
+    const used: SpecialRun = { shieldUsed: 3, waiting: false };
+    const level6 = tick(
+      { ...lastDot(5, used, 20), turns: 19, timeMs: 29000 },
+      answers(CENTRE_RIGHT, 0),
+    );
     expect(level6.run).toBeNull();
     const level10 = tick(lastDot(9, null, 40), answers(CENTRE_RIGHT, 0));
     expect(level10.run).toEqual(FRESH_RUN);
@@ -199,7 +214,7 @@ describe("dots and points on a special level (docs/SPEC.md 2.9 (1), 2.12 (8))", 
     expect(next.snake).toHaveLength(4);
   });
 
-  it.each<[string, Partial<SpecialRun>, number]>([
+  it.each<[string, Partial<SpecialRun> & { turns?: number; timeMs?: number }, number]>([
     ["no turns, no shield used, one tick: (20 + 30) x 1", {}, 50],
     [
       "5 turns, 10 s, one layer used: (15 + 20) x 2/3 = 23.3",
@@ -229,17 +244,17 @@ describe("turns on a special level (docs/SPEC.md 2.12 (6))", () => {
   it("a queued turn is not counted until a tick takes it", () => {
     const queued = turn(special(), "up");
     expect(queued.queue).toEqual(["up"]);
-    expect(queued.run?.turns).toBe(0);
+    expect(queued.turns).toBe(0);
     const next = tick(queued, answers(0));
     expect(next.heading).toBe("up");
-    expect(next.run?.turns).toBe(1);
+    expect(next.turns).toBe(1);
   });
 
   it("the 20th turn is allowed", () => {
     const next = tick(special({ turns: 19 }, { queue: ["up"] }), answers(0));
     expect(next.status).toBe("running");
     expect(next.snake[0]).toEqual({ x: 10, y: 9 });
-    expect(next.run?.turns).toBe(20);
+    expect(next.turns).toBe(20);
     expect(specialInfo(next)?.turnsLeft).toBe(0);
   });
 
@@ -250,14 +265,14 @@ describe("turns on a special level (docs/SPEC.md 2.12 (6))", () => {
   });
 
   it("a tick with no turn counts none", () => {
-    expect(tick(special({ turns: 20 }), answers(0)).run?.turns).toBe(20);
+    expect(tick(special({ turns: 20 }), answers(0)).turns).toBe(20);
   });
 });
 
 describe("the level's time (docs/SPEC.md 2.12 (3), (7))", () => {
   it("each tick in which the snake moves adds the level's delay", () => {
     const next = tick(special({ timeMs: 1000 }), answers(0));
-    expect(next.run?.timeMs).toBe(1000 + LEVEL_5_DELAY);
+    expect(next.timeMs).toBe(1000 + LEVEL_5_DELAY);
   });
 
   it("a tick that leaves the time at 30 s or more, the level not cleared, blows the snake up there", () => {
@@ -265,7 +280,7 @@ describe("the level's time (docs/SPEC.md 2.12 (3), (7))", () => {
     expect(next.status).toBe("blown");
     expect(next.ended).toBe("time");
     expect(next.snake).toEqual(shifted(1));
-    expect(next.run?.timeMs).toBe(30000);
+    expect(next.timeMs).toBe(30000);
     expect(specialInfo(next)?.secondsLeft).toBe(0);
   });
 
@@ -295,7 +310,9 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
     expect(next.status).toBe("running");
     expect(next.snake).toEqual(atWall);
     expect(next.heading).toBe("right");
-    expect(next.run).toEqual({ turns: 2, timeMs: 500, shieldUsed: 1, waiting: true });
+    expect(next.run).toEqual({ shieldUsed: 1, waiting: true });
+    expect(next.turns).toBe(2);
+    expect(next.timeMs).toBe(500);
     expect(specialInfo(next)?.shieldLeft).toBe(2);
   });
 
@@ -306,7 +323,9 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
     expect(next.snake).toEqual(top);
     expect(next.heading).toBe("up");
     expect(next.queue).toEqual([]);
-    expect(next.run).toEqual({ turns: 1, timeMs: 0, shieldUsed: 1, waiting: true });
+    expect(next.run).toEqual({ shieldUsed: 1, waiting: true });
+    expect(next.turns).toBe(1);
+    expect(next.timeMs).toBe(0);
   });
 
   it("an obstacle with a layer left uses it the same way", () => {
@@ -371,10 +390,12 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
       const turned = turn(waiting, "down");
       expect(turned.heading).toBe("down");
       expect(turned.queue).toEqual([]);
-      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false, turns: 3, timeMs: 700 });
+      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false });
+      expect(turned.turns).toBe(3);
+      expect(turned.timeMs).toBe(700);
       const moved = tick(turned, answers(0));
       expect(moved.snake[0]).toEqual({ x: 19, y: 11 });
-      expect(moved.run?.timeMs).toBe(700 + LEVEL_5_DELAY);
+      expect(moved.timeMs).toBe(700 + LEVEL_5_DELAY);
     });
 
     it("with all 20 turns used, that turn is still free: the snake goes on", () => {
@@ -382,7 +403,9 @@ describe("the shield (docs/SPEC.md 2.12 (5))", () => {
       const turned = turn(last, "down");
       expect(turned.status).toBe("running");
       expect(turned.heading).toBe("down");
-      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false, turns: 20, timeMs: 0 });
+      expect(turned.run).toEqual({ shieldUsed: 1, waiting: false });
+      expect(turned.turns).toBe(20);
+      expect(turned.timeMs).toBe(0);
       expect(tick(turned, answers(0)).snake[0]).toEqual({ x: 19, y: 11 });
     });
 

@@ -127,7 +127,6 @@ const special: SpecialRules = {
   seconds: specialSeconds,
   jumpSeconds,
   clearAheadOfHead,
-  delays,
 };
 const delayOfLevel = (level: number): number =>
   levelDelay(level, { ...delays, every: specialEvery });
@@ -177,6 +176,8 @@ const canvas = element("board", HTMLCanvasElement);
 const levelText = element("level", HTMLElement);
 const scoreText = element("score", HTMLElement);
 const bestText = element("best", HTMLElement);
+const turnsValue = element("level-turns", HTMLElement);
+const timeValue = element("level-time", HTMLElement);
 const specialRow = element("special", HTMLElement);
 const turnsText = element("turns-left", HTMLElement);
 const secondsText = element("seconds-left", HTMLElement);
@@ -295,6 +296,7 @@ const freshGame = (): GameState =>
     startLength,
     clearAhead,
     dotsPerLevel,
+    delays,
     startLevel: options.startLevel ?? undefined,
     special,
     choose,
@@ -869,6 +871,8 @@ function render(): void {
   const info = specialInfo(state);
   root.dataset.special = String(info !== null);
   root.dataset.waiting = String(state.run?.waiting ?? false);
+  root.dataset.turns = String(state.turns);
+  root.dataset.time = String(state.timeMs);
   root.dataset.score = String(state.score);
   root.dataset.best = String(best);
   root.dataset.head = head === undefined ? "" : cellText(head);
@@ -879,6 +883,9 @@ function render(): void {
   levelText.textContent = String(state.level);
   scoreText.textContent = String(state.score);
   bestText.textContent = String(best);
+  // The level's turns and time on every level, the time in whole seconds rounded down (2.18 (3)).
+  turnsValue.textContent = String(state.turns);
+  timeValue.textContent = `${Math.floor(state.timeMs / 1000)}s`;
   statusText.textContent = STATUS_TEXT[state.status](state);
   specialRow.hidden = info === null;
   // The Slow button is shown only on a special level (docs/SPEC.md 2.14 (5)).

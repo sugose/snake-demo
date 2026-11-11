@@ -32,7 +32,6 @@ const SPECIAL: SpecialRules = {
   seconds: 30,
   jumpSeconds: 3,
   clearAheadOfHead: 2,
-  delays: DELAYS,
 };
 const VALUES: LogValues = {
   size: 20,
@@ -47,6 +46,7 @@ const BASE = newGame({
   startLength: 3,
   clearAhead: 8,
   dotsPerLevel: 5,
+  delays: { first: 125, step: 5, shortest: 50 },
   special: SPECIAL,
   choose: () => 0,
 });
@@ -68,7 +68,7 @@ function game(overrides: Partial<GameState> = {}, level = 1): GameState {
     heading: "right",
     food: { x: 0, y: 19 },
     obstacles: [],
-    run: level % 5 === 0 ? { turns: 0, timeMs: 0, shieldUsed: 0, waiting: false } : null,
+    run: level % 5 === 0 ? { shieldUsed: 0, waiting: false } : null,
     ...overrides,
   };
 }
@@ -268,7 +268,9 @@ describe("logInput (docs/SPEC.md 2.13 (4), (5))", () => {
           { x: 18, y: 10 },
           { x: 17, y: 10 },
         ],
-        run: { turns: 4, timeMs: 0, shieldUsed: 1, waiting: true },
+        turns: 4,
+        timeMs: 0,
+        run: { shieldUsed: 1, waiting: true },
       },
       5,
     );
@@ -304,17 +306,42 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     const queued = turn(three.state, "up");
     const next = tick(queued, ZERO);
     const log = logTick(three.log, at(500, 4), queued, next);
-    expect(log.lines).toEqual(["[t=500 #4] move right 3 head=(13,10)", "[t=500 #4] turn up"]);
+    expect(log.lines).toEqual([
+      "[t=500 #4] move right 3 head=(13,10)",
+      "[t=500 #4] turn up counted 1",
+    ]);
     expect(log.stretch).toEqual({ heading: "up", cells: 1, head: { x: 13, y: 9 } });
   });
 
   it("a turn on a special level is counted", () => {
     const state = turn(
-      game({ run: { turns: 4, timeMs: 0, shieldUsed: 0, waiting: false } }, 5),
+      game({ turns: 4, timeMs: 0, run: { shieldUsed: 0, waiting: false } }, 5),
       "up",
     );
     const log = logTick(EMPTY, at(55, 1), state, tick(state, ZERO));
     expect(log.lines).toEqual(["[t=55 #1] turn up counted 5/20"]);
+  });
+
+  it("a turn on a normal level is counted, with no limit after the count", () => {
+    const state = turn(game({ turns: 4, timeMs: 0 }), "up");
+    const log = logTick(EMPTY, at(125, 1), state, tick(state, ZERO));
+    expect(log.lines).toEqual(["[t=125 #1] turn up counted 5"]);
+  });
+
+  it("a normal level cleared by a tick that takes a turn: the turn line, then the level's turns and time", () => {
+    // The spec's example of 2.13 (5): 12 turns and 25 300 ms on level 4 (110 ms a tick).
+    const state = turn(
+      game({ food: { x: 10, y: 9 }, dotsEaten: 4, score: 19, turns: 11, timeMs: 25190 }, 4),
+      "up",
+    );
+    const next = tick(state, ZERO);
+    const lines = logTick(EMPTY, at(125, 1), state, next).lines;
+    expect(lines.slice(0, 4)).toEqual([
+      "[t=125 #1] turn up counted 12",
+      "[t=125 #1] move up 1 head=(10,9)",
+      "[t=125 #1] dot +1 score=20",
+      "[t=125 #1] cleared level 4 turns=12 time=25300 score=20",
+    ]);
   });
 
   it("a dot on a normal level: +1, and the new dot", () => {
@@ -345,14 +372,16 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
   });
 
   it("a tick while the snake waits writes nothing", () => {
-    const waiting = game({ run: { turns: 0, timeMs: 0, shieldUsed: 1, waiting: true } }, 5);
+    const waiting = game({ turns: 0, timeMs: 0, run: { shieldUsed: 1, waiting: true } }, 5);
     expect(logTick(EMPTY, at(1, 1), waiting, tick(waiting, ZERO)).lines).toEqual([]);
   });
 
   it("an obstacle jump gives all the new cells", () => {
     const state = game(
       {
-        run: { turns: 0, timeMs: 2999, shieldUsed: 0, waiting: false },
+        turns: 0,
+        timeMs: 2999,
+        run: { shieldUsed: 0, waiting: false },
         obstacles: [
           { x: 0, y: 19 },
           { x: 1, y: 19 },
@@ -374,7 +403,7 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     expect(log.lines).toEqual([
       "[t=125 #1] move right 1 head=(11,10)",
       "[t=125 #1] dot +1 score=20",
-      "[t=125 #1] cleared level 4 score=20",
+      "[t=125 #1] cleared level 4 turns=0 time=110 score=20",
       `[t=125 #1] level 5 special delay=55 start=(${head.x},${head.y}) ${next.heading} obstacles=${obstacles} dot=(${dot.x},${dot.y}) turns=20 seconds=30 shield=3`,
     ]);
     expect(log.stretch).toBeNull();
@@ -386,7 +415,9 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
         food: { x: 11, y: 10 },
         dotsEaten: 4,
         score: 20,
-        run: { turns: 15, timeMs: 17945, shieldUsed: 1, waiting: false },
+        turns: 15,
+        timeMs: 17985,
+        run: { shieldUsed: 1, waiting: false },
       },
       5,
     );
@@ -394,7 +425,7 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     expect(log.lines.slice(0, 3)).toEqual([
       "[t=55 #1] move right 1 head=(11,10)",
       "[t=55 #1] dot +0 score=20",
-      "[t=55 #1] cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31",
+      "[t=55 #1] cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=18040 score=31",
     ]);
     expect(log.lines[3]).toMatch(/^\[t=55 #1\] level 6 normal delay=105 start=/);
   });
@@ -420,13 +451,13 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     expect(logTick(EMPTY, at(125, 1), state, next).lines).toEqual([
       "[t=125 #1] move up 1 head=(1,0)",
       "[t=125 #1] dot +1 score=2",
-      "[t=125 #1] cleared level 1 score=2",
+      "[t=125 #1] cleared level 1 turns=0 time=125 score=2",
     ]);
   });
 
   it("the 21st turn writes no turn line", () => {
     const state = turn(
-      game({ run: { turns: 20, timeMs: 0, shieldUsed: 0, waiting: false } }, 5),
+      game({ turns: 20, timeMs: 0, run: { shieldUsed: 0, waiting: false } }, 5),
       "up",
     );
     const next = tick(state, ZERO);
