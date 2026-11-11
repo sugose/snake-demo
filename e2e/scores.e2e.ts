@@ -12,7 +12,7 @@ import {
 } from "./helpers";
 
 // The browser-local high score list (docs/SPEC.md 2.15): the name entry, the table, the Scores link,
-// storage and the log lines. The look of 2.16 is not tested here (it is not in this PR).
+// storage and the log lines. The look of 2.16 is tested in `arcade.e2e.ts`.
 
 const SCORES_KEY = "snake-demo.scores";
 const BEST_KEY = "snake-demo.best";

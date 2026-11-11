@@ -6,6 +6,12 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- The high score list's name entry and table have an arcade look: letters drawn as pixels from a 5 × 7 font of our own at the
+  largest whole-number scale (1, 2 or 3) that fits the board, a dark panel in light and dark mode alike with four
+  high-contrast text colours, scanlines and a glow, a rolling band, small sideways slips of the picture and a blinking
+  cursor block in the selected slot, all in CSS and all stopped by `prefers-reduced-motion: reduce` (the cursor then stays
+  on). The row of a name just entered is marked by a drawn triangle. The rest of the page keeps its plain look (#66).
+  Specified in #62.
 - A browser-local high score list: a game that ends with a score of at least 1 and makes the top 10 asks for a name of
   3 letters (arrow keys, or the Up and Down buttons under each letter), and a Scores link next to Log opens the table
   of rank, score, level reached and name, with the best score as a `--` / `---` row ahead of the entries. The list is
