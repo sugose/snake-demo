@@ -68,7 +68,7 @@ test("the Log link is usable in every state; the panel shows the whole game", as
   await expect(panel).toBeVisible();
   const { first, events, ticks } = await logLines(page);
   expect(first).toMatch(
-    /^snake-demo build=\S+ size=20 start-length=3 clear-ahead=8 dots=5 delays=125\/5\/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2$/,
+    /^snake-demo version=\S+ build=\S+ size=20 start-length=3 clear-ahead=8 dots=5 delays=125\/5\/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2$/,
   );
   expect(events).toEqual([
     "level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",

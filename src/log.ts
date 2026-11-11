@@ -81,13 +81,18 @@ function flush(log: Log, at: Stamp): Log {
 }
 
 /**
- * The first line: the build and the named values (2.13 (3)). On a playtest page it ends with the
+ * The first line: the version, the build and the named values (2.13 (3)). On a playtest page it ends with the
  * options: `playtest start-level=5 slow`, `playtest start-level=5` or `playtest slow` (2.14 (4)).
  */
-export function firstLine(build: string, values: LogValues, playtest?: PlaytestWords): string {
+export function firstLine(
+  version: string,
+  build: string,
+  values: LogValues,
+  playtest?: PlaytestWords,
+): string {
   const { delays, special } = values;
   const common =
-    `snake-demo build=${build} size=${values.size} start-length=${values.startLength}` +
+    `snake-demo version=${version} build=${build} size=${values.size} start-length=${values.startLength}` +
     ` clear-ahead=${values.clearAhead} dots=${values.dotsPerLevel}` +
     ` delays=${delays.first}/${delays.step}/${delays.shortest}`;
   const rules =

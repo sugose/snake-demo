@@ -6,6 +6,10 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- A version line under the controls, `v0.1.0 · abc1234` (the `version` of `package.json` and the first 7 characters of the
+  commit the page was built from, or `dev` for a local build), in small muted text, centred under the board, on every page and
+  not a button or in the tab order. Both are fixed at build time, and the event log's first line now starts `snake-demo
+  version=<version> build=<build> size=…` with the same two values (#78). Specified in #74.
 - The event log ends with a checksum line, `sha256 ` and the 64 digits of the SHA-256 of the log text above it, in the
   Log panel and in what Copy copies; the page makes it each time the panel opens, with a SHA-256 written for the project
   (no third-party code). `npm run verify-log [file]` reads a log from a file or the standard input and says `match`,

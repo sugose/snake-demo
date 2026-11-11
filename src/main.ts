@@ -63,6 +63,7 @@ import {
 import { sha256 } from "./sha256";
 import { endText, waitingText } from "./status";
 import { readBest, writeBest } from "./storage";
+import { versionText } from "./version";
 
 const {
   gridSize,
@@ -181,6 +182,7 @@ const turnsText = element("turns-left", HTMLElement);
 const secondsText = element("seconds-left", HTMLElement);
 const shieldText = element("shield-left", HTMLElement);
 const statusText = element("status", HTMLElement);
+const versionLine = element("version", HTMLElement);
 const banner = element("banner", HTMLElement);
 const startButton = element("start", HTMLButtonElement);
 const pauseButton = element("pause", HTMLButtonElement);
@@ -206,6 +208,8 @@ const scoresPanel = element("scores-panel", HTMLElement);
 const scoresRows = element("scores-rows", HTMLElement);
 const scoresEmpty = element("scores-empty", HTMLElement);
 const scoresClose = element("scores-close", HTMLButtonElement);
+// The version line (docs/SPEC.md 2.17): the build-time version and build, as text.
+versionLine.textContent = versionText(__VERSION__, __BUILD__);
 const frame = canvas.parentElement;
 if (frame === null) throw new Error("the board has no frame");
 const drawing = canvas.getContext("2d");
@@ -304,7 +308,7 @@ let best = readBest(getStore, storageKey, maxScore);
 
 // The event log of the current game (docs/SPEC.md 2.13).
 const LOG_VALUES = { size: gridSize, startLength, clearAhead, dotsPerLevel, delays, special };
-const FIRST_LINE = firstLine(__BUILD__, LOG_VALUES, options);
+const FIRST_LINE = firstLine(__VERSION__, __BUILD__, LOG_VALUES, options);
 let gameMadeAt = performance.now();
 let ticks = 0;
 let log: Log = startLog(FIRST_LINE, { t: 0, k: 0 }, state, LOG_VALUES);
