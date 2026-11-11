@@ -135,7 +135,12 @@ describe("isValidList and isValidEntry: the shape of 2.19 (2)", () => {
   it("refuses an entry with no line, or with an empty line", () => {
     expect(isValidList([entry("0.2.0", "2026-11-11", [])])).toBe(false);
     expect(isValidList([entry("0.2.0", "2026-11-11", ["A line.", ""])])).toBe(false);
+  });
+
+  it("refuses a line of only spaces, tabs or line feeds: it is not a non-empty text", () => {
     expect(isValidList([entry("0.2.0", "2026-11-11", ["   "])])).toBe(false);
+    expect(isValidList([entry("0.2.0", "2026-11-11", ["A line.", " \t\n "])])).toBe(false);
+    expect(isValidList([entry("0.2.0", "2026-11-11", [" a "])])).toBe(true);
   });
 
   it("refuses an entry that lacks a field or has one of the wrong kind", () => {
@@ -460,7 +465,7 @@ describe("entriesOnLoad: what opens by itself (docs/SPEC.md 2.19 (3), (5))", () 
     expect(entriesOnLoad("0.2.0", "0.2.0", list)).toEqual([]);
   });
 
-  it("opens nothing when V is not a SemVer 2.0.0 version", () => {
+  it("opens nothing when the build's version V is not a SemVer 2.0.0 version", () => {
     expect(entriesOnLoad("0.1.0", "banana", LIST)).toEqual([]);
     expect(entriesOnLoad("0.1.0", "v0.4.0", LIST)).toEqual([]);
   });
@@ -651,7 +656,7 @@ describe("openOnLoad: reading, deciding and writing V (docs/SPEC.md 2.19 (3), (5
     expect(openOnLoad(() => store, KEY, "0.3.0", LIST)).toEqual([]);
   });
 
-  it("with a V that is not a SemVer 2.0.0 version nothing opens and the write is still tried", () => {
+  it("with a V that is not a SemVer 2.0.0 version nothing opens and V is still written", () => {
     const { store, writes } = memoryStore({ [KEY]: "0.1.0" });
     expect(openOnLoad(() => store, KEY, "banana", LIST)).toEqual([]);
     expect(writes).toEqual([[KEY, "banana"]]);

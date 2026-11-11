@@ -293,7 +293,7 @@ test.describe("the Version history link and what it shows (docs/SPEC.md 2.19 (4)
     expect(await overflow(page)).toBeLessThanOrEqual(0);
   });
 
-  test("when the four links do not fit the width they wrap onto another line, with no sideways scrolling", async ({
+  test("at 320 px the four links do not fit the width and wrap onto another line, with no sideways scrolling", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 800 });
@@ -397,6 +397,29 @@ test.describe("the Version history link and what it shows (docs/SPEC.md 2.19 (4)
     expect(look.history.border).toBe(look.log.border);
     expect(look.history.radius).toBe(look.log.radius);
     await expect(panelOf(page).getByText("Nine one.")).toBeVisible();
+  });
+
+  test("the test-only list is ignored when navigator.webdriver is false: the panel shows the bundled list", async ({
+    page,
+  }) => {
+    await giveList(page, LIST);
+    await seed(page, { [SEEN_KEY]: "0.0.1" });
+    await page.context().addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, "webdriver", { get: () => false });
+    });
+    await openGame(page);
+    expect(await page.evaluate(() => navigator.webdriver)).toBe(false);
+    // Opened by itself, it shows the bundled entries; the test list's lines and entries are nowhere.
+    await expect(panelOf(page)).toBeVisible();
+    await expect(titleOf(page)).toHaveText("What's new");
+    const entries = await shown(page);
+    expect(entries[0]?.heading.startsWith(`Version ${VERSION} \u00b7 `)).toBe(true);
+    await fullButton(page).click();
+    const all = await headings(page);
+    expect(all).not.toContain(ALL[1]);
+    expect(all).not.toContain(ALL[3]);
+    await expect(page.getByText("The newest line.")).toHaveCount(0);
+    await expect(page.getByText("Nine one.")).toHaveCount(0);
   });
 
   test("the test-only list is not used when it is not a list the page accepts", async ({

@@ -31,12 +31,11 @@ export const HISTORY: readonly HistoryEntry[] = [
     date: "2026-11-09",
     lines: [
       "Steer the snake with the arrow keys, W A S D or a swipe on the board. Space or P pauses.",
-      "Eat 5 dots to clear a level. Each level is laid out anew with a random start, one more obstacle than the one before, and a little more speed.",
+      "Eat 5 dots to clear a level. Each level is laid out anew with a random start and one more obstacle than the one before, and the early levels get faster.",
       "Every 5th level is a special level: a shield that takes 3 crashes, at most 20 turns and 30 seconds, and obstacles that jump around. You score for the turns and seconds you have left.",
       "Your best score is kept in this browser, and so is a top 10 list of high scores, where a score that makes the list asks for a name of 3 letters (the Scores link).",
       "Every level shows its turns and its time while you play, and keeps your records for it, the fewest turns and the fastest time (the Records link).",
       "The Log link shows everything that happened in your game, line by line, and you can copy it.",
-      "To practise a level, add ?level=5 to the page address (any level from 1 to 99) and every new game starts there. Add ?slow for a small hidden button that slows a special level down. Games played this way do not change your scores or records.",
       "The Version history link shows what is new in each version of the game.",
     ],
   },
