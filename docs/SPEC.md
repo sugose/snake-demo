@@ -186,8 +186,8 @@ link, it is not visible during game play", to Clead's recommendations of
 12:09 (the time is the game's time, the sum of the level's delay over the
 moves, as the special levels count it; the records show as a line on the
 page for the current level and in a table of all levels) (`DECISIONS.md`,
-PO-171, the row "Snake demo, per-level records"). 2.18, and the changes
-to 2.4, 2.5, 2.6, 2.12, 2.13, 2.14, 2.15, 3, 3.1 and 5 that follow from
+PO-171, the row "Snake demo, per-level records and live turns and time"). 2.18, and the changes
+to 2.4, 2.5, 2.6, 2.10, 2.12, 2.13, 2.14, 2.15, 3, 3.1 and 5 that follow from
 it, are Clead's exact wording of that decision. Details Adam has not
 settled are marked **[Clead]**; a mark at the start of an item or a
 bullet covers all of it, and a mark in the middle covers the sentence it
@@ -287,7 +287,8 @@ the name entry of 2.15 (4) is open the command does nothing. While the
 scores panel of 2.15 (5) or the records panel of 2.18 (7) is open, which
 either can be in `ready`, `paused` and the ended states (each pauses a
 `running` game), only the New game button gives a new game, and Enter
-closes the panel. While the log panel
+on the focused Close closes the panel (with the focus on the records
+panel's table, Enter does nothing, 2.18 (7)). While the log panel
 (2.13 (6)) is open, the button, or Enter with the focus on nothing,
 closes it and gives a new game; Enter with the focus on Close or Copy
 presses that button. Enter and Space with a button focused do that
@@ -306,7 +307,8 @@ Arrow keys and W, A, S, D (either case) turn up, left, down and right.
 Space and P (either case) pause and go on; Enter starts a new game (Enter
 and Space are different when a button has the focus, below). Other keys do
 nothing. The page stops the arrow keys and Space from scrolling
-it while the game has the focus.
+it while the game has the focus (not with the focus on the table of the
+records panel, 2.18 (7)).
 
 A key pressed together with Ctrl, Meta (Cmd) or Alt does nothing, so the
 browser's shortcuts are not taken as turns; Shift does not matter. When a
@@ -433,7 +435,8 @@ Enter confirms the name then and the New game button does nothing.
    goes up by one, the dots eaten on it start at 0, the queued turns are
    cleared, and the board is laid out anew (2.11) with the snake as long
    as it was when the level was cleared, the growth from the 5th dot
-   included. The state is `ready` until a turn or the Start button
+   included. The level's turns and time start at 0 (2.18 (1), (2)). The
+   state is `ready` until a turn or the Start button
    starts the level (2.1 (3)); while `ready`, the page's status line says
    which level is about to start.
 4. Level N has N − 1 obstacles: none on level 1, one on level 2, and so
@@ -621,7 +624,7 @@ cleared, no queued turns, and no obstacles or dot.
    button, or Enter with the focus on nothing) or the scores panel or the
    records panel is open (the button only, 2.5), which closes the panel
    and makes a new game; opening and closing
-   the panels make a line only as (6) and 2.15 (5) say. The New game command's line is the first stamped line
+   the panels make a line only as (6), 2.15 (5) and 2.18 (7) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
    ignored, and if ignored, why, with one of these reasons:
@@ -649,8 +652,8 @@ cleared, no queued turns, and no obstacles or dot.
 | a new dot | `dot at (5,9)` |
 | a shielded crash | `crash wall shield=2 free=up,left` |
 | an obstacle jump | `jump obstacles=(1,2),(7,9),(0,0),(4,4)` |
-| a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=17800 score=31`; on a normal level `cleared level 4 turns=12 time=25300 score=20`; `turns` and `time` (in milliseconds) are the level's turns and time (2.18 (1), (2)) |
-| a record set (2.18 (4)) | `record fewest level=4 turns=12 time=25300`, `record fastest level=4 time=18200 turns=14`; one line for each record the cleared level set, the fewest first, right after the `cleared` line, also when the write to the storage fails; none on a playtest page |
+| a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=18040 score=31`; on a normal level `cleared level 4 turns=12 time=25300 score=20`; `turns` and `time` (in milliseconds) are the level's turns and time (2.18 (1), (2)) |
+| a record set (2.18 (4)) | `record fewest level=4 turns=12 time=25300`, `record fastest level=4 time=18150 turns=14`; one line for each record the cleared level set, the fewest first, right after the `cleared` line, also when the write to the storage fails; none on a playtest page |
 | pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores`; made by the records panel (2.18 (7)): `pause records`, `resume records` |
 | a slow step (2.14 (5)) | `slow x2`, `slow x4`, `slow x1`, after the input line `button Slow used`; a press the state ignores is `button Slow ignored state` |
 | a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped`; when the list had no room left at the confirmation (2.15 (6)) `scores name=ABC full` |
@@ -808,9 +811,10 @@ Without them the page is as every other section says.
    with no value is the use.
 4. A page with a valid `level` is a playtest page. **[Clead]** So is a page
    with `slow`, since a slowed game is not comparable with others. On a playtest page,
-   no game changes the best score (2.9 (2)), none enters the high
-   score list (2.15 (3)) and none sets a record (2.18 (4)); all three keep
-   showing what they hold. The end line
+   no game changes the best score (2.9 (2)) and none enters the high
+   score list (2.15 (3)); both keep showing what they hold.
+   **[Clead]** No game of a playtest page sets a record (2.18 (4)); the
+   records keep showing what is stored. The end line
    of the log says `best=no`. **[Clead]** The page shows no sign of a
    playtest page apart from the Slow button of (5); the first line of
    every log names the options (2.13 (3)).
@@ -1093,130 +1097,162 @@ section 3.
 
 ### 2.18 Level turns, level time and level records
 
-1. **Turns.** A level's turns are the turns counted on it. A turn counts
-   when a tick takes it from the queue and it becomes the heading
-   (2.2 step 1). The turn that starts the level from `ready` (2.1 (3)),
-   the Start button, and the turn that ends a wait after a shielded crash
-   (2.12 (5)) are not counted, and nor is a turn that is ignored or only
-   queued. The turns start at 0 when a level is laid out (2.11). This holds
-   on every level; the limit of 20 turns (2.12 (6)) is on special levels
-   only.
+1. **Turns.** **[Clead]** A level's turns are the turns counted on it. A
+   turn counts when a tick takes it from the queue and it becomes the
+   heading (2.2 step 1). The turn that starts the level from `ready`
+   (2.1 (3)), the Start button, and the turn that ends a wait after a
+   shielded crash (2.12 (5)) are not counted (for special levels this is
+   the rule Adam accepted for 2.12 (6); on a normal level it is the same
+   rule), and nor is a turn that is ignored or only queued. The turns
+   start at 0 when a level is laid out (2.11). This holds on every level;
+   the limit of 20 turns (2.12 (6)) is on special levels only.
 2. **Time.** A level's time is the sum, over the ticks in which the snake
    moved (step 6 of 2.2), of the level's delay (2.10 (2), 2.12 (2)),
-   whatever the tick really took (2.14 (6)), kept in whole milliseconds.
-   It starts at 0 when a level is laid out. So the time runs only while
-   the snake moves, and not in `ready`, in `paused`, while the snake waits
-   after a shielded crash (2.12 (5)), or in the tick of the crash itself;
-   the tick that eats the 5th dot counts. **[Clead]** It is the game's
-   time, as the special levels count it (2.12 (3)), not the clock on the
-   wall: on a machine whose ticks run later than their delay it is less
-   than a stopwatch shows. The page's clock and the log's stamps (2.13 (2))
-   are not the level's time.
-3. **On the page.** On every level the page shows two values next to the
-   level, the score and the best score: the level's turns as a whole
-   number ("Turns 7") and the level's time in whole seconds, rounded down
-   ("Time 12s" for 12000 to 12999 ms). **[Clead]** They are shown in every
-   state; they are 0 and 0s when a level is laid out (a new game
-   included), change when the turn is counted or the tick is run, and keep
-   their last values when the game ends. The page does not announce their
-   changes to screen readers. **[Clead]** The values of a special level
-   (2.12 (10)) are labelled "Turns left", "Seconds left" and "Shield
-   left", so that no two labels read alike; on a special level the seconds
-   left (rounded up, 2.12 (8)) and the time (rounded down) add up to 30.
+   whatever the tick really took (2.14 (6)). It is the game's time, as the
+   special levels count it, and not the clock on the wall: on a machine
+   whose ticks run later than their delay it is less than a stopwatch
+   shows.
+   - **[Clead]** It is kept in whole milliseconds and starts at 0 when a
+     level is laid out.
+   - **[Clead]** So the time runs only while the snake moves, and not in
+     `ready`, in `paused`, while the snake waits after a shielded crash
+     (2.12 (5)), or in the tick of the crash itself; the tick that eats
+     the 5th dot counts.
+   - **[Clead]** The page's clock and the log's stamps (2.13 (2)) are not
+     the level's time.
+3. **On the page.** On every level the page shows the level's turns and
+   the level's time while the level is played.
+   - **[Clead]** They are shown next to the level, the score and the best
+     score, as "Turns 7" and "Time 12s": the turns as a whole number, the
+     time as whole seconds, rounded down ("Time 12s" for 12000 to
+     12999 ms).
+   - **[Clead]** They are shown in every state; they are 0 and 0s when a
+     level is laid out (a new game included), change when the turn is
+     counted or the tick is run, and keep their last values when the game
+     ends. The page does not announce their changes to screen readers.
+   - **[Clead]** The values of a special level (2.12 (10)) are labelled
+     "Turns left", "Seconds left" and "Shield left", so that a special
+     level shows five values, "Turns", "Time", "Turns left", "Seconds
+     left" and "Shield left"; tests find each by its whole label, since
+     "Turns" is the start of "Turns left". On a special level the seconds
+     left (rounded up, 2.12 (8)) and the time (rounded down) add up to 30.
 4. **Records.** For each level the page keeps up to two records: the
-   fewest turns, with the time that level took, and the fastest time, with
-   the turns that level took; they come from different plays of the level
-   when they differ. A level is cleared when its 5th dot is eaten (2.2
-   step 7), also when the next level then cannot be laid out and the game
-   is `won` (2.11). When a level is cleared on a page that is not a
-   playtest page (2.14 (4)), its turns T and its time S, as they are after
-   that tick, are compared with the records of that level:
-   - the fewest-turns record becomes (T, S) when the level has none, or
-     when T is fewer than its turns, or when T is equal to its turns and S
-     is shorter than its time;
-   - the fastest-time record becomes (S, T) when the level has none, or
-     when S is shorter than its time, or when S is equal to its time and T
-     is fewer than its turns.
-   A cleared level can set both records, one or none: one that equals both
-   changes nothing. The first clear of a level sets both. A game that ends
-   on a level without clearing it sets no record, and no game of a
-   playtest page sets one.
-5. **Stored.** The records are kept in the browser's local storage, for
-   this browser only, under the key `snake-demo.records`, as text: one
-   entry for each level that has records, in ascending order of level,
-   joined by `,`. An entry is written `LEVEL:A:B:C:D`: the level, the
-   turns A and the time B in milliseconds of its fewest-turns record, then
-   the time C in milliseconds and the turns D of its fastest-time record,
-   for example `4:12:25300:18200:14,5:15:17800:15200:16`. Numbers are
-   written with the digits 0 to 9 and no leading zero (zero is `0`).
-   **[Clead]** The bounds, named values of section 3: the level from 1 to
-   80 (`main.ts` works it out as the number of cells divided by the dots
-   per level, 20 × 20 / 5, as 2.9 (3) does), the turns from 0 to 99999 and
-   the times from 1 to 99999999 ms. A missing value, or any other value (an
-   entry that is not of that form, a level twice or not rising along the
-   list, a number outside its bound), reads as no records, the whole value
-   and not an entry at a time. A level whose turns or time are above their
-   bound sets no record. **[Clead]** The records are read from the storage
-   each time they are shown or compared: when a level is laid out (for the
-   line of (6)), when the panel of (7) opens, and when a level is cleared,
-   before the comparison, so that the records another tab stored in the
-   meantime are kept; the whole text is then written. A read that fails
-   reads as no records. Every access to the storage, including getting
-   hold of it, happens inside the module's error handling, and the game
-   goes on; after a failed write the page keeps its records in memory and
-   uses them for the rest of the page's life, with no further read (as
-   2.15 (6) says of the list). **[Clead]** These bounds are no rule of the
-   game, so the first line of the log (2.13 (3)) does not name them.
-6. **The line.** The page shows the records of the current level as one
-   line of text under the values of (3) and above the board: `Fewest
-   turns: 12 turns (25s) · Fastest: 18s (14 turns)`. **[Clead]** The text
-   is `Fewest turns: `, the fewest text, ` · ` (a space, the middle dot
-   U+00B7 and a space, as 2.17 (1)), `Fastest: ` and the fastest text. The
-   fewest text is the record's turns, a space, `turn` when the turns are 1
-   and `turns` otherwise, a space and in parentheses its time in whole
-   seconds, rounded down, and `s`: `12 turns (25s)`, `1 turn (9s)`,
-   `0 turns (7s)`. The fastest text is the time in whole seconds, rounded
-   down, and `s`, a space and in parentheses its turns with the same word:
-   `18s (14 turns)`. A level with no records shows `–` (U+2013) in place
-   of each text: `Fewest turns: – · Fastest: –`. **[Clead]** The line is
-   shown in every state, from when the level is laid out, and on a
-   playtest page too, where it shows the records as they are stored. It
-   changes when a level is laid out, so a record set on a level shows in
-   its line the next time that level is laid out. It is not announced to
-   screen readers when it changes, is in the muted colour of the page
-   (`--muted`), and wraps between its two texts when it does not fit, so
-   that the page does not scroll sideways at 375 px.
-7. **The table.** A "Records" link below the board, next to the Log and
-   Scores links, opens the table of the records in a panel over the board
-   with a Close button. **[Clead]** The panel works as the scores panel
-   of 2.15 (5) does, apart from its content:
-   - it can be used in every state; opening it on a `running` game pauses
-     it, and closing it with Close or Escape goes on if opening paused the
-     game (the lines `pause records` and `resume records`); in `ready`,
-     `paused` and the ended states it changes nothing, on opening or on
-     closing;
-   - while it is open, game keys, swipes, the Start, Pause and Resume
-     buttons and the Log and Scores links do nothing; the New game button
-     closes it and makes a new game, and Enter does not, since the focus
-     is on Close, which Enter presses; while the name entry of 2.15 (4) is
-     open the Records link does nothing;
-   - the focus goes to Close when it opens, back to the Records link when
-     Close or Escape closes it, and to the New game button when the New
-     game command closes it; Tab and Shift+Tab stay inside the panel,
-     between the table, which is a Tab stop so that a long table can be
-     scrolled with the keys, and Close;
-   - a key already down when it opens, and the repeats of Enter, Space
-     and Escape, do nothing; Enter or Space on the focused Close closes it
-     (2.6), and on the focused table does nothing; the status line of an ended game keeps its words while it is
-     open (2.8).
-   The panel's title is "Level records". It shows a table with the
-   headings "Level", "Fewest turns" and "Fastest" and a row for each level
-   that has records, in ascending order of level, read when the panel
-   opens: the level number, the fewest text and the fastest text of (6).
-   With no records it says "No records yet" instead of the rows.
-   **[Clead]** The panel has the plain look of the log panel and not the
-   arcade look, which is for the scores panel only (2.16); the table
-   scrolls inside the panel when its rows do not fit.
+   fewest turns, with the time that level took, and the fastest time,
+   with the turns that level took.
+   - **[Clead]** They come from different plays of the level when they
+     differ. A level is cleared when its 5th dot is eaten (2.2 step 7),
+     also when the next level then cannot be laid out and the game is
+     `won` (2.11); such a clear counts.
+   - **[Clead]** When a level is cleared on a page that is not a
+     playtest page (2.14 (4)), its turns T and its time S, as they are
+     after that tick, are compared with the records of that level. The
+     fewest-turns record becomes (T, S) when the level has none, or when
+     T is fewer than its turns, or when T is equal to its turns and S is
+     shorter than its time. The fastest-time record becomes (S, T) when
+     the level has none, or when S is shorter than its time, or when S is
+     equal to its time and T is fewer than its turns.
+   - **[Clead]** A clear can set both records, only one, or none: a clear
+     that equals both records changes nothing. The first clear of a level
+     sets both. A game that ends on a level without clearing it sets no
+     record, and no game of a playtest page sets one.
+5. **Stored.** The records are kept in this browser only, in its local
+   storage.
+   - **[Clead]** They are under the key `snake-demo.records`, as text:
+     one entry for each level that has records, in ascending order of
+     level, joined by `,`. An entry is written `LEVEL:A:B:C:D`: the level,
+     the turns A and the time B in milliseconds of its fewest-turns
+     record, then the time C in milliseconds and the turns D of its
+     fastest-time record, for example
+     `4:12:25300:18150:14,5:15:18040:15180:16`. Numbers are written with
+     the digits 0 to 9 and no leading zero (zero is `0`).
+   - **[Clead]** The bounds, named values of section 3: the level from 1
+     to 80 (`main.ts` works it out as the number of cells divided by the
+     dots per level, 20 × 20 / 5, as 2.9 (3) does), the turns from 0 to
+     99999 and the times from 1 to 99999999 ms. A missing value, or any
+     other value (an entry that is not of that form, a level twice or not
+     rising along the list, a number outside its bound), reads as no
+     records, the whole value and not an entry at a time. A level whose
+     turns or time are above their bound sets no record, and the records
+     it would have replaced stay. These bounds are no rule of the game, so
+     the first line of the log (2.13 (3)) does not name them.
+   - **[Clead]** The records are read from the storage each time they are
+     shown or compared: when a level is laid out (for the line of (6)),
+     when the panel of (7) opens, and when a level is cleared, before the
+     comparison, so that the records another tab stored in the meantime
+     are kept; the whole text is then written, at every clear that sets a
+     record, also after a write that failed. A read that fails reads as no
+     records, so the next clear that sets a record writes the text with
+     only the entries it then holds; this is meant, as for the list
+     (2.15 (6)).
+   - **[Clead]** Every access to the storage, including getting hold of
+     it, happens inside the module's error handling, and the game goes
+     on; after a failed write the page keeps its records in memory and
+     uses them for the rest of the page's life, with no further read (as
+     2.15 (6) says of the list).
+6. **The line.** The page shows the records of the current level in one
+   line of text, with the texts `Fewest turns: 12 turns (25s)` and
+   `Fastest: 18s (14 turns)`.
+   - **[Clead]** The line is `Fewest turns: 12 turns (25s) · Fastest:
+     18s (14 turns)`, the two texts joined by ` · ` (a space, the middle
+     dot U+00B7 and a space, as 2.17 (1)), under the values of (3) and
+     above the board.
+   - **[Clead]** The fewest text is the record's turns, a space, `turn`
+     when the turns are 1 and `turns` otherwise, a space and in
+     parentheses its time in whole seconds, rounded down, and `s`:
+     `12 turns (25s)`, `1 turn (9s)`, `0 turns (7s)`. The fastest text is
+     the time in whole seconds, rounded down, and `s`, a space and in
+     parentheses its turns with the same word: `18s (14 turns)`. A level
+     with no records shows `–` (U+2013) in place of each text: `Fewest
+     turns: – · Fastest: –`.
+   - **[Clead]** The line is shown in every state, from when the level is
+     laid out, and on a playtest page too, where it shows the records as
+     they are stored. It changes when a level is laid out, so a record set
+     on a level shows in its line the next time that level is laid out.
+   - **[Clead]** It is not announced to screen readers when it changes,
+     is in the muted colour of the page (`--muted`), and wraps between its
+     two texts when it does not fit, so that the page does not scroll
+     sideways at 375 px.
+7. **The table.** A link opens a table of the records of all levels. The
+   table is not on the page: it is brought up by clicking the link.
+   - **[Clead]** The link is "Records", below the board next to the Log
+     and Scores links, and the table is in a panel over the board with a
+     Close button. The panel works as the scores panel of 2.15 (5) does,
+     apart from its content, as the bullets below say.
+   - **[Clead]** It can be used in every state; opening it on a `running`
+     game pauses it, and closing it with Close or Escape goes on if
+     opening paused the game (the lines `pause records` and
+     `resume records`); in `ready`, `paused` and the ended states it
+     changes nothing, on opening or on closing.
+   - **[Clead]** While it is open, game keys, swipes, the Start, Pause
+     and Resume buttons and the Log and Scores links do nothing; the New
+     game button closes it and makes a new game; Enter does not make a new
+     game (with the focus on Close, Enter presses it; on the table, Enter
+     does nothing); while the name entry of 2.15 (4) is open the Records
+     link does nothing.
+   - **[Clead]** The focus goes to Close when it opens, back to the
+     Records link when Close or Escape closes it, and to the New game
+     button when the New game command closes it. Tab and Shift+Tab stay
+     inside the panel, between the table and Close; with the focus outside
+     the panel, Tab goes to the table and Shift+Tab to Close. The table is
+     a Tab stop so that a long table can be scrolled with the keys.
+   - **[Clead]** With the focus on the table, the arrow keys, Space,
+     Page Up, Page Down, Home and End are left to the browser, which
+     scrolls the table: the page does not stop them (2.6) and they turn
+     nothing and make no line. Enter does nothing, and Escape closes the
+     panel from anywhere in it. With the focus on Close, Enter and Space
+     press it (2.6).
+   - **[Clead]** A key already down when it opens, and the repeats of
+     Enter, Space and Escape, do nothing; the status line of an ended game
+     keeps its words while it is open (2.8).
+   - **[Clead]** The panel's title is "Level records". It shows a table
+     with the headings "Level", "Fewest turns" and "Fastest" and a row for
+     each level that has records, in ascending order of level, read when
+     the panel opens: the level number, the fewest text and the fastest
+     text of (6). With no records it says "No records yet" instead of the
+     rows, and the headings stay.
+   - **[Clead]** The panel has the plain look of the log panel and not
+     the arcade look, which is for the scores panel only (2.16); the table
+     scrolls inside the panel when its rows do not fit.
 8. **[Clead]** Tests. Jest, game: the turns of a level count a turn a tick
    takes from the queue, on a normal and on a special level, and not the
    turn that starts the level, the Start button, the turn that ends a
@@ -1225,25 +1261,43 @@ section 3.
    in which the snake moved, and is not changed in `ready`, in `paused`,
    by a crash, or by the Slow factor; the tick that clears a level counts;
    the time of a special level is what it was before this change. Jest,
-   records: each rule of (4) (the first clear sets both; fewer turns;
-   equal turns and a shorter time; equal on both changes nothing; faster;
-   equal time and fewer turns; one record set and the other kept), the
-   text of (5) made and read back, every malformed text (a leading zero,
-   a number outside its bound, a level twice or not rising, a missing
-   field, an extra comma, an empty entry, a sign, a space), the reads and
-   writes through fake stores that return nothing, throw on getting hold
-   of the store, on reading and on writing (the records then kept in
-   memory), a level whose turns are above the bound, and the texts of (6)
-   and (7) (`1 turn`, `0 turns`, `24999 ms` as `24s`, `–`). Jest, log: the
-   changed and new lines of 2.13 (5). Browser: the values of (3) in every
-   state, their labels and those of a special level; the line of (6)
-   from records stored before the page loads, with and without records,
-   on a playtest page too; a level cleared on a normal page sets and
-   shows its records the next time that level is laid out, and one cleared
-   on a playtest page sets none; the panel of (7): its content, pause and
-   resume, the focus in each case, Tab, Escape, the New game button, the
-   Records link with the name entry open, and the status line; a failing
-   storage; the log lines.
+   records: each rule of (4), with the cases: the first clear sets both;
+   fewer turns with a longer time sets only the fewest; equal turns and a
+   shorter time sets the fewest; equal turns and a longer or equal time
+   changes nothing in the fewest; a shorter time with more turns sets
+   only the fastest; an equal time and fewer turns sets the fastest; an
+   equal time and more or equal turns changes nothing in the fastest; a
+   clear that equals both changes nothing; a clear that sets one record
+   keeps the other; a level cleared that ends the game as `won` because
+   the next level cannot be laid out sets its records. Jest, records,
+   storage: the text of (5) made and read back; every malformed text (a
+   leading zero, a sign, a space, a missing field, an extra field, an
+   extra comma, an empty entry, a level twice or not rising); each bound
+   accepted at the bound and rejected one past it (level 1 and 80, with 0
+   and 81 rejected; turns 0 and 99999, with 100000 rejected; time 1 and
+   99999999, with 0 and 100000000 rejected); a level whose turns or time
+   are above the bound sets no record and the stored records stay; reads
+   and writes through fake stores that return nothing, throw on getting
+   hold of the store, on reading and on writing (the records then kept in
+   memory, a later clear writing them again); records another tab stored
+   between the page load and a clear are kept. Jest, texts: those of (6)
+   and (7) (`1 turn`, `0 turns`, 24999 ms as `24s`, `–`, the longest line
+   `Fewest turns: 99999 turns (99999s) · Fastest: 99999s (99999 turns)`).
+   Jest, log: the changed and new lines of 2.13 (5). Browser: the values
+   of (3) in every state, found by their whole labels, also on a special
+   level; the line of (6) from records stored before the page loads, with
+   and without records, on a playtest page too, and at 375 px with the
+   longest line the page does not scroll sideways; a level cleared on a
+   normal page sets its records, and the line shows them the next time
+   that level is laid out, while one cleared on a playtest page sets
+   none; the panel of (7): its content with and without records and what
+   is stored when it opens, pause and resume, the focus in each case, Tab
+   and Shift+Tab inside it and from outside it, the keys on the focused
+   table (the table scrolls with the arrow keys and Space, nothing turns,
+   Enter does nothing, Escape closes), Escape, the New game button, the
+   Records link with the name entry open, the status line, and that its
+   look is the plain one and not the arcade look; a failing storage; the
+   log lines.
 
 ## 3. Architecture
 
@@ -1303,7 +1357,7 @@ section 3.
 - `src/records.ts`: the level records (2.18) as pure functions: reading
   and writing their text through a function passed in that returns the
   store and may throw, the records after a cleared level (the rules of
-  (4)), and the texts of the line and of the table's cells (2.18 (6),
+  (4)), which of the two records it set, and the texts of the line and of the table's cells (2.18 (6),
   (7)) from a record, so that the page shows no text of its own. Covered
   by Jest with fake stores, also ones that throw, every malformed text of
   2.18 (5), and each rule of 2.18 (4).
@@ -1324,7 +1378,8 @@ section 3.
 - `src/log.ts`: the event log of 2.13 as pure functions: the first
   line, and the lines of one step of the game, given the state before
   it, the input or tick, the state after it, what `src/game.ts`
-  reported about the step, the time and the tick count; it keeps its
+  reported about the step, the records `src/records.ts` set for a
+  cleared level (2.18 (4)), the time and the tick count; it keeps its
   own small state (the open stretch of moves) and works out no game
   rule itself. Pure, covered by Jest: every kind of line of 2.13 (5)
   whole, except the checksum line, which `src/logsum.ts` makes.
