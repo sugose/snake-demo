@@ -1,6 +1,14 @@
 import { createHash } from "node:crypto";
 import type { Page } from "@playwright/test";
-import { CHECKSUM_LINE, expect, expectGame, openGame, runTicks, test } from "./helpers";
+import {
+  CHECKSUM_LINE,
+  expect,
+  expectGame,
+  focusNothing,
+  openGame,
+  runTicks,
+  test,
+} from "./helpers";
 
 // The checksum line of the event log (docs/SPEC.md 2.13 (7)): the last line of the panel's text and
 // of what Copy copies, the SHA-256 of the text above it.
@@ -105,6 +113,8 @@ test("a new game's log has its own checksum line, and the old one is gone", asyn
   await link(page).click();
   const old = await panelText(page);
   expectChecksummed(old);
+  // The New game command with the focus on no button (docs/SPEC.md 2.5); on Close, Enter closes.
+  await focusNothing(page);
   await page.keyboard.press("Enter");
   await expect(game).toHaveAttribute("data-status", "ready");
   await link(page).click();

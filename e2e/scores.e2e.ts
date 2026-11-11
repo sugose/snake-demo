@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import {
   answer,
   expect,
+  focusNothing,
   freeIndex,
   openGame,
   runTicks,
@@ -669,6 +670,8 @@ test.describe("the Scores link and the table (docs/SPEC.md 2.15 (5))", () => {
 
     await page.keyboard.press("ArrowRight");
     await runTicks(page, 3);
+    // The focus is on New game after the table closed: Space would press it (docs/SPEC.md 2.6).
+    await focusNothing(page);
     await page.keyboard.press("Space");
     await expect(game).toHaveAttribute("data-status", "paused");
     await scoresLink(page).click();
@@ -703,6 +706,9 @@ test.describe("the Scores link and the table (docs/SPEC.md 2.15 (5))", () => {
     await expect(game).toHaveAttribute("data-status", "running");
     await expect(newGameButton(page)).toBeFocused();
 
+    // Space on the focused New game button would press it (docs/SPEC.md 2.6): pause with the focus
+    // on no button.
+    await focusNothing(page);
     await page.keyboard.press("Space");
     const lines = await logLines(page);
     expect(lines).toEqual(

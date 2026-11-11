@@ -3,6 +3,7 @@ import {
   centreStart,
   expect,
   expectGame,
+  focusNothing,
   freeIndex,
   gameOf,
   openGame,
@@ -184,43 +185,71 @@ test.describe("pause", () => {
   });
 });
 
-// Chromium focuses a button when it is clicked. Space and Enter then still do what docs/SPEC.md
-// 2.5 and 2.6 say, whichever button has the focus, and act exactly once.
+// Chromium focuses a button when it is clicked. Enter and Space then press that button, and are the
+// New game and Pause commands only with the focus on no button (docs/SPEC.md 2.5 and 2.6). The
+// keys on each button, in each state, are tested in keys.e2e.ts.
 test.describe("keys while a button has the focus", () => {
-  test("after clicking Start, Space pauses", async ({ page }) => {
+  test("after clicking Start, Space presses Start (ignored in running) and does not pause; P pauses", async ({
+    page,
+  }) => {
     const game = await openGame(page);
     await page.getByRole("button", { name: "Start", exact: true }).click();
     await page.keyboard.press("Space");
+    await expect(game).toHaveAttribute("data-status", "running");
+    await page.keyboard.press("p");
     await expect(game).toHaveAttribute("data-status", "paused");
   });
 
-  test("after clicking Start and losing, Enter starts a new game", async ({ page }) => {
+  test("after clicking Start and losing, Enter presses Start (ignored) and starts no new game; with the focus on no button it does", async ({
+    page,
+  }) => {
     const game = await openGame(page);
     await page.getByRole("button", { name: "Start", exact: true }).click();
     await runTicks(page, 10);
     await expect(game).toHaveAttribute("data-status", "over");
     await page.keyboard.press("Enter");
+    await expectGame(game, "over", "19,10");
+    await focusNothing(page);
+    await page.keyboard.press("Enter");
     await expectGame(game, "ready", "10,10");
   });
 
-  test("after clicking New game and turning, Space pauses rather than resetting", async ({
+  test("after clicking New game and turning, Space presses New game again rather than pausing", async ({
     page,
   }) => {
     const game = await openGame(page);
     await page.getByRole("button", { name: "New game", exact: true }).click();
     await page.keyboard.press("ArrowUp");
     await runTicks(page, 2);
+    await expectGame(game, "running", "10,8");
+    await page.keyboard.press("Space");
+    await expectGame(game, "ready", "10,10");
+  });
+
+  test("after clicking New game and turning, Space with the focus on no button pauses", async ({
+    page,
+  }) => {
+    const game = await openGame(page);
+    await page.getByRole("button", { name: "New game", exact: true }).click();
+    await page.keyboard.press("ArrowUp");
+    await runTicks(page, 2);
+    await focusNothing(page);
     await page.keyboard.press("Space");
     await expectGame(game, "paused", "10,8");
   });
 
-  test("after clicking Pause twice, Enter starts a new game", async ({ page }) => {
+  test("after clicking Pause twice, Enter presses Pause rather than starting a new game", async ({
+    page,
+  }) => {
     const game = await openGame(page);
     await page.keyboard.press("ArrowUp");
     await page.locator("#pause").click();
     await page.locator("#pause").click();
     await runTicks(page, 2);
     await expect(game).toHaveAttribute("data-head", "10,8");
+    await page.keyboard.press("Enter");
+    await expectGame(game, "paused", "10,8");
+    await focusNothing(page);
     await page.keyboard.press("Enter");
     await expectGame(game, "ready", "10,10");
   });

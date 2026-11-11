@@ -1,5 +1,14 @@
 import type { Page } from "@playwright/test";
-import { expect, expectGame, openGame, runTicks, splitPanel, swipe, test } from "./helpers";
+import {
+  expect,
+  expectGame,
+  focusNothing,
+  openGame,
+  runTicks,
+  splitPanel,
+  swipe,
+  test,
+} from "./helpers";
 
 // The event log in the browser (docs/SPEC.md 2.13).
 
@@ -37,6 +46,7 @@ test("the Log link is usable in every state; the panel shows the whole game", as
   await runTicks(page, 3);
   await expect(game).toHaveAttribute("data-status", "running");
   await expect(link).toBeEnabled();
+  await focusNothing(page);
   await page.keyboard.press("Space");
   await expect(game).toHaveAttribute("data-status", "paused");
   await expect(link).toBeEnabled();
@@ -48,6 +58,7 @@ test("the Log link is usable in every state; the panel shows the whole game", as
   await expect(panel).toBeHidden();
   await expect(game).toHaveAttribute("data-status", "paused");
 
+  await focusNothing(page);
   await page.keyboard.press("Space");
   await runTicks(page, 7);
   await expectGame(game, "over", "19,10");
@@ -120,6 +131,9 @@ test("a new game while the panel is open closes it and starts a new log", async 
   await expectGame(game, "over", "19,10");
   const link = page.getByRole("button", { name: "Log", exact: true });
   await link.click();
+  // Enter with the focus on no button is the New game command (docs/SPEC.md 2.5, 2.13 (6)); on
+  // Close, where the opening puts the focus, it would press Close.
+  await focusNothing(page);
   await page.keyboard.press("Enter");
   await expect(page.locator("#log-panel")).toBeHidden();
   await expect(game).toHaveAttribute("data-status", "ready");
@@ -218,6 +232,7 @@ test("the panel changes nothing, opening or closing, in ready, paused and ended 
 
   await page.keyboard.press("ArrowRight");
   await runTicks(page, 2);
+  await focusNothing(page);
   await page.keyboard.press("Space");
   await expectGame(game, "paused", "12,10");
   await link.click();
@@ -241,6 +256,7 @@ test("the panel changes nothing, opening or closing, in ready, paused and ended 
   ]);
   await page.keyboard.press("Escape");
 
+  await focusNothing(page);
   await page.keyboard.press("Space");
   await runTicks(page, 8);
   await expectGame(game, "over", "19,10");
@@ -334,6 +350,7 @@ for (const how of ["Escape", "Close"] as const) {
     await linkOf(page).click();
     await close();
     await expectGame(game, "running", "12,10");
+    await focusNothing(page);
     await page.keyboard.press("Space");
     await expectGame(game, "paused", "12,10");
 
@@ -351,13 +368,16 @@ for (const newGame of ["Enter", "the New game button"] as const) {
   }) => {
     const game = await runningGame(page);
     await linkOf(page).click();
-    if (newGame === "Enter") await page.keyboard.press("Enter");
-    else await page.locator("#new-game").click();
+    if (newGame === "Enter") {
+      await focusNothing(page);
+      await page.keyboard.press("Enter");
+    } else await page.locator("#new-game").click();
     await expectGame(game, "ready", "10,10");
 
     await page.keyboard.press("ArrowRight");
     await runTicks(page, 2);
     await expectGame(game, "running", "12,10");
+    await focusNothing(page);
     await page.keyboard.press("Space");
     await expectGame(game, "paused", "12,10");
 
@@ -418,8 +438,10 @@ for (const how of ["Enter", "the New game button"] as const) {
     const game = await runningGame(page);
     await linkOf(page).click();
     await expectGame(game, "paused", "12,10");
-    if (how === "Enter") await page.keyboard.press("Enter");
-    else await page.locator("#new-game").click();
+    if (how === "Enter") {
+      await focusNothing(page);
+      await page.keyboard.press("Enter");
+    } else await page.locator("#new-game").click();
     await expect(page.locator("#log-panel")).toBeHidden();
     await expectGame(game, "ready", "10,10");
     await runTicks(page, 5);
@@ -443,8 +465,10 @@ for (const how of ["Enter", "the New game button"] as const) {
     // Time has passed in the old game, so a stamp of 0 shows that the new log starts afresh.
     await linkOf(page).click();
     await expectGame(game, "paused", "12,10");
-    if (how === "Enter") await page.keyboard.press("Enter");
-    else await page.locator("#new-game").click();
+    if (how === "Enter") {
+      await focusNothing(page);
+      await page.keyboard.press("Enter");
+    } else await page.locator("#new-game").click();
     await expect(page.locator("#log-panel")).toBeHidden();
     await expectGame(game, "ready", "10,10");
     await linkOf(page).click();
