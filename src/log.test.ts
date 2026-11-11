@@ -455,6 +455,112 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     ]);
   });
 
+  it("a cleared level that set both records: record fewest, then record fastest, right after the cleared line", () => {
+    const state = game(
+      { food: { x: 11, y: 10 }, dotsEaten: 4, score: 19, turns: 12, timeMs: 25175 },
+      4,
+    );
+    const next = tick(state, ZERO);
+    const set = { fewest: { turns: 12, timeMs: 25285 }, fastest: { turns: 12, timeMs: 25285 } };
+    const lines = logTick(EMPTY, at(125, 1), state, next, set).lines;
+    expect(lines.slice(0, 5)).toEqual([
+      "[t=125 #1] move right 1 head=(11,10)",
+      "[t=125 #1] dot +1 score=20",
+      "[t=125 #1] cleared level 4 turns=12 time=25285 score=20",
+      "[t=125 #1] record fewest level=4 turns=12 time=25285",
+      "[t=125 #1] record fastest level=4 time=25285 turns=12",
+    ]);
+    // The next level's line follows the record lines.
+    expect(lines[5]).toMatch(/^\[t=125 #1\] level 5 special /);
+    expect(lines).toHaveLength(6);
+  });
+
+  it("the example lines of the spec: fewest level=4 turns=12 time=25300 and fastest level=4 time=18150 turns=14", () => {
+    const state = game({ food: { x: 11, y: 10 }, dotsEaten: 4, score: 19 }, 4);
+    const next = tick(state, ZERO);
+    const set = { fewest: { turns: 12, timeMs: 25300 }, fastest: { turns: 14, timeMs: 18150 } };
+    const lines = logTick(EMPTY, at(125, 1), state, next, set).lines;
+    expect(lines).toContain("[t=125 #1] record fewest level=4 turns=12 time=25300");
+    expect(lines).toContain("[t=125 #1] record fastest level=4 time=18150 turns=14");
+  });
+
+  it("a cleared level that set only the fewest writes only the fewest line", () => {
+    const state = game({ food: { x: 11, y: 10 }, dotsEaten: 4, score: 19 }, 4);
+    const next = tick(state, ZERO);
+    const set = { fewest: { turns: 0, timeMs: 110 }, fastest: null };
+    const lines = logTick(EMPTY, at(125, 1), state, next, set).lines;
+    expect(lines.filter((l) => l.includes(" record "))).toEqual([
+      "[t=125 #1] record fewest level=4 turns=0 time=110",
+    ]);
+  });
+
+  it("a cleared level that set only the fastest writes only the fastest line", () => {
+    const state = game({ food: { x: 11, y: 10 }, dotsEaten: 4, score: 19 }, 4);
+    const next = tick(state, ZERO);
+    const set = { fewest: null, fastest: { turns: 3, timeMs: 110 } };
+    const lines = logTick(EMPTY, at(125, 1), state, next, set).lines;
+    expect(lines.filter((l) => l.includes(" record "))).toEqual([
+      "[t=125 #1] record fastest level=4 time=110 turns=3",
+    ]);
+  });
+
+  it("a cleared level that set no record, or a tick given no records, writes no record line", () => {
+    const state = game({ food: { x: 11, y: 10 }, dotsEaten: 4, score: 19 }, 4);
+    const next = tick(state, ZERO);
+    const none = { fewest: null, fastest: null };
+    expect(
+      logTick(EMPTY, at(125, 1), state, next, none).lines.some((l) => l.includes(" record ")),
+    ).toBe(false);
+    expect(logTick(EMPTY, at(125, 1), state, next).lines.some((l) => l.includes(" record "))).toBe(
+      false,
+    );
+  });
+
+  it("a level cleared with no room for the next: the record lines are the last lines", () => {
+    const state = game({
+      size: 2,
+      clearAhead: 1,
+      dotsPerLevel: 2,
+      snake: [
+        { x: 1, y: 1 },
+        { x: 0, y: 1 },
+        { x: 0, y: 0 },
+      ],
+      heading: "up",
+      food: { x: 1, y: 0 },
+      dotsEaten: 1,
+      score: 1,
+    });
+    const next = tick(state, ZERO);
+    const set = { fewest: { turns: 0, timeMs: 125 }, fastest: { turns: 0, timeMs: 125 } };
+    expect(logTick(EMPTY, at(125, 1), state, next, set).lines).toEqual([
+      "[t=125 #1] move up 1 head=(1,0)",
+      "[t=125 #1] dot +1 score=2",
+      "[t=125 #1] cleared level 1 turns=0 time=125 score=2",
+      "[t=125 #1] record fewest level=1 turns=0 time=125",
+      "[t=125 #1] record fastest level=1 time=125 turns=0",
+    ]);
+  });
+
+  it("a special level's cleared line is followed by its record lines too", () => {
+    const state = game(
+      {
+        food: { x: 11, y: 10 },
+        dotsEaten: 4,
+        score: 20,
+        turns: 15,
+        timeMs: 17985,
+        run: { shieldUsed: 1, waiting: false },
+      },
+      5,
+    );
+    const set = { fewest: { turns: 15, timeMs: 18040 }, fastest: null };
+    const lines = logTick(EMPTY, at(55, 1), state, tick(state, ZERO), set).lines;
+    expect(lines[2]).toMatch(/^\[t=55 #1\] cleared level 5 points=11 /);
+    expect(lines[3]).toBe("[t=55 #1] record fewest level=5 turns=15 time=18040");
+    expect(lines[4]).toMatch(/^\[t=55 #1\] level 6 normal /);
+  });
+
   it("the 21st turn writes no turn line", () => {
     const state = turn(
       game({ turns: 20, timeMs: 0, run: { shieldUsed: 0, waiting: false } }, 5),
@@ -581,6 +687,25 @@ describe("the scores panel's pause and resume (docs/SPEC.md 2.13 (5), 2.15 (5))"
   it("the log panel's lines are unchanged when no panel is named", () => {
     expect(logPanelPause(EMPTY, at(5, 0), "log").lines).toEqual(["[t=5 #0] pause log"]);
     expect(logPanelResume(EMPTY, at(5, 0), "log").lines).toEqual(["[t=5 #0] resume log"]);
+  });
+});
+
+describe("the records panel's pause and resume (docs/SPEC.md 2.13 (5), 2.18 (7))", () => {
+  it("pause records ends the open stretch and writes pause records", () => {
+    const running = game();
+    const moved = logTick(EMPTY, at(125, 1), running, tick(running, ZERO));
+    const log = logPanelPause(moved, at(200, 1), "records");
+    expect(added(moved, log)).toEqual([
+      "[t=200 #1] move right 1 head=(11,10)",
+      "[t=200 #1] pause records",
+    ]);
+    expect(log.stretch).toBeNull();
+  });
+
+  it("resume records writes resume records and nothing else", () => {
+    expect(logPanelResume(EMPTY, at(900, 1), "records").lines).toEqual([
+      "[t=900 #1] resume records",
+    ]);
   });
 });
 

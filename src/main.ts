@@ -51,6 +51,16 @@ import {
 } from "./pixel";
 import { firstSlowFactor, readQuery, stepSlowFactor } from "./query";
 import {
+  createRecordBook,
+  fastestText,
+  fewestText,
+  type RecordRules,
+  type RecordsSet,
+  recordFor,
+  recordsAfterClear,
+  recordsLineParts,
+} from "./records";
+import {
   confirmEntry,
   createScoreBook,
   listAsShown,
@@ -90,6 +100,9 @@ const {
   scoreEntries,
   nameLetters,
   scoresStorageKey,
+  recordsStorageKey,
+  maxRecordTurns,
+  maxRecordTimeMs,
   pixelScales,
   bandHeight,
   rollMs,
@@ -117,6 +130,12 @@ const scoreRules: ScoreRules = {
   nameLetters,
   maxScore,
   maxLevel: (gridSize * gridSize) / dotsPerLevel + 1,
+};
+/** The level records' bounds (docs/SPEC.md 2.18 (5)): the highest level is one per 5 cells of the board. */
+const recordRules: RecordRules = {
+  maxLevel: (gridSize * gridSize) / dotsPerLevel,
+  maxTurns: maxRecordTurns,
+  maxTimeMs: maxRecordTimeMs,
 };
 const SCORES_TITLE = `TOP ${scoreEntries} SCORES`;
 const delays = { first: firstDelay, step: delayStep, shortest: shortestDelay };
@@ -190,6 +209,8 @@ const pauseButton = element("pause", HTMLButtonElement);
 const newGameButton = element("new-game", HTMLButtonElement);
 const logLink = element("log-link", HTMLButtonElement);
 const scoresLink = element("scores-link", HTMLButtonElement);
+const recordsLink = element("records-link", HTMLButtonElement);
+const recordsLineText = element("records-line", HTMLElement);
 const slowRow = element("slow-row", HTMLElement);
 const slowButton = element("slow", HTMLButtonElement);
 const logPanel = element("log-panel", HTMLElement);
@@ -209,6 +230,11 @@ const scoresPanel = element("scores-panel", HTMLElement);
 const scoresRows = element("scores-rows", HTMLElement);
 const scoresEmpty = element("scores-empty", HTMLElement);
 const scoresClose = element("scores-close", HTMLButtonElement);
+const recordsPanel = element("records-panel", HTMLElement);
+const recordsScroll = element("records-scroll", HTMLElement);
+const recordsRows = element("records-rows", HTMLElement);
+const recordsEmpty = element("records-empty", HTMLElement);
+const recordsClose = element("records-close", HTMLButtonElement);
 // The version line (docs/SPEC.md 2.17): the build-time version and build, as text.
 versionLine.textContent = versionText(__VERSION__, __BUILD__);
 const frame = canvas.parentElement;
@@ -304,9 +330,25 @@ const freshGame = (): GameState =>
 const getStore = (): Storage => window.localStorage;
 
 const scoreBook = createScoreBook(getStore, scoresStorageKey, scoreRules);
+const recordBook = createRecordBook(getStore, recordsStorageKey, recordRules);
+
+/**
+ * Shows the records of `level` in the line above the board (docs/SPEC.md 2.18 (6)). The records are
+ * read now; this is called when a level is laid out, and nowhere else. The line is two texts with a
+ * space between them, so it can wrap between them.
+ */
+function showRecordsLine(level: number): void {
+  const [fewest, fastest] = recordsLineParts(recordFor(recordBook.read(), level));
+  const first = document.createElement("span");
+  first.textContent = fewest;
+  const second = document.createElement("span");
+  second.textContent = fastest;
+  recordsLineText.replaceChildren(first, " ", second);
+}
 
 let state = freshGame();
 let best = readBest(getStore, storageKey, maxScore);
+showRecordsLine(state.level);
 
 // The event log of the current game (docs/SPEC.md 2.13).
 const LOG_VALUES = { size: gridSize, startLength, clearAhead, dotsPerLevel, delays, special };
@@ -329,13 +371,15 @@ function newGameWithLog(input: Input): GameState {
   gameMadeAt = performance.now();
   ticks = 0;
   log = startLog(FIRST_LINE, { t: 0, k: 0 }, game, LOG_VALUES, input);
-  const closesPanel = logOpen() || scoresOpen();
+  const closesPanel = logOpen() || scoresOpen() || recordsOpen();
   hideLog();
   hideScores();
+  hideRecords();
+  showRecordsLine(game.level);
   entering = null;
   entryPanel.hidden = true;
-  // The New game command that closes the log panel or the scores panel puts the focus on the
-  // New game button (docs/SPEC.md 2.5).
+  // The New game command that closes the log panel, the scores panel or the records panel puts the
+  // focus on the New game button (docs/SPEC.md 2.5).
   if (closesPanel) newGameButton.focus();
   return game;
 }
@@ -366,8 +410,11 @@ function hideBanner(): void {
 function apply(next: GameState): void {
   const justEnded = next.status !== state.status && ended(next);
   const enteredSpecial = next.run !== null && next.status === "ready" && next.level !== state.level;
-  // A level laid out starts at the first factor (docs/SPEC.md 2.14 (5)).
-  if (next.level !== state.level) factor = firstFactor;
+  // A level laid out starts at the first factor (docs/SPEC.md 2.14 (5)) and shows its records (2.18 (6)).
+  if (next.level !== state.level) {
+    factor = firstFactor;
+    showRecordsLine(next.level);
+  }
   state = next;
   if (enteredSpecial) showBanner();
   else if (state.status !== "ready" || state.run === null) hideBanner();
@@ -406,8 +453,23 @@ function onTick(): void {
   ticks++;
   const before = state;
   const after = tick(before, choose);
-  log = logTick(log, stamp(), before, after);
+  log = logTick(log, stamp(), before, after, setRecords(before, after));
   apply(after);
+}
+
+/**
+ * The records a tick's cleared level sets (docs/SPEC.md 2.18 (4), (5)). Not on a playtest page. The
+ * records are read now, before the comparison, so that those another tab stored are kept, and the
+ * whole text is written when one is set.
+ */
+function setRecords(before: GameState, after: GameState): RecordsSet | undefined {
+  const cleared = after.cleared;
+  if (options.playtest || cleared === null || cleared === before.cleared) return undefined;
+  const outcome = recordsAfterClear(recordBook.read(), cleared, recordRules);
+  if (outcome.set.fewest !== null || outcome.set.fastest !== null) {
+    recordBook.write(outcome.records);
+  }
+  return outcome.set;
 }
 
 /** An input that makes a line in the log, and what it does (docs/SPEC.md 2.13 (4)). */
@@ -525,8 +587,8 @@ let entering: Entering | null = null;
 let pausedByScores = false;
 
 const scoresOpen = (): boolean => !scoresPanel.hidden;
-/** Only one panel is open at a time: the log panel, the name entry or the table (2.13 (6), 2.15). */
-const anyPanelOpen = (): boolean => logOpen() || entering !== null || scoresOpen();
+/** Only one panel is open at a time: the log panel, the name entry, the scores table or the records table. */
+const anyPanelOpen = (): boolean => logOpen() || entering !== null || scoresOpen() || recordsOpen();
 
 /** The keys that are down now, by `KeyboardEvent.code`, and those that were down when a panel opened. */
 const keysDown = new Set<string>();
@@ -725,6 +787,125 @@ function closeScores(): void {
   if (goOn) {
     log = logPanelResume(log, stamp(), "scores");
     apply(togglePause(state));
+  }
+}
+
+// The level records: the Records link and its panel with the table (docs/SPEC.md 2.18 (7)).
+
+/** True from an opening of the panel that paused a running game until it closes (2.18 (7)). */
+let pausedByRecords = false;
+const recordsOpen = (): boolean => !recordsPanel.hidden;
+
+/** Fills the table with the records stored now, one row for each level that has records (2.18 (7)). */
+function fillRecords(): void {
+  const list = recordBook.read();
+  recordsRows.replaceChildren(
+    ...list.map((record) => {
+      const row = document.createElement("tr");
+      for (const text of [
+        String(record.level),
+        fewestText(record.fewest),
+        fastestText(record.fastest),
+      ]) {
+        const cell = document.createElement("td");
+        cell.textContent = text;
+        row.append(cell);
+      }
+      return row;
+    }),
+  );
+  recordsEmpty.hidden = list.length > 0;
+  recordsScroll.scrollTop = 0;
+}
+
+/**
+ * Opens the panel over the board, in every state of the game, from the Records link. A running game
+ * is paused first (2.18 (7)). The records are read as they are now.
+ */
+function openRecords(): void {
+  if (anyPanelOpen()) return;
+  if (state.status === "running") {
+    pausedByRecords = true;
+    log = logPanelPause(log, stamp(), "records");
+    apply(pauseIfRunning(state));
+  }
+  fillRecords();
+  keysBlocked = new Set(keysDown);
+  recordsPanel.hidden = false;
+  recordsClose.focus();
+}
+
+/** Hides the panel; the game is left as it is. */
+function hideRecords(): void {
+  pausedByRecords = false;
+  recordsPanel.hidden = true;
+}
+
+/** Close and Escape: hides the panel, gives the focus to the Records link and goes on, but only if opening it paused the game. */
+function closeRecords(): void {
+  const goOn = pausedByRecords && state.status === "paused";
+  hideRecords();
+  recordsLink.focus();
+  if (goOn) {
+    log = logPanelResume(log, stamp(), "records");
+    apply(togglePause(state));
+  }
+}
+
+/**
+ * Tab and Shift+Tab in the records panel (docs/SPEC.md 2.18 (7)): between the table and Close, and
+ * with two stops each leads to the other; from outside the panel Tab goes to the table and
+ * Shift+Tab to Close.
+ */
+function keepFocusInRecords(event: KeyboardEvent): void {
+  event.preventDefault();
+  const stops = [recordsScroll, recordsClose];
+  const at = stops.indexOf(document.activeElement as HTMLElement);
+  if (at < 0) (event.shiftKey ? recordsClose : recordsScroll).focus();
+  else stops[(at + 1) % stops.length]?.focus();
+}
+
+/**
+ * The keys while the records panel is open (docs/SPEC.md 2.18 (7)): Escape closes it from anywhere;
+ * Enter and Space press the focused Close and do nothing otherwise; Tab stays inside; no game key
+ * does anything. With the focus on the table the arrow keys, Space, Page Up, Page Down, Home and
+ * End are left to the browser, which scrolls it. A key already down when the panel opened, and the
+ * repeats of Enter, Space and Escape, do nothing.
+ */
+function recordsKey(event: KeyboardEvent): void {
+  const onTable = document.activeElement === recordsScroll;
+  if (
+    keysBlocked.has(keyId(event)) ||
+    (event.repeat && ["Enter", " ", "Escape"].includes(event.key))
+  ) {
+    if (!onTable || event.key !== " ") event.preventDefault();
+    return;
+  }
+  if (hasModifier(event)) return;
+  switch (event.key) {
+    case "Escape":
+      event.preventDefault();
+      closeRecords();
+      return;
+    case "Enter":
+      event.preventDefault();
+      if (document.activeElement === recordsClose) closeRecords();
+      return;
+    case " ":
+      if (onTable) return;
+      event.preventDefault();
+      if (document.activeElement === recordsClose) closeRecords();
+      return;
+    case "Tab":
+      keepFocusInRecords(event);
+      return;
+    case "ArrowUp":
+    case "ArrowDown":
+    case "ArrowLeft":
+    case "ArrowRight":
+      if (!onTable) event.preventDefault();
+      return;
+    default:
   }
 }
 
@@ -993,6 +1174,10 @@ document.addEventListener("keydown", (event) => {
     scoresKey(event);
     return;
   }
+  if (recordsOpen()) {
+    recordsKey(event);
+    return;
+  }
   // While the log panel is open, Escape closes it and a new game closes it too; other game keys do
   // nothing and make no line (docs/SPEC.md 2.13 (4), (6)).
   if (logOpen() && event.key === "Escape") {
@@ -1119,6 +1304,9 @@ slowButton.addEventListener("click", () => {
 logLink.addEventListener("click", openLog);
 // The high score list's links and buttons (docs/SPEC.md 2.15).
 scoresLink.addEventListener("click", openScores);
+// The level records' link and panel (docs/SPEC.md 2.18 (7)).
+recordsLink.addEventListener("click", openRecords);
+recordsClose.addEventListener("click", closeRecords);
 scoresClose.addEventListener("click", closeScores);
 entryOk.addEventListener("click", confirmName);
 entrySkip.addEventListener("click", skipEntry);

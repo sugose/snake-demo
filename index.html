@@ -21,6 +21,7 @@
         <span>Seconds left <strong id="seconds-left">0</strong></span>
         <span>Shield left <strong id="shield-left">0</strong></span>
       </p>
+      <p id="records-line" class="records-line"></p>
       <div class="board-frame">
         <canvas id="board" role="img" aria-label="Snake board"></canvas>
         <p id="banner" class="banner" aria-hidden="true" hidden>Special Level</p>
@@ -30,6 +31,32 @@
           <div class="log-actions">
             <button type="button" id="log-copy">Copy</button>
             <button type="button" id="log-close">Close</button>
+          </div>
+        </section>
+        <section
+          id="records-panel"
+          class="log-panel records-panel"
+          role="dialog"
+          aria-labelledby="records-title"
+          hidden
+        >
+          <h2 id="records-title" class="records-title">Level records</h2>
+          <!-- biome-ignore lint/a11y/noNoninteractiveTabindex: the scrolling table is a Tab stop so the keys can scroll it (SPEC 2.18 (7)) -->
+          <section id="records-scroll" class="records-scroll" tabindex="0" aria-label="Table of level records">
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th scope="col">Level</th>
+                  <th scope="col">Fewest turns</th>
+                  <th scope="col">Fastest</th>
+                </tr>
+              </thead>
+              <tbody id="records-rows"></tbody>
+            </table>
+            <p id="records-empty" class="records-empty" hidden>No records yet</p>
+          </section>
+          <div class="log-actions">
+            <button type="button" id="records-close">Close</button>
           </div>
         </section>
         <section
@@ -91,6 +118,7 @@
       </div>
       <p class="log-row">
         <button type="button" id="scores-link" class="log-link">Scores</button>
+        <button type="button" id="records-link" class="log-link">Records</button>
         <button type="button" id="log-link" class="log-link">Log</button>
       </p>
       <p id="status" class="status" role="status"></p>
