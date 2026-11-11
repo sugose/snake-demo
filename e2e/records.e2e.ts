@@ -41,7 +41,7 @@ const LEVEL_5_STAIRS = [answer(startIndex("0,19", "up"), STARTS), 0, 0, 0, 0, an
 /** The answers of a game that eats one dot and then hits the wall (as scores.e2e.ts has it). */
 const SCORING_GAME = [
   answer(startIndex("10,10", "right"), STARTS),
-  answer(11, 399),
+  answer(211, 399),
   answer(0, 397),
 ];
 
@@ -447,7 +447,7 @@ test.describe("a store that fails (docs/SPEC.md 2.18 (5))", () => {
     const game = await openGame(page);
     await expect(line(page)).toHaveText(NO_RECORDS_LINE);
     await recordsLink(page).click();
-    await expect(recordsPanel(page)).toContainText("No records yet");
+    await expect(recordsPanel(page).getByText("No records yet")).toBeVisible();
     await page.keyboard.press("Escape");
     await focusNothing(page);
     await page.keyboard.press("ArrowRight");
@@ -558,6 +558,18 @@ const keysSeen = (page: Page): Promise<Array<[string, boolean]>> =>
 
 const scrollTop = (page: Page): Promise<number> => tableBox(page).evaluate((box) => box.scrollTop);
 
+/** The table's scroll position once it has stopped moving (the browser scrolls with the keys smoothly). */
+async function settled(page: Page): Promise<number> {
+  let last = -1;
+  for (let tries = 0; tries < 40; tries++) {
+    await page.waitForTimeout(150);
+    const now = await scrollTop(page);
+    if (now === last) return now;
+    last = now;
+  }
+  return last;
+}
+
 /** Level 5 played to a blown game by the staircase of special.e2e.ts: 21 turns on a level of 20. */
 async function playToBlown(page: Page): Promise<void> {
   await page.keyboard.press("ArrowUp");
@@ -619,7 +631,7 @@ test.describe("the Records link and the panel (docs/SPEC.md 2.18 (7))", () => {
       ["4", "12 turns (25s)", "18s (14 turns)"],
       ["5", "15 turns (18s)", "15s (16 turns)"],
     ]);
-    await expect(recordsPanel(page)).not.toContainText("No records yet");
+    await expect(recordsPanel(page).getByText("No records yet")).toBeHidden();
   });
 
   test("with no records it says No records yet instead of the rows, and the headings stay", async ({
@@ -628,7 +640,7 @@ test.describe("the Records link and the panel (docs/SPEC.md 2.18 (7))", () => {
     await openGame(page);
     await recordsLink(page).click();
     const panel = recordsPanel(page);
-    await expect(panel).toContainText("No records yet");
+    await expect(panel.getByText("No records yet")).toBeVisible();
     await expect(panel.getByRole("columnheader")).toHaveText(["Level", "Fewest turns", "Fastest"]);
     expect(await rows(page)).toEqual([]);
   });
@@ -637,13 +649,13 @@ test.describe("the Records link and the panel (docs/SPEC.md 2.18 (7))", () => {
     await seed(page, { [RECORDS_KEY]: "4:12:25300:18150:14,4:1:1:1:1" });
     await openGame(page);
     await recordsLink(page).click();
-    await expect(recordsPanel(page)).toContainText("No records yet");
+    await expect(recordsPanel(page).getByText("No records yet")).toBeVisible();
   });
 
   test("reads what is stored when it opens, each time", async ({ page }) => {
     await openGame(page);
     await recordsLink(page).click();
-    await expect(recordsPanel(page)).toContainText("No records yet");
+    await expect(recordsPanel(page).getByText("No records yet")).toBeVisible();
     await page.keyboard.press("Escape");
     await page.evaluate((key) => window.localStorage.setItem(key, "2:3:4000:3000:5"), RECORDS_KEY);
     await recordsLink(page).click();
@@ -1096,24 +1108,25 @@ test.describe("the Records link and the panel (docs/SPEC.md 2.18 (7))", () => {
       const pageScroll = await page.evaluate(() => window.scrollY);
       expect(await scrollTop(page)).toBe(0);
 
-      await page.keyboard.press("ArrowDown");
-      await expect.poll(() => scrollTop(page)).toBeGreaterThan(0);
-      await page.keyboard.press("Home");
-      await expect.poll(() => scrollTop(page)).toBe(0);
-      await page.keyboard.press("Space");
-      await expect.poll(() => scrollTop(page)).toBeGreaterThan(0);
-      await page.keyboard.press("Home");
-      await expect.poll(() => scrollTop(page)).toBe(0);
-      await page.keyboard.press("PageDown");
-      await expect.poll(() => scrollTop(page)).toBeGreaterThan(0);
-      await page.keyboard.press("End");
       const maximum = await tableBox(page).evaluate((box) => box.scrollHeight - box.clientHeight);
-      await expect.poll(() => scrollTop(page)).toBeGreaterThanOrEqual(maximum - 1);
+      expect(maximum).toBeGreaterThan(0);
+      await page.keyboard.press("ArrowDown");
+      expect(await settled(page)).toBeGreaterThan(0);
+      await page.keyboard.press("Home");
+      expect(await settled(page)).toBe(0);
+      await page.keyboard.press("Space");
+      expect(await settled(page)).toBeGreaterThan(0);
+      await page.keyboard.press("Home");
+      expect(await settled(page)).toBe(0);
+      await page.keyboard.press("PageDown");
+      expect(await settled(page)).toBeGreaterThan(0);
+      await page.keyboard.press("End");
+      expect(await settled(page)).toBeGreaterThanOrEqual(maximum - 1);
       await page.keyboard.press("PageUp");
-      await expect.poll(() => scrollTop(page)).toBeLessThan(maximum - 1);
+      expect(await settled(page)).toBeLessThan(maximum - 1);
       await page.keyboard.press("ArrowUp");
       await page.keyboard.press("Home");
-      await expect.poll(() => scrollTop(page)).toBe(0);
+      expect(await settled(page)).toBe(0);
 
       // The page did not stop any of them, and the page itself did not scroll.
       const seen = await keysSeen(page);

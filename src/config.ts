@@ -52,6 +52,12 @@ export const config = Object.freeze({
   nameLetters: 3,
   /** The local-storage key of the high score list (docs/SPEC.md 2.15 (1)). */
   scoresStorageKey: "snake-demo.scores",
+  /** The local-storage key of the level records (docs/SPEC.md 2.18 (5)). */
+  recordsStorageKey: "snake-demo.records",
+  /** The most turns a level record can hold (docs/SPEC.md 2.18 (5)). */
+  maxRecordTurns: 99999,
+  /** The longest time a level record can hold, in milliseconds (docs/SPEC.md 2.18 (5)). */
+  maxRecordTimeMs: 99999999,
   /** The whole-number scales of the pixel letters, CSS pixels per font pixel (docs/SPEC.md 2.16 (1)). */
   pixelScales: Object.freeze([1, 2, 3]),
   /** Height of the band that rolls down the panel, in CSS pixels (docs/SPEC.md 2.16 (4)). */

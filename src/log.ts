@@ -15,6 +15,7 @@ import {
   type SpecialRules,
   specialInfo,
 } from "./game";
+import type { RecordsSet } from "./records";
 
 /** The named values the first line gives (docs/SPEC.md 2.13 (3), 3). */
 export interface LogValues {
@@ -201,12 +202,12 @@ export function logPage(
   return pauseLines(add(log, at, hidden ? "hidden" : "shown"), at, before, after);
 }
 
-/** The panels that can pause a running game as they open: the log panel and the scores panel. */
-export type PausingPanel = "log" | "scores";
+/** The panels that can pause a running game as they open: the log, scores and records panels. */
+export type PausingPanel = "log" | "scores" | "records";
 
 /**
  * A panel pausing a running game as it opens (2.13 (5), (6), 2.15 (5)): the open stretch ends, then
- * `pause log` or `pause scores`.
+ * `pause log`, `pause scores` or `pause records`.
  */
 export function logPanelPause(log: Log, at: Stamp, panel: PausingPanel = "log"): Log {
   return add(flush(log, at), at, `pause ${panel}`);
@@ -214,7 +215,7 @@ export function logPanelPause(log: Log, at: Stamp, panel: PausingPanel = "log"):
 
 /**
  * A panel going on as it closes, when its opening paused the game (2.13 (5), (6), 2.15 (5)):
- * `resume log` or `resume scores`.
+ * `resume log`, `resume scores` or `resume records`.
  */
 export function logPanelResume(log: Log, at: Stamp, panel: PausingPanel = "log"): Log {
   return add(log, at, `resume ${panel}`);
@@ -222,9 +223,16 @@ export function logPanelResume(log: Log, at: Stamp, panel: PausingPanel = "log")
 
 /**
  * One tick (2.13 (4), (5)): a queued turn taken, the head's move, a dot, a new dot, a shielded crash,
- * an obstacle jump, a level cleared and the next one laid out. The end of the game is `logEnd`'s.
+ * an obstacle jump, a level cleared, the records it set (2.18 (4); `set` is what `src/records.ts`
+ * reported, none when omitted) and the next level laid out. The end of the game is `logEnd`'s.
  */
-export function logTick(log: Log, at: Stamp, before: GameState, after: GameState): Log {
+export function logTick(
+  log: Log,
+  at: Stamp,
+  before: GameState,
+  after: GameState,
+  set?: RecordsSet,
+): Log {
   if (after === before) return log;
   let next = log;
   const taken = before.run?.waiting ? undefined : before.queue[0];
@@ -283,6 +291,21 @@ export function logTick(log: Log, at: Stamp, before: GameState, after: GameState
             ` seconds-left=${special.secondsLeft} shield-used=${special.shieldUsed}` +
             ` ${levelValues} score=${after.score}`,
     );
+    // One line for each record the level set, the fewest first, right after the cleared line.
+    if (set?.fewest != null) {
+      next = add(
+        next,
+        at,
+        `record fewest level=${before.level} turns=${set.fewest.turns} time=${set.fewest.timeMs}`,
+      );
+    }
+    if (set?.fastest != null) {
+      next = add(
+        next,
+        at,
+        `record fastest level=${before.level} time=${set.fastest.timeMs} turns=${set.fastest.turns}`,
+      );
+    }
     // A level that cannot be laid out ends the game (2.11): no next level's line.
     return newLevel ? add(next, at, levelLine(after, next.values)) : next;
   }

@@ -6,6 +6,16 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- Level records. The page keeps up to two records for each level: the fewest turns, with the time that play took, and the
+  fastest time, with the turns it took. A level is cleared on a page that is not a playtest page: the records are compared
+  (fewer turns, or equal turns and a shorter time, sets the fewest; a shorter time, or an equal time and fewer turns, sets
+  the fastest) and kept in this browser's local storage under `snake-demo.records`, read again at every clear so that
+  another tab's records are kept, and kept in memory for the rest of the page's life when a write fails. A line above the
+  board shows the current level's records, `Fewest turns: 12 turns (25s) · Fastest: 18s (14 turns)` (`–` for none), and a
+  Records link below the board opens a table of every level's records in a panel over the board, which pauses a running game
+  as the Log and Scores panels do (`pause records`, `resume records`). The event log writes
+  `record fewest level=4 turns=12 time=25300` and `record fastest level=4 time=18150 turns=14` after the `cleared` line
+  (#86). Specified in #80.
 - Every level counts its turns and its time. The page shows "Turns 7" and "Time 12s" next to the level, the score and the
   best score, in every state: a turn counts when a tick takes it from the queue (not the turn or the Start button that
   starts the level, not the turn that ends a wait after a shielded crash, not one ignored or only queued), and the time
