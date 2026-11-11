@@ -117,13 +117,12 @@ arcade look of the high score list"):
   time and points rules are unchanged; a small button under the board);
 - a high score list in the style of an old arcade machine: 00:34, 00:35
   ("intended for browser local high scores only") and 00:38, "apyr on all
-  except swap RND for LVL", to Clead's recommendation of 00:34 (a top 10 in
-  the browser only, the columns RANK, SCORE, LVL (the level reached) and
-  NAME, a name of 3 letters A to Z, ties ranked older first, a name entry
-  after a qualifying game, a link next to Log, the best score kept as the
-  top row's score with the name `---`, a log line for the name and the
-  rank, no game of a playtest page enters it); the picture of an arcade
-  table he sent at 00:34 is the model of the table's title and columns;
+  except swap RND for LVL" (a top 10 in the browser only, the columns RANK,
+  SCORE, LVL (the level reached) and NAME, a name of 3 letters A to Z,
+  ties ranked older first, a name entry after a qualifying game, a link
+  next to Log that opens the table, the best score kept as the top row's
+  score with the name `---`, no game of a playtest page enters it); he
+  sent a picture of an arcade table at 00:34 as the model;
 - an arcade look for that list only, 00:35, 00:39 and 00:40 ("pixely
   graphics adn fonts", "for the highscore list only. all other aspects of
   the game is same as now"), Clead's choices accepted at 00:50 ("start the
@@ -133,7 +132,9 @@ arcade look of the high score list"):
 Sections 2.14 to 2.16, and the changes to 2.1, 2.5, 2.6, 2.8, 2.9, 2.10,
 2.11, 2.12 (9), 2.13, 3 and 5 that follow from them, are Clead's exact
 wording of that decision. Details Adam has not settled are marked
-**[Clead]**; a mark covers the sentence it opens.
+**[Clead]**. In 2.14 to 2.16 a mark at the start of a numbered item or of a
+bullet covers all of it, and a mark in the middle covers the sentence it
+opens; what has no mark is in Adam's words above.
 
 ---
 
@@ -545,7 +546,7 @@ cleared, no queued turns, and no obstacles or dot.
 | a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 score=31`; on a normal level `cleared level 4 score=20` |
 | pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores` |
 | a slow step (2.14 (5)) | `slow x2`, `slow x4`, `slow x1`, after the input line `button Slow used`; a press the state ignores is `button Slow ignored state` |
-| a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped` |
+| a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped`; when the list had no room left at the confirmation (2.15 (6)) `scores name=ABC full` |
 | the page hidden or shown | `hidden`, `shown` |
 | the end of the game | `end over boxed score=43 best=yes`; `best=no` when the score did not become the best score |
 
@@ -633,29 +634,33 @@ Without them the page is as every other section says.
    of the log says `best=no`. **[Clead]** The page shows no sign of a
    playtest page apart from the Slow button of (5); the first line of
    every log names the options (2.13 (3)).
-5. The Slow button. When `slow` is on, a button sits under the board, at
-   its right edge. **[Clead]** It has no visible text and is 24 × 24 CSS
-   pixels. Its fill differs from the page's background by a contrast ratio
-   of 1.5:1 to 2:1, in light and in dark mode, so that it is hard to
-   notice, and when it has the focus it shows an outline 2 pixels wide
-   with a contrast of at least 3:1 against the page's background. Its
-   accessible name is "Slow down", so that screen readers and tests can
-   find it. It is shown, and in the tab order, only while the current
-   level is a special level; on a normal level it is hidden. Each press
-   steps the factor 1× → 2× → 4× → 1×, in `ready`, `running` and `paused`;
-   in `over`, `blown` and `won` a press is ignored. While the log panel,
-   the scores panel or the name entry is open the button does nothing and
-   makes no line. The factor is 1× when a level is laid out and when a new
-   game is made, so a special level always starts at its normal speed and
-   the factor does not carry from one level to the next.
-6. The factor multiplies the delay of the tick timer on the level. The
-   timer schedules each tick when the one before it has run, and when the
-   game starts or goes on from `paused`, with the delay (the level's
-   delay × the factor) of that moment. A tick that is already waiting
-   keeps its delay: a press changes the delay of the ticks scheduled
-   after it (from 1× to 2× on a level of 55 ms, the waiting tick comes
-   after 55 ms and the next one after 110 ms). The rules of a tick, and
-   the game's time of 2.12 (3), are not changed: each tick in which the
+5. The Slow button. When `slow` is on, a small button with no visible text
+   sits under the board. Each press steps the factor 1× → 2× → 4× → 1× on
+   a special level.
+   - **[Clead]** Its place is the board's right edge and its size
+     24 × 24 CSS pixels. Its fill differs from the page's background by a
+     contrast ratio of 1.5:1 to 2:1, in light and in dark mode, so that it
+     is hard to notice. When it has the focus it shows an outline 2 pixels
+     wide with a contrast of at least 3:1 against the page's background.
+   - **[Clead]** Its accessible name is "Slow down", so that screen
+     readers and tests can find it.
+   - **[Clead]** It is shown, and in the tab order, only while the current
+     level is a special level; on a normal level it is hidden.
+   - **[Clead]** A press steps the factor in `ready`, `running` and
+     `paused`, and is ignored in `over`, `blown` and `won`. While the log
+     panel, the scores panel or the name entry is open the button does
+     nothing and makes no line.
+   - **[Clead]** The factor is 1× when a level is laid out and when a new
+     game is made, so a special level always starts at its normal speed
+     and the factor does not carry from one level to the next.
+6. The factor multiplies the delay of the tick timer on the level.
+   **[Clead]** The timer schedules each tick when the one before it has
+   run, and when the game starts or goes on from `paused`, with the delay
+   (the level's delay × the factor) of that moment; a tick that is already
+   waiting keeps its delay, so a press changes the delay of the ticks
+   scheduled after it (from 1× to 2× on a level of 55 ms, the waiting tick
+   comes after 55 ms and the next one after 110 ms). The rules of a tick,
+   and the game's time of 2.12 (3), are not changed: each tick in which the
    snake moves adds the level's delay of 2.12 (2) to the time, whatever
    the factor. So a game played slowed has the same budget of moves,
    seconds and turns, the obstacles jump after the same number of moves
@@ -677,8 +682,9 @@ Without them the page is as every other section says.
    `snake-demo.scores` as text: the entries in that order, each written
    `SCORE:LEVEL:NAME` with the digits 0 to 9 and no leading zero, joined
    by `,`, for example `43:7:ABC,40:6:XYZ`. **[Clead]** The entry made
-   from the best score (2) has the level 0 and the name `---`, and no
-   other entry has either; the page shows them as `--` and `---`. A
+   from the best score (2) has the level 0 and the name `---`, no other
+   entry has either, and at most one entry of the stored text has them;
+   the page shows them as `--` and `---`. A
    missing value, or a value that is not exactly of that form (an entry
    that is not valid, more than 10 entries, or scores that rise along the
    list), reads as an empty list, the whole value and not an entry at a
@@ -691,51 +697,62 @@ Without them the page is as every other section says.
    one: with 10 stored the lowest of them is not shown.
 3. A game qualifies when it ends (`over`, `blown` or `won`) on a page
    that is not a playtest page (2.14 (4)) with a score of at least 1,
-   and the list as shown, read before the game's score is applied to the
-   best score (2.9 (2)), has fewer than 10 entries or the score is above
-   that of the 10th. **[Clead]** The least score that qualifies is 1.
-   Making an entry (4) puts the new entry after every entry of that list
-   with a score at least as high, so it is older-first against the entry
-   of (2) as against a stored one; the list is then cut to 10 entries, the
-   entry of (2) is stored if it was in the list, and the result is stored.
-   The rank of the entry is its place in that list. Example: the best
-   score is 43, nothing is stored, and a game ends with 43: the list is
-   the entry of (2), the new entry is ranked 2, and the stored list is
-   `43:0:---,43:7:ABC` (the game having reached level 7).
+   and the list as shown, read as (6) says, has fewer than 10 entries or
+   the score is above that of the 10th. **[Clead]** The least score that
+   qualifies is 1. Making an entry (4) puts the new entry after every
+   entry of that list with a score at least as high, so it is older-first
+   against the entry of (2) as against a stored one; the list is then cut
+   to 10 entries (with the entry of (2) and the new one, two stored
+   entries can drop out of a full list), the entry of (2) is stored if it
+   was in the list, replacing a stored entry with the level 0, and the
+   result is stored. The rank of the entry is its place in that list.
+   Example: the best score is 43, nothing is stored, and a game ends with
+   43: the list is the entry of (2), the new entry is ranked 2, and the
+   stored list is `43:0:---,43:7:ABC` (the game having reached level 7).
    Example: nothing is stored, the best score is 0, a game ends with 43:
    the rank is 1, and the best score becomes 43; the stored list is
    `43:7:ABC`, and the next time the list is read the best score is not
-   above it, so no entry of (2) is made.
-4. When a game qualifies, a panel over the board offers a name entry. It
-   has the title ENTER YOUR NAME, then SCORE with the game's score, LVL
-   with the level it reached, RANK with the rank written as in (5), then 3
-   slots, each showing a letter from A to Z and starting at A, one of them
-   selected, the first at the start, then an OK button and a Skip button.
-   ArrowUp changes the selected letter to the next in the alphabet (after
-   Z comes A) and ArrowDown to the one before (before A comes Z);
-   ArrowLeft and ArrowRight move the selection (not past the first or the
-   last slot). Each slot is a button with the accessible name "Letter 1",
-   "Letter 2" and "Letter 3"; pressing it selects it. **[Clead]** Each
-   slot also has an Up and a Down button, named "Letter 1 up", "Letter 1
-   down" and so on, which select their slot and then do what ArrowUp or
-   ArrowDown does, so that a phone can do all of it. OK confirms, Skip
-   skips. Confirming stores the entry as (3) says, writes the line
-   `scores name=ABC rank=3` (2.13 (5)) and turns the panel into the
-   table of (5), with the new entry marked. Skipping stores nothing, writes
-   `scores skipped` and closes the panel. **[Clead]** Keys in the entry:
-   Enter confirms and Escape skips, but with the focus on a button of the
-   panel Enter and Space press that button instead (as the decision of
-   2026-11-10 on keys on a focused button says, `DECISIONS.md`, PO-171);
-   a repeat of Enter or Escape does nothing, a repeat of an arrow key acts
-   as a new press, and a key that was already down when the entry opened
-   does nothing, its repeats included, until it is released. While the
-   entry is open, game keys, swipes, the Start, Pause and Resume buttons,
-   the New game button, the Log link and the Scores link do nothing, and
-   Enter confirms instead of making a new game (2.6); the status line says
-   so (2.8). **[Clead]** The entry can be skipped, so that nobody is held
-   up by it. **[Clead]** The panel is a dialog: the focus goes to the
-   first slot when it opens, Tab and Shift+Tab stay inside it, and the
-   focus goes back to the New game button when it closes.
+   above it, so no entry of (2) is made. Example: `120:0:---` is stored,
+   a game skips its name at the new best score 150, and a game then makes
+   an entry with 20: the list is `150:0:---,20:5:ABC`, the stored entry of
+   120 having been replaced.
+4. When a game qualifies, a panel over the board offers a name entry,
+   with 3 slots, each a letter from A to Z starting at A, and a way to
+   confirm the name.
+   - **[Clead]** The panel's texts: the title ENTER YOUR NAME, then SCORE
+     with the game's score, LVL with the level it reached, RANK with the
+     rank written as in (5), then the 3 slots, then an OK button and a
+     Skip button.
+   - **[Clead]** One slot is selected, the first at the start, and the
+     focus follows the selection. ArrowUp changes the selected letter to
+     the next in the alphabet (after Z comes A) and ArrowDown to the one
+     before (before A comes Z); ArrowLeft and ArrowRight move the selection
+     (not past the first or the last slot). Each slot is a button whose
+     accessible name is its number and its letter, "Letter 1, A", and the
+     selected slot has `aria-current="true"`; pressing a slot selects it.
+     Each slot also has an Up and a Down button, named "Letter 1 up",
+     "Letter 1 down" and so on, which select their slot and then do what
+     ArrowUp or ArrowDown does, so that a phone can do all of it.
+   - **[Clead]** Keys: with the focus on a slot, Enter confirms and Space
+     does nothing; with the focus on OK, Skip, an Up or a Down button,
+     Enter and Space press that button (the decision of 2026-11-10 on keys
+     on a focused button, `DECISIONS.md`, PO-171); Escape skips from
+     anywhere in the entry. A repeat of Enter, Space or Escape does
+     nothing, a repeat of an arrow key acts as a new press, and a key that
+     was already down when the entry opened does nothing, its repeats
+     included, until it is released.
+   - Confirming stores the entry as (3) says, writes the line
+     `scores name=ABC rank=3` (2.13 (5)) and turns the panel into the table
+     of (5), with the new entry marked. **[Clead]** Skipping stores
+     nothing, writes `scores skipped` and closes the panel; the entry can
+     be skipped so that nobody is held up by it.
+   - **[Clead]** While the entry is open, game keys, swipes, the Start,
+     Pause and Resume buttons, the New game button, the Log link and the
+     Scores link do nothing, Enter confirms instead of making a new game
+     (2.6), and the status line says so (2.8). The panel is a dialog: the
+     focus goes to the first slot when it opens, Tab and Shift+Tab stay
+     inside it, and the focus goes back to the New game button when it
+     closes.
 5. A "Scores" link below the board, next to the Log link, opens the
    table in a panel over the board with a Close button. **[Clead]** It
    can be used in every state, as the Log link can (2.13 (6)), and the
@@ -755,14 +772,23 @@ Without them the page is as every other section says.
    drawn before its rank (2.16 (1)), so that the mark is not only a
    colour; closing the panel leaves the ended game as it was. **[Clead]**
    The focus goes to Close when the table opens and back to the Scores
-   link, or after an entry to the New game button, when it closes. The
-   focus of the log panel is as it is.
-6. When the list is read: when a game ends (for the qualification), when
-   the entry opens, when it is confirmed (before the write, so that the
-   entries another tab stored in the meantime are kept; the rank of the
-   line and the table is the one found then) and when the Scores panel
-   opens. A read that fails reads as an empty list (1). **[Clead]** After
-   a failed write the page keeps its list in memory and uses that list for
+   link, or after an entry to the New game button, when it closes, and
+   stays inside the panel; Enter and Space on the focused Close press it
+   (as in the entry), so the table closes and Enter makes no new game from
+   it. The focus of the log panel is as it is.
+6. **[Clead]** When the list is read: when a game ends (for the
+   qualification), when the entry opens, when it is confirmed (before the
+   write, so that the entries another tab stored in the meantime are
+   kept) and when the Scores panel opens. For one game the page keeps the
+   best score as it was before that game's score was applied (2.9 (2)),
+   and the reads for the qualification, the opening and the confirmation
+   all make the entry of (2) from that score; the Scores panel's read uses
+   the current best score. The rank of the line and the table is the one
+   found at the confirmation. If the entry no longer ranks in the top 10
+   then (another tab filled the list), nothing is stored, the line is
+   `scores name=ABC full` and the panel turns into the table without a
+   marked row. A read that fails reads as an empty list (1). After a
+   failed write the page keeps its list in memory and uses that list for
    the rest of the page's life, with no further read (as 2.9 (4) says the
    best score lasts only until the page is closed).
 
@@ -779,8 +805,8 @@ section 3.
    patterns are written in the project's own code, drawn for this
    project; no font, image or other third-party material is used. Every
    text of the panels (the titles, the headings, the words SCORE, LVL and
-   RANK, the ranks, scores, levels and names, the labels of the buttons
-   and the line NO SCORES YET) is drawn as squares, one per pixel, at a
+   RANK, the ranks, scores, levels and names, the letters of the slots, the
+   labels of the buttons and the line NO SCORES YET) is drawn as squares, one per pixel, at a
    whole-number scale of 1, 2 or 3 (a named value, section 3), the largest
    at which the widest of the entry and the table is no wider than the
    board; no pixel is blurred. The drawn pixels are hidden from screen
@@ -813,9 +839,9 @@ section 3.
    in the panel flashes: the one thing that blinks is the cursor of the
    selected slot, with a period of 500 ms, shown for 250 ms and hidden for
    250 ms (twice a second, under the 3 flashes a second of WCAG 2.3.1).
-   The panel can be closed at any time (Close, Escape, or Skip), which
-   stops all of it, and (5) turns it off; Adam has accepted no more
-   control than that.
+   The panel can be closed at any time (Close, Escape or Skip), which
+   stops all of it, and (5) turns it off; this is the control that WCAG
+   2.2.2 asks for movement of more than 5 seconds.
 5. **[Clead]** With `prefers-reduced-motion: reduce` nothing moves: no
    band, no shift, and the cursor does not blink but stays on; the
    colours, the scanlines and the glow remain.
