@@ -164,6 +164,19 @@ it are Clead's exact wording of that decision. Details Adam has not
 settled are marked **[Clead]**; a mark at the start of an item or a bullet
 covers all of it, and a mark in the middle covers the sentence it opens.
 
+Approved: Adam, 2026-11-10 23:04, in chat ("apyr"), to Clead's
+recommendation of 23:00, and 2026-11-11 00:41 (the version line goes last
+in the batch) and 00:50 ("start the batch, apyr") (`DECISIONS.md`, PO-171,
+the rows "Snake demo gets a version line" and the batch order of 00:41):
+the page shows a small "v0.2.0 · abc1234" under the board, the version
+from `package.json` and the build's commit; the event log's first line
+names the version too; the version is set to `0.2.0` once Adam has played
+the levels, and Adam tags `v0.2.0`. 2.17, and the changes to 2.13 (3) and
+section 3 that follow from it, are Clead's exact wording of that decision.
+Details Adam has not settled are marked **[Clead]**; a mark at the start
+of an item or a bullet covers all of it, and a mark in the middle covers
+the sentence it opens.
+
 ---
 
 ## 1. System overview
@@ -577,8 +590,9 @@ cleared, no queued turns, and no obstacles or dot.
    `running`, ticks of a waiting snake (2.12 (5)) included. K counts the
    tick being run when the line is written; a line written outside a
    tick (an input, pause, the page hidden) has the K of the last tick.
-3. **[Clead]** The first line names the build (the commit it was built
-   from, or `dev` for a local build) and the named values of section 3
+3. **[Clead]** The first line names the version of 2.17 and the build (the
+   commit it was built from, or `dev` for a local build), as
+   `snake-demo version=0.2.0 build=abc1234 size=…`, and the named values of section 3
    the game uses, so a log from any build can be read. **[Clead]** On a
    playtest page (2.14) it ends with the options, `playtest
    start-level=5 slow`, `playtest start-level=5` or `playtest slow`.
@@ -1019,6 +1033,37 @@ section 3.
 
 ---
 
+### 2.17 Version line
+
+1. The page shows one line of small text under the board: the letter `v`,
+   the version, a space, the middle dot `·` (U+00B7), a space and the
+   build, as `v0.2.0 · abc1234`. The version is the `version` of
+   `package.json` when the page was built, whatever it is then. The build
+   is the one of 2.13 (3): the first 7 characters of the commit the page
+   was built from, or `dev` for a local build, so a local build shows
+   `v0.2.0 · dev`.
+2. **[Clead]** The line is the last thing in the page's column, below the
+   controls; it is not a button or a link, is not in the tab order, takes
+   no key or pointer input, and is read by screen readers as the text it
+   is. Its text is in the muted colour of the page, at least 4.5:1 against
+   the page's background in light and in dark mode, in the page's font at
+   0.75 of the size of the status line, and centred under the board. It
+   is on every page, a playtest page (2.14) included.
+3. **[Clead]** The version and the build are fixed when the page is built,
+   by the build tool, from `package.json` and from the commit; nothing is
+   read from the network or at run time. The text is made by one function
+   of the version and the build (section 3), which the log's first line
+   uses for the same two values, so the page and the log cannot differ.
+4. **[Clead]** Tests. Jest: the function, with a given version and build
+   (`v0.2.0 · abc1234`, `v1.10.3 · dev`) and the first line of the log
+   with the version in it. Browser: the line is under the board and below
+   the controls, has the form `v<digits>.<digits>.<digits> · ` and 7
+   lowercase hexadecimal digits or `dev`, and its version is `package.json`'s;
+   the first line of the log opens `snake-demo version=<that version>
+   build=<that build> `; the same build in both; the line is not a Tab
+   stop, and a click or key on it does nothing; the contrast of its text
+   in both colour modes is at least 4.5:1.
+
 ## 3. Architecture
 
 - `src/config.ts`: the named values: grid size 20, start length 3,
@@ -1091,6 +1136,11 @@ section 3.
   own small state (the open stretch of moves) and works out no game
   rule itself. Pure, covered by Jest: every kind of line of 2.13 (5)
   whole, except the checksum line, which `src/logsum.ts` makes.
+- `src/version.ts`: the text of 2.17 (1) from a version and a build, a pure
+  function covered by Jest; the log's first line (2.13 (3)) uses the same
+  two values. `vite.config.mts` hands the version of `package.json` and
+  the build to the page as build-time constants, as it does for the build
+  today.
 - `src/sha256.ts`: SHA-256 of a string as UTF-8, written for this project
   (2.13 (7)). Pure, covered by Jest against published test vectors and
   Node's own result.
