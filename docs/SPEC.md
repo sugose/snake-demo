@@ -1260,7 +1260,7 @@ section 3.
      the panel, Tab goes to the table and Shift+Tab to Close. The element
      that scrolls the table (the scroll area around it, which holds the
      table) is the Tab stop and takes the focus, so that a long table can
-     be scrolled with the keys; "the table" in the rest of this item and
+     be scrolled with the keys; "the table" in this item and
      in 2.5, 2.6 and 2.18 (8) means that element where a focus or a key is
      named.
    - **[Clead]** With the focus on the table, the arrow keys, Space,
@@ -1396,7 +1396,7 @@ section 3.
    width (no sideways scrolling, section 3). The element that scrolls the text
    of the history (the scroll area around it) is the Tab stop and takes the
    focus, so that a long history can be scrolled with the keys ("the text
-   of the history" in 2.5 and 2.6 means that element), and the keys on it are as the
+   of the history" in this item, 2.5, 2.6 and 2.19 (5) means that element), and the keys on it are as the
    records table's (2.18 (7)): the browser scrolls it, nothing turns,
    Enter does nothing, Escape closes the panel. Tab and Shift+Tab stay
    inside the panel, in the order the text, the button "Show full
