@@ -320,7 +320,10 @@ export function newGame(options: {
   startLength: number;
   clearAhead: number;
   dotsPerLevel: number;
-  /** The delays between ticks (docs/SPEC.md 2.10 (2)); a level's time is counted in them. */
+  /**
+   * The delays between ticks (docs/SPEC.md 2.10 (2)); a level's time is counted in them. They are
+   * trusted, like the other named values of docs/SPEC.md 3, and not checked.
+   */
   delays: Delays;
   /** The level the game starts at (docs/SPEC.md 2.14 (2)); level 1 without it. */
   startLevel?: number;
@@ -567,7 +570,10 @@ function afterMove(state: GameState, timeBefore: number, choose: Chooser): GameS
 
 /**
  * One tick (docs/SPEC.md 2.2), only while `running`. A tick that ends the game (a wall, an
- * obstacle or the body) leaves everything as it was and only sets the state to `over`. The body
+ * obstacle or the body) keeps what step 1 did, the turn taken from the queue counted and made the
+ * heading, and nothing else: the snake does not move and the time does not run. The one exception
+ * is the 21st turn of a special level, which leaves everything as it was and only sets the state
+ * to `blown`. The body
  * is counted by segments: when the snake does not eat, its last segment does not count, but other
  * segments on the same cell do. The last dot of a level clears it and lays out the next one in the
  * same tick, with the same chooser; otherwise, leaving no free cell wins the game, with no dot
@@ -594,9 +600,12 @@ export function tick(state: GameState, choose: Chooser): GameState {
   if (head === undefined) throw new RangeError("the snake has no segments");
   const newHead = ahead(head, heading, 1);
 
+  // What step 1 left: the turn taken is the heading and counted, the rest of the queue stays. A
+  // tick that ends the game keeps this and adds nothing else (docs/SPEC.md 2.2 step 1, 2.18 (1)).
+  const afterStep1 = { ...state, heading, queue, turns };
   const crash = (ended: "wall" | "obstacle"): GameState => {
     if (run === null || special === null || run.shieldUsed >= special.shieldLayers) {
-      return { ...state, status: "over", ended };
+      return { ...afterStep1, status: "over", ended };
     }
     const waiting: GameState = {
       ...state,
@@ -621,7 +630,7 @@ export function tick(state: GameState, choose: Chooser): GameState {
   const body = eats ? state.snake : state.snake.slice(0, -1);
   if (state.obstacles.some((cell) => sameCell(cell, newHead))) return crash("obstacle");
   if (body.some((cell) => sameCell(cell, newHead))) {
-    return { ...state, status: "over", ended: "self" };
+    return { ...afterStep1, status: "over", ended: "self" };
   }
 
   const snake = eats ? [newHead, ...state.snake] : [newHead, ...state.snake.slice(0, -1)];
