@@ -7,6 +7,7 @@ import {
   newGame,
   pauseIfRunning,
   type Status,
+  specialInfo,
   start,
   tick,
   togglePause,
@@ -961,5 +962,150 @@ describe("a whole game through the commands", () => {
     const lost = game({ status: "over", score: 5, queue: ["up"], level: 3 });
     const again = newGame({ ...RULES, size: lost.size, choose: answers(CENTRE_RIGHT, 0) });
     expect(again).toEqual(game());
+  });
+});
+
+describe("newGame with a start level (docs/SPEC.md 2.14 (2), 2.10 (1), 2.11)", () => {
+  const SPECIAL = {
+    every: 5,
+    shieldLayers: 3,
+    maxTurns: 20,
+    seconds: 30,
+    jumpSeconds: 3,
+    clearAheadOfHead: 2,
+    delays: DELAYS,
+  };
+
+  it("a start level of 1 is the game of every other test: level 1, no obstacles", () => {
+    const state = newGame({ ...RULES, startLevel: 1, choose: answers(CENTRE_RIGHT, 0) });
+    expect(state).toEqual(newGame({ ...RULES, choose: answers(CENTRE_RIGHT, 0) }));
+  });
+
+  it("level 7 starts in ready at level 7, score 0, no dots eaten, 6 obstacles, a snake of 3 on one cell", () => {
+    const state = newGame({ ...RULES, startLevel: 7, choose: answers(CENTRE_RIGHT, 0) });
+    expect(state.level).toBe(7);
+    expect(state.status).toBe("ready");
+    expect(state.score).toBe(0);
+    expect(state.dotsEaten).toBe(0);
+    expect(state.obstacles).toHaveLength(6);
+    expect(state.snake).toEqual(stacked(CENTRE, 3));
+    expect(state.queue).toEqual([]);
+    expect(state.ended).toBeNull();
+  });
+
+  it("asks the one chooser for the start, then each of the 6 obstacles, then the dot", () => {
+    const choose = answers(CENTRE_RIGHT, 0);
+    newGame({ ...RULES, startLevel: 7, choose });
+    // 960 starts; the obstacles from the cells off the start and its 8 cells ahead (400 - 9 = 391,
+    // then one fewer each); the dot from the cells off the start and the 6 obstacles (400 - 7).
+    expect(choose.counts).toEqual([STARTS, 391, 390, 389, 388, 387, 386, 393]);
+  });
+
+  it("never puts an obstacle on the start or on the 8 cells ahead of it, at the highest start level", () => {
+    // Free cell 205 is (5,10), then (6,10) ... as each is taken, and then it skips the kept cells.
+    const state = newGame({ ...RULES, startLevel: 99, choose: answers(CENTRE_RIGHT, 205) });
+    expect(state.obstacles).toHaveLength(98);
+    const kept = new Set(Array.from({ length: 9 }, (_, i) => `${10 + i},10`));
+    expect(state.obstacles.filter((cell) => kept.has(`${cell.x},${cell.y}`))).toEqual([]);
+    expect(new Set(state.obstacles.map((cell) => `${cell.x},${cell.y}`)).size).toBe(98);
+    expect(state.obstacles.slice(0, 5)).toEqual([5, 6, 7, 8, 9].map((x) => ({ x, y: 10 })));
+    expect(state.obstacles[5]).toEqual({ x: 19, y: 10 });
+  });
+
+  it("lays out the start, then the obstacles, then the dot, in that order", () => {
+    const state = newGame({ ...RULES, startLevel: 4, choose: answers(CENTRE_RIGHT, 0, 0, 0, 5) });
+    expect(state.obstacles).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ]);
+    // The dot: free cell 5 off the start (10,10) and the 3 obstacles: (3,0) is 0, so (8,0) is 5.
+    expect(state.food).toEqual({ x: 8, y: 0 });
+  });
+
+  it("with the special rules, level 5 has its fresh run: 0 turns, 0 ms, no layer used, not waiting", () => {
+    const state = newGame({
+      ...RULES,
+      special: SPECIAL,
+      startLevel: 5,
+      choose: answers(CENTRE_RIGHT, 0),
+    });
+    expect(state.level).toBe(5);
+    expect(state.run).toEqual({ turns: 0, timeMs: 0, shieldUsed: 0, waiting: false });
+    expect(specialInfo(state)).toEqual({ turnsLeft: 20, secondsLeft: 30, shieldLeft: 3 });
+  });
+
+  it.each([6, 7, 9, 11, 99])("with the special rules, level %i is normal: no run", (startLevel) => {
+    const state = newGame({
+      ...RULES,
+      special: SPECIAL,
+      startLevel,
+      choose: answers(CENTRE_RIGHT, 0),
+    });
+    expect(state.run).toBeNull();
+  });
+
+  it.each([10, 15, 95])("with the special rules, level %i is special", (startLevel) => {
+    const state = newGame({
+      ...RULES,
+      special: SPECIAL,
+      startLevel,
+      choose: answers(CENTRE_RIGHT, 0),
+    });
+    expect(state.run).not.toBeNull();
+  });
+
+  it("without the special rules no level is special, whatever the start level", () => {
+    expect(newGame({ ...RULES, startLevel: 5, choose: answers(CENTRE_RIGHT, 0) }).run).toBeNull();
+  });
+
+  it("clearing the start level goes on to the next as usual", () => {
+    const first = newGame({ ...RULES, startLevel: 3, choose: answers(CENTRE_RIGHT, 0) });
+    let state: GameState = frozen({
+      ...first,
+      status: "running",
+      dotsEaten: 4,
+      food: { x: 11, y: 10 },
+    });
+    state = tick(state, answers(CENTRE_RIGHT, 0, 0, 0, 0));
+    expect(state.level).toBe(4);
+    expect(state.score).toBe(1);
+    expect(state.status).toBe("ready");
+    expect(state.obstacles).toHaveLength(3);
+  });
+
+  it.each([0, -1, 1.5, 2.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    "throws a RangeError for the start level %p",
+    (startLevel) => {
+      expect(() => newGame({ ...RULES, startLevel, choose: answers(CENTRE_RIGHT, 0) })).toThrow(
+        RangeError,
+      );
+    },
+  );
+
+  describe("a start level whose obstacles, dot and snake do not fit (docs/SPEC.md 2.11)", () => {
+    // A 9 x 9 board of 81 cells with 8 cells ahead: the start and its 8 cells are kept free of
+    // obstacles, so at most 72 obstacles; and obstacles + dot + snake must be at most 81.
+    const SMALL = { ...RULES, size: 9, startLength: 3 };
+
+    it("level 74: 73 obstacles are more than the 72 cells off the start and its cells ahead", () => {
+      const choose = answers(0);
+      expect(() => newGame({ ...SMALL, startLevel: 74, choose })).toThrow(RangeError);
+      expect(choose.counts).toEqual([]);
+    });
+
+    it("level 73 fits: 72 obstacles on every cell off the start and its cells ahead", () => {
+      const state = newGame({ ...SMALL, startLevel: 73, choose: answers(0) });
+      expect(state.obstacles).toHaveLength(72);
+    });
+
+    it("a start level that overflows by the snake alone: obstacles + dot + snake are more than the cells", () => {
+      // Without clear cells ahead, 8 x 8 holds 63 obstacles + the dot + 1 segment = 65 > 64 cells.
+      const board = { ...RULES, size: 8, clearAhead: 0, startLength: 1 };
+      const choose = answers(0);
+      expect(() => newGame({ ...board, startLevel: 64, choose })).toThrow(RangeError);
+      expect(choose.counts).toEqual([]);
+      expect(newGame({ ...board, startLevel: 63, choose: answers(0) }).obstacles).toHaveLength(62);
+    });
   });
 });

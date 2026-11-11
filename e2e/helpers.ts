@@ -109,11 +109,12 @@ export function gameOf(page: Page): Locator {
  * answers in turn, over and over, so the start, the obstacles and the dots are placed the same way
  * every run (docs/SPEC.md 2.11 (2)). The default starts at (10,10) heading right, with the dot at
  * (0,0), out of the way of every test's path; a new game in the page draws the same again as long
- * as the snake has eaten nothing.
+ * as the snake has eaten nothing. `address` is the page's address, such as "/?level=5" (docs/SPEC.md 2.14).
  */
 export async function openGame(
   page: Page,
   random: number | readonly number[] = centreStart("right"),
+  address = "/",
 ): Promise<Locator> {
   const answers = typeof random === "number" ? [random] : [...random];
   await page.addInitScript((values) => {
@@ -125,7 +126,7 @@ export async function openGame(
     };
   }, answers);
   await page.clock.install({ time: CLOCK_START });
-  await page.goto("/");
+  await page.goto(address);
   await page.clock.pauseAt(CLOCK_START + 60_000);
   const game = gameOf(page);
   await expect(game).toHaveAttribute("data-status", "ready");

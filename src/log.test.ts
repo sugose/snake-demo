@@ -17,6 +17,7 @@ import {
   logPage,
   logPanelPause,
   logPanelResume,
+  logSlow,
   logText,
   logTick,
   startLog,
@@ -87,6 +88,32 @@ describe("firstLine (docs/SPEC.md 2.13 (3))", () => {
   it("says special=none without special levels", () => {
     expect(firstLine("dev", { ...VALUES, special: null })).toBe(
       "snake-demo build=dev size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special=none",
+    );
+  });
+});
+
+describe("firstLine on a playtest page (docs/SPEC.md 2.13 (3), 2.14 (4))", () => {
+  const PLAIN =
+    "snake-demo build=abc1234 size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special-every=5 shield=3 turns=20 seconds=30 jump=3 clear-head=2";
+
+  it.each([
+    [{ startLevel: 5, slow: true }, "playtest start-level=5 slow"],
+    [{ startLevel: 5, slow: false }, "playtest start-level=5"],
+    [{ startLevel: null, slow: true }, "playtest slow"],
+    [{ startLevel: 1, slow: false }, "playtest start-level=1"],
+    [{ startLevel: 99, slow: true }, "playtest start-level=99 slow"],
+  ])("%o ends the line with %p", (options, words) => {
+    expect(firstLine("abc1234", VALUES, options)).toBe(`${PLAIN} ${words}`);
+  });
+
+  it("a page with no option has the plain first line", () => {
+    expect(firstLine("abc1234", VALUES, { startLevel: null, slow: false })).toBe(PLAIN);
+    expect(firstLine("abc1234", VALUES, undefined)).toBe(PLAIN);
+  });
+
+  it("the options come after the special=none words too", () => {
+    expect(firstLine("dev", { ...VALUES, special: null }, { startLevel: 5, slow: true })).toBe(
+      "snake-demo build=dev size=20 start-length=3 clear-ahead=8 dots=5 delays=125/5/50 special=none playtest start-level=5 slow",
     );
   });
 });
@@ -396,6 +423,29 @@ describe("logTick (docs/SPEC.md 2.13 (4), (5))", () => {
     const next = tick(state, ZERO);
     expect(next.status).toBe("blown");
     expect(logTick(EMPTY, at(1, 1), state, next).lines).toEqual([]);
+  });
+});
+
+describe("logSlow: a press of the Slow button (docs/SPEC.md 2.13 (4), (5), 2.14 (5))", () => {
+  it.each([2, 4, 1])("a step to x%i: the input line, then the slow line", (factor) => {
+    expect(logSlow(EMPTY, at(310, 4), factor).lines).toEqual([
+      "[t=310 #4] button Slow used",
+      `[t=310 #4] slow x${factor}`,
+    ]);
+  });
+
+  it("does not end the open stretch of moves", () => {
+    const running = game();
+    const moved = logTick(EMPTY, at(55, 1), running, tick(running, ZERO));
+    const slowed = logSlow(moved, at(60, 1), 2);
+    expect(slowed.stretch).toEqual(moved.stretch);
+    expect(added(moved, slowed)).toEqual(["[t=60 #1] button Slow used", "[t=60 #1] slow x2"]);
+  });
+
+  it("a press the state ignores is button Slow ignored state, and no slow line", () => {
+    const over = game({ status: "over", ended: "wall" });
+    const log = logInput(EMPTY, at(9, 2), { kind: "button", label: "Slow" }, "state", over, over);
+    expect(log.lines).toEqual(["[t=9 #2] button Slow ignored state"]);
   });
 });
 
