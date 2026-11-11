@@ -271,7 +271,7 @@ test("the panel changes nothing, opening or closing, in ready, paused and ended 
   expect(await panelText(page)).toBe(endedText);
 });
 
-test("while the panel is open, keys, swipes, Start, Pause, Resume and the Log link do nothing", async ({
+test("while the panel is open, keys, swipes, Start, Pause, Resume, the Log link and the Version history link do nothing", async ({
   page,
   context,
 }) => {
@@ -298,6 +298,8 @@ test("while the panel is open, keys, swipes, Start, Pause, Resume and the Log li
   await page.getByRole("button", { name: "Copy", exact: true }).click();
   await expect(page.locator("#log-copy")).toHaveText("✓ Copied!");
   await linkOf(page).click({ force: true });
+  await page.getByRole("button", { name: "Version history", exact: true }).click();
+  await expect(page.locator("#history-panel")).toBeHidden();
   await expect(page.locator("#log-copy")).toHaveText("✓ Copied!");
   expect(await panelText(page)).toBe(text);
   await runTicks(page, 5);

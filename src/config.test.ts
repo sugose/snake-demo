@@ -30,6 +30,7 @@ describe("config (docs/SPEC.md 3)", () => {
       recordsStorageKey: "snake-demo.records",
       maxRecordTurns: 99999,
       maxRecordTimeMs: 99999999,
+      seenVersionStorageKey: "snake-demo.seen-version",
       pixelScales: [1, 2, 3],
       bandHeight: 40,
       rollMs: 8000,
