@@ -195,6 +195,24 @@ opens. The encodings Adam has not seen are Clead's technical detail: the
 text format and bounds of the stored records (2.18 (5)) and the storage
 key name.
 
+Approved: Adam, 2026-11-11 12:25 and 12:26, in chat, his request: "i want
+a a link with version history. the version history page is brought
+automaticaly when loading the app for the first time after a versio
+upgrade to show what is new", with the correction "app" for "page"; and
+12:28, "1a, 2 apyr, 3 apyr", to Clead's recommendations of 12:27: the
+text is a player-facing list written for the app, one entry for each
+version in plain words, bundled when the page is built, not
+`CHANGELOG.md`; after an upgrade only the versions newer than the last one
+this browser saw open, with a button to the full history; on a first visit
+with no stored version nothing opens (`DECISIONS.md`, PO-171, the row
+"Snake demo, a version history"). 2.19, and the changes to 2.5, 2.6, 2.13,
+2.14, 2.15, 2.18 and 3 that follow from it, are Clead's exact wording of
+that decision. Details Adam has not settled are marked **[Clead]**; a mark
+at the start of an item or a bullet covers all of it, and a mark in the
+middle covers the sentence it opens. The storage key name and the rules
+for what counts as newer (SemVer 2.0.0 precedence) are Clead's technical
+detail.
+
 ---
 
 ## 1. System overview
@@ -282,24 +300,26 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | New game (Enter with the focus on no button, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
 | Slow button (2.14 (5)) | steps the factor | steps the factor | steps the factor | ignored |
 
-**[Clead]** Four panels change the New game row in every column. While
+**[Clead]** Five panels change the New game row in every column. While
 the name entry of 2.15 (4) is open the command does nothing. While the
-scores panel of 2.15 (5) or the records panel of 2.18 (7) is open, which
-either can be in `ready`, `paused` and the ended states (each pauses a
-`running` game), only the New game button gives a new game, and Enter
-on the focused Close closes the panel (with the focus on the records
-panel's table, Enter does nothing, 2.18 (7)). While the log panel
+scores panel of 2.15 (5), the records panel of 2.18 (7) or the history
+panel of 2.19 is open, which each can be in `ready`, `paused` and the
+ended states (each pauses a `running` game when opened from its link),
+only the New game button gives a new game, and Enter on the focused Close
+closes the panel (with the focus on the table of the records panel or the
+text of the history panel, Enter does nothing, 2.18 (7), 2.19 (4)). While the log panel
 (2.13 (6)) is open, the button, or Enter with the focus on nothing,
 closes it and gives a new game; Enter with the focus on Close or Copy
 presses that button. Enter and Space with a button focused do that
 button's job (2.6) and are the New game and Pause commands only with the
 focus on no button. When the New game command closes the log panel, the
-scores panel or the records panel, the focus goes to the New game button.
+scores panel, the records panel or the history panel, the focus goes to
+the New game button.
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused. The log panel of 2.13 (6),
-the scores panel of 2.15 (5) and the records panel of 2.18 (7) can also
-pause a `running` game and go on.
+the scores panel of 2.15 (5), the records panel of 2.18 (7) and the
+history panel of 2.19 can also pause a `running` game and go on.
 
 ### 2.6 Keys
 
@@ -308,7 +328,7 @@ Space and P (either case) pause and go on; Enter starts a new game (Enter
 and Space are different when a button has the focus, below). Other keys do
 nothing. The page stops the arrow keys and Space from scrolling
 it while the game has the focus (not with the focus on the table of the
-records panel, 2.18 (7)).
+records panel or the text of the history panel, 2.18 (7), 2.19 (4)).
 
 A key pressed together with Ctrl, Meta (Cmd) or Alt does nothing, so the
 browser's shortcuts are not taken as turns; Shift does not matter. When a
@@ -316,9 +336,9 @@ key is held down, its repeats still turn the snake but do not pause, go
 on or start a new game again. Keys act on the game even while a button
 has the focus, and a key that does something in the game does not also
 press that button, with the exception of Enter and Space below. While the
-log panel (2.13 (6)), the scores panel or the name entry (2.15) or the
-records panel (2.18 (7)) is open, what the keys do is as those sections
-say.
+log panel (2.13 (6)), the scores panel or the name entry (2.15), the
+records panel (2.18 (7)) or the history panel (2.19) is open, what the
+keys do is as those sections say.
 
 A key pressed on a focused button does that button's job (Space or Enter
 on Log opens it, on Close closes it, on Copy copies), and only Enter with
@@ -326,14 +346,15 @@ the focus on the board or on nothing starts a new game.
 - **[Clead]** "The focus on no button" is what the Pause and New game
   commands need: the focus is on no button when it is on the page itself,
   the board, or any element that is not a button. The buttons are Start,
-  Pause (Resume), New game and Slow, the Log, Scores and Records links,
-  Copy and Close of the log panel, Close of the scores panel, Close of the
-  records panel, and OK, Skip, Up and Down of the name entry. With the focus on one of them, Enter or Space
+  Pause (Resume), New game and Slow, the Log, Scores, Records and Version
+  history links, Copy and Close of the log panel, Close of the scores
+  panel, Close of the records panel, Close and Show full history of the
+  history panel, and OK, Skip, Up and Down of the name entry. With the focus on one of them, Enter or Space
   presses it and is not the Pause or New game command. Space is the Pause
   command, and Enter the New game command, only with the focus on no
   button. A slot of the name entry is as 2.15 (4) says.
-- **[Clead]** While the log panel, the scores panel, the records panel or
-  the name entry is open, a button outside it counts as no button, so what Enter and Space
+- **[Clead]** While the log panel, the scores panel, the records panel,
+  the history panel or the name entry is open, a button outside it counts as no button, so what Enter and Space
   do is as 2.5, 2.13 (6) and 2.15 say; a button inside the panel is
   pressed as above.
 - **[Clead]** A press is a keydown of Enter or Space with `repeat` false.
@@ -619,12 +640,13 @@ cleared, no queued turns, and no obstacles or dot.
    (2.14 (5)) buttons, by pointer or by Enter or Space on the focused button
    (2.6), which then makes the button's line and no key line. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6), the scores panel
-   or the name entry of 2.15 or the records panel of 2.18 (7) is open make
-   no line, except the New game command while the log panel is open (the
-   button, or Enter with the focus on nothing) or the scores panel or the
-   records panel is open (the button only, 2.5), which closes the panel
-   and makes a new game; opening and closing
-   the panels make a line only as (6), 2.15 (5) and 2.18 (7) say. The New game command's line is the first stamped line
+   or the name entry of 2.15, the records panel of 2.18 (7) or the history
+   panel of 2.19 is open make no line, except the New game command while
+   the log panel is open (the button, or Enter with the focus on nothing)
+   or the scores panel, the records panel or the history panel is open (the
+   button only, 2.5), which closes the panel and makes a new game; opening
+   and closing the panels make a line only as (6), 2.15 (5), 2.18 (7) and
+   2.19 (4) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
    ignored, and if ignored, why, with one of these reasons:
@@ -654,7 +676,7 @@ cleared, no queued turns, and no obstacles or dot.
 | an obstacle jump | `jump obstacles=(1,2),(7,9),(0,0),(4,4)` |
 | a level cleared | `cleared level 5 points=11 turns-left=5 seconds-left=12 shield-used=1 turns=15 time=18040 score=31`; on a normal level `cleared level 4 turns=12 time=25300 score=20`; `turns` and `time` (in milliseconds) are the level's turns and time (2.18 (1), (2)) |
 | a record set (2.18 (4)) | `record fewest level=4 turns=12 time=25300`, `record fastest level=4 time=18150 turns=14`; one line for each record the cleared level set, the fewest first, right after the `cleared` line, also when the write to the storage fails; none on a playtest page |
-| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores`; made by the records panel (2.18 (7)): `pause records`, `resume records` |
+| pause, resume | `pause`, `resume`; made by the log panel (6): `pause log`, `resume log`; made by the scores panel (2.15 (5)): `pause scores`, `resume scores`; made by the records panel (2.18 (7)): `pause records`, `resume records`; made by the history panel (2.19 (4)): `pause history`, `resume history` |
 | a slow step (2.14 (5)) | `slow x2`, `slow x4`, `slow x1`, after the input line `button Slow used`; a press the state ignores is `button Slow ignored state` |
 | a name entered (2.15 (4)) | `scores name=ABC rank=3`; when the entry is skipped `scores skipped`; when the list had no room left at the confirmation (2.15 (6)) `scores name=ABC full` |
 | the page hidden or shown | `hidden`, `shown` |
@@ -685,8 +707,8 @@ cleared, no queued turns, and no obstacles or dot.
    refuses Copy, the log's text is selected so it can be copied by hand.
    While the panel is open, game keys, swipes and the Start, Pause and
    Resume buttons do nothing, and so do the Log link, the Scores link
-   of 2.15 (5) and the Records link of 2.18 (7), since only one panel is
-   open at a time; Escape or Close
+   of 2.15 (5), the Records link of 2.18 (7) and the Version history link
+   of 2.19 (4), since only one panel is open at a time; Escape or Close
    closes it, and the New game command (the button, or Enter with the
    focus on nothing) closes it and makes a new game. **[Clead]** The focus
    goes to Close when the panel opens, and back to the Log link when Close
@@ -833,8 +855,8 @@ Without them the page is as every other section says.
    - **[Clead]** A press, or Enter or Space on the focused button (2.6),
      steps the factor in `ready`, `running` and
      `paused`, and is ignored in `over`, `blown` and `won`. While the log
-     panel, the scores panel, the records panel or the name entry is open
-     the button does nothing and makes no line.
+     panel, the scores panel, the records panel, the history panel or the
+     name entry is open the button does nothing and makes no line.
    - **[Clead]** The factor is 1× when a level is laid out and when a new
      game is made, so a special level always starts at its normal speed
      and the factor does not carry from one level to the next.
@@ -937,7 +959,8 @@ Without them the page is as every other section says.
      be skipped so that nobody is held up by it.
    - **[Clead]** While the entry is open, game keys, swipes, the Start,
      Pause and Resume buttons, the New game button, the Log link, the
-     Scores link and the Records link do nothing, Enter confirms instead of making a new game
+     Scores link, the Records link and the Version history link do
+     nothing, Enter confirms instead of making a new game
      (2.6), and the status line says so (2.8). The panel is a dialog: the
      focus goes to the first slot when it opens, Tab and Shift+Tab stay
      inside it, and the focus goes back to the New game button when it
@@ -948,8 +971,8 @@ Without them the page is as every other section says.
    panel works as the log panel does: opening it on a `running` game
    pauses it, closing it with Close or Escape goes on if opening paused
    the game (the lines `pause scores` and `resume scores`); while it is
-   open, game keys, swipes, the Start, Pause and Resume buttons and the Log and
-   Records links do nothing, and the New game button closes it and makes a new
+   open, game keys, swipes, the Start, Pause and Resume buttons and the Log, Records and
+   Version history links do nothing, and the New game button closes it and makes a new
    game; Enter does not, since the focus is on Close and Enter presses it. The panel has the title TOP 10 SCORES, the headings RANK, SCORE,
    LVL and NAME, and a row for each entry of the list as shown, read when
    the panel opens: its rank written 1ST, 2ND, 3RD, 4TH and so on to
@@ -1224,7 +1247,8 @@ section 3.
      `resume records`); in `ready`, `paused` and the ended states it
      changes nothing, on opening or on closing.
    - **[Clead]** While it is open, game keys, swipes, the Start, Pause
-     and Resume buttons and the Log and Scores links do nothing; the New
+     and Resume buttons and the Log, Scores and Version history links do
+     nothing; the New
      game button closes it and makes a new game; Enter does not make a new
      game (with the focus on Close, Enter presses it; on the table, Enter
      does nothing); while the name entry of 2.15 (4) is open the Records
@@ -1299,6 +1323,111 @@ section 3.
    look is the plain one and not the arcade look; a failing storage; the
    log lines.
 
+### 2.19 Version history
+
+1. **Version history.** The app has a history of its versions. A "Version
+   history" link opens it. The history opens by itself when the app is
+   loaded for the first time after a version upgrade, and shows what is
+   new. Its text is a player-facing list written for the app, one entry
+   for each version in plain words, bundled into the page when it is
+   built; it is not `CHANGELOG.md`. After an upgrade only the versions
+   newer than the last one this browser saw open, with a button to the
+   full history. On a first visit, with no stored version, nothing opens;
+   the link is always there.
+2. **The list.** **[Clead]** The list is in `src/history.ts` as data,
+   newest first. An entry has a version (the text of `package.json`'s
+   `version`, which is a SemVer 2.0.0 version), a date written
+   `YYYY-MM-DD`, and one or more lines, each a non-empty text of plain
+   words with no markup. The versions are all different and the list is
+   in descending order of precedence, as SemVer 2.0.0 section 11 defines
+   it (compared by this project's own function, `src/history.ts`; no
+   third-party code). The version of `package.json` has an entry and it is
+   the first, so a version cannot be set without writing what it brings;
+   a Jest test checks it. The text is read from nothing at run time.
+3. **What opens by itself.** **[Clead]** The version last seen is kept in
+   the browser's local storage under the key `snake-demo.seen-version`,
+   as the version text. When the page loads, with S the stored text and V
+   the build's version (the one 2.17 shows):
+   - S is missing or is not a SemVer 2.0.0 version, or the storage cannot
+     be used: nothing opens. V is stored when the storage works.
+   - S is V, or higher than V (a build older than the one this browser
+     saw last): nothing opens, and V is stored.
+   - S is lower than V: the history opens by itself with the entries of
+     versions higher than S and not higher than V, newest first, and V is
+     stored. If there is no such entry, nothing opens.
+   So a version opens by itself at most once in a browser, whatever the
+   player does with the panel. A write that fails is ignored, and then the
+   history may open again at the next load. Every access to the storage,
+   including getting hold of it, happens inside the module's error
+   handling (as 2.9 (4) says), and the game goes on. A playtest page
+   (2.14) follows the same rules.
+4. **The panel.** **[Clead]** The "Version history" link is below the
+   board, next to the Log, Scores and Records links, and opens the history
+   in a panel over the board with a Close button. The panel works as the
+   records panel of 2.18 (7) does, apart from its content and the
+   button below: it can be used in every state, and opening it from the
+   link on a `running` game pauses it and closing it goes on (the lines
+   `pause history` and `resume history`); while it is open, game keys,
+   swipes, the Start, Pause and Resume buttons and the Log, Scores and
+   Records links do nothing, and the New game button closes it and makes
+   a new game; while the name entry of 2.15 (4) is open the Version
+   history link does nothing; the focus goes to Close when it opens, back
+   to the Version history link when Close or Escape closes it and to the
+   New game button when the New game command closes it; a key already
+   down when it opens, and the repeats of Enter, Space and Escape, do
+   nothing; the status line of an ended game keeps its words while it is
+   open (2.8). The text of the history is a Tab stop, so that a long
+   history can be scrolled with the keys, and the keys on it are as the
+   records table's (2.18 (7)): the browser scrolls it, nothing turns,
+   Enter does nothing, Escape closes the panel. Tab and Shift+Tab stay
+   inside the panel, in the order the text, the button "Show full
+   history" when there is one, and Close; with the focus outside it, Tab
+   goes to the text and Shift+Tab to Close.
+   - **[Clead]** Opened from the link, the panel has the title "Version
+     history" and shows every entry, newest first.
+   - **[Clead]** Opened by itself (3), the panel has the title "What's
+     new", shows the entries of (3) newest first, and has a button "Show
+     full history" below them. Pressing it (a click, or Enter or Space on
+     it, 2.6) shows every entry under the title "Version history",
+     removes the button and puts the focus on Close. It is opened in
+     `ready`, as the page loads, so it pauses nothing and writes no log
+     line; the focus goes to Close when it opens, and the New game command
+     closes it as it closes the other panels.
+   - **[Clead]** An entry is shown as a heading "Version 0.2.0 ·
+     2026-11-11" (the version, a space, the middle dot U+00B7, a space and
+     the date, as 2.17 (1)) and its lines as a list of items under it,
+     in the order of the list. The panel has the plain look of the log
+     panel, not the arcade look (2.16), and the text scrolls inside the
+     panel when it does not fit.
+   - **[Clead]** The buttons of the panel, "Show full history" and Close,
+     are buttons in the sense of 2.6.
+5. **[Clead]** Tests. Jest: the shape of the list (not empty; each entry's
+   version a SemVer 2.0.0 version, different from the others and in
+   descending order; each date well formed; at least one line, none
+   empty); the version of `package.json` is the first entry's; the
+   precedence function on the examples of SemVer 2.0.0 section 11
+   (`1.0.0-alpha` < `1.0.0-alpha.1` < `1.0.0-alpha.beta` < `1.0.0-beta` <
+   `1.0.0-beta.2` < `1.0.0-beta.11` < `1.0.0-rc.1` < `1.0.0`, and
+   `1.9.0` < `1.10.0` < `1.11.0`); the decision of (3) in each case: a
+   missing, an invalid and a prerelease-looking invalid S, an unusable
+   store, S equal to V, S higher than V, S lower than V with one, several
+   and no entry in between, and the entries given newest first; the
+   stored text made and read back; a store that returns nothing, throws on
+   getting hold of it, on reading and on writing. Browser: the link opens
+   the panel with every entry and the title "Version history"; with
+   `snake-demo.seen-version` set to `0.0.1` before the page loads, the
+   panel opens by itself with the title "What's new", the entry of the
+   build's version and the button, and after the page has loaded the key
+   holds the build's version; the button shows every entry; with the key
+   missing, equal to the build's version or higher, nothing opens and the
+   key holds the build's version; Close and Escape close it and put the
+   focus on the link; the New game button closes it and makes a new game;
+   the keys on the text (the arrow keys and Space scroll it, nothing
+   turns, Enter does nothing); Tab and Shift+Tab inside the panel and
+   from outside it; a running game is paused by opening it from the link
+   and goes on when it closes; the Version history link does nothing with
+   the name entry open; the plain look; a failing storage.
+
 ## 3. Architecture
 
 - `src/config.ts`: the named values: grid size 20, start length 3,
@@ -1313,7 +1442,8 @@ section 3.
   1, 2 and 4 (2.14); the list's 10 entries, name of 3 letters and storage
   key `snake-demo.scores` (2.15); the records' storage key
   `snake-demo.records`, highest turns 99999 and longest time 99999999 ms
-  (2.18 (5)); and the arcade look's pixel scales 1, 2
+  (2.18 (5)); the seen version's storage key `snake-demo.seen-version`
+  (2.19 (3)); and the arcade look's pixel scales 1, 2
   and 3, band of 40 pixels, roll of 8000 ms, shift of 2 pixels for 120 ms
   in a cycle of 7000 ms at 900, 3300 and 5600 ms, and cursor period of
   500 ms, the scanlines, the glow and the 6 % of the band, and the
@@ -1324,7 +1454,7 @@ section 3.
   highest level of a record (2.18 (5)) as 20 × 20 / 5. No other
   module writes these numbers
   (product-office Process P-11 § 5 (2)): `game.ts`, `input.ts`,
-  `storage.ts`, `query.ts`, `scores.ts`, `records.ts` and `pixel.ts` take the values
+  `storage.ts`, `query.ts`, `scores.ts`, `records.ts`, `history.ts` and `pixel.ts` take the values
   they need as parameters, and `main.ts`
   passes them from here.
 - `src/game.ts`: the game rules as pure functions over a game state (no
@@ -1361,6 +1491,12 @@ section 3.
   (7)) from a record, so that the page shows no text of its own. Covered
   by Jest with fake stores, also ones that throw, every malformed text of
   2.18 (5), and each rule of 2.18 (4).
+- `src/history.ts`: the version history of 2.19 as data (2.19 (2)), the
+  function that orders versions by SemVer 2.0.0 precedence, the decision
+  of 2.19 (3) from the stored version, the build's version and the list
+  (which entries open by itself, or none), reading and writing the stored
+  version through a function passed in that returns the store and may
+  throw, and the headings of 2.19 (4). Covered by Jest as 2.19 (5) says.
 - `src/pixel.ts`: the 5 × 7 bitmap font and the drawing of a text into
   pixels (2.16 (1)), the gap between the table's columns (12 pixels of the
   font, `COLUMN_GAP`) and the lead before a row's marker (6 pixels of the
@@ -1399,7 +1535,8 @@ section 3.
 - `src/main.ts`: draws the board, the obstacles and the level on a
   canvas, shows a special level's turns left, seconds left and shield
   (2.12 (10)), every level's turns and time (2.18 (3)), the line of its
-  records and the Records link with its table (2.18 (6), (7)),
+  records and the Records link with its table (2.18 (6), (7)), the
+  Version history link with its panel and its opening by itself (2.19),
   shows the "Special Level" text (2.12 (11)), shows the status line
   (the ended game's from `src/status.ts`), keeps the event log and
   shows its panel and the Copy feedback (2.13), runs the tick timer with the delay of the current level
