@@ -1,5 +1,17 @@
 import type { Locator, Page } from "@playwright/test";
-import { expect, expectGame, focusNothing, openGame, runTicks, splitPanel, test } from "./helpers";
+import {
+  answer,
+  expect,
+  expectGame,
+  focusNothing,
+  freeIndex,
+  openGame,
+  runTicks,
+  STARTS,
+  splitPanel,
+  startIndex,
+  test,
+} from "./helpers";
 
 // A key pressed on a focused button (docs/SPEC.md 2.6, 2.5, 2.13 (4) and (6), 2.14 (5), PBI-2.24).
 // Enter or Space on a focused button does that button's job and is not the New game or Pause
@@ -603,3 +615,63 @@ test("Tab with Ctrl, Alt or Meta in the log panel is left to the browser", async
   expect(prevented).toEqual([false, false, false]);
   await expect(page.locator("#log-copy")).toBeFocused();
 });
+
+// Ctrl, Meta and Alt with Enter or Space do nothing on the buttons of the name entry and on the
+// Close of the scores panel either (docs/SPEC.md 2.6, 2.15 (4), (5)): the browser's own click on a
+// focused button, which Chromium fires on the key-up of Space, is stopped there too.
+
+/** The answers of a game that eats one dot and then hits the wall: its score of 2 opens the name entry. */
+const scoringGame = (): number[] => [
+  answer(startIndex("10,10", "right"), STARTS),
+  answer(freeIndex("12,10", ["10,10"]), 399),
+  answer(0, 397),
+];
+
+const entryButtons = {
+  OK: "#entry-ok",
+  Skip: "#entry-skip",
+  Up: '[aria-label="Letter 1 up"]',
+  Down: '[aria-label="Letter 1 down"]',
+} as const;
+
+for (const modifier of ["Control", "Meta", "Alt"] as const) {
+  for (const key of KEYS) {
+    for (const [name, selector] of Object.entries(entryButtons)) {
+      test(`${modifier}+${key} on the focused ${name} of the name entry does nothing`, async ({
+        page,
+      }) => {
+        const game = await openGame(page, scoringGame());
+        await page.keyboard.press("ArrowRight");
+        await runTicks(page, 10);
+        await expect(game).toHaveAttribute("data-status", "over");
+        const entry = page.getByRole("dialog", { name: "Enter your name" });
+        await expect(entry).toBeVisible();
+        await page.locator(selector).focus();
+        await page.keyboard.press(`${modifier}+${key}`);
+        // Nothing was confirmed, skipped or changed.
+        await expect(entry).toBeVisible();
+        await expect(page.getByRole("dialog", { name: "Top 10 scores" })).toBeHidden();
+        await expect(page.getByRole("button", { name: "Letter 1, A", exact: true })).toBeVisible();
+        await expect(page.locator("#status")).toContainText("Enter your name");
+        expect(await page.evaluate(() => localStorage.getItem("snake-demo.scores"))).toBeNull();
+        // And the press itself still works, so the test does not pass because the button is dead.
+        await page.keyboard.press(name === "Skip" ? key : "Escape");
+        await expect(entry).toBeHidden();
+      });
+    }
+
+    test(`${modifier}+${key} on the focused Close of the scores panel does nothing`, async ({
+      page,
+    }) => {
+      const game = await runningGame(page);
+      await scoresLink(page).click();
+      await expect(page.locator("#scores-close")).toBeFocused();
+      await page.keyboard.press(`${modifier}+${key}`);
+      await expect(scoresPanel(page)).toBeVisible();
+      await expectGame(game, "paused", "12,10");
+      await page.keyboard.press("Escape");
+      await expect(scoresPanel(page)).toBeHidden();
+      await expectGame(game, "running", "12,10");
+    });
+  }
+}
