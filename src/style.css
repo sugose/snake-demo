@@ -15,6 +15,8 @@
   --focus: #2563eb;
   --copied-bg: #15803d;
   --copied-fg: #ffffff;
+  /* The Slow button's fill: a contrast of about 1.7:1 with the page, hard to notice (SPEC 2.14 (5)). */
+  --slow-bg: #c8c8c8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +36,7 @@
     --focus: #7aa7ff;
     --copied-bg: #4ade80;
     --copied-fg: #052e16;
+    --slow-bg: #3d3d3d;
   }
 }
 
@@ -117,6 +120,31 @@ h1 {
 
 .banner[hidden] {
   display: none;
+}
+
+.slow-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 auto;
+}
+
+.slow-row[hidden] {
+  display: none;
+}
+
+.slow-button {
+  width: var(--slow-size);
+  height: var(--slow-size);
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--slow-bg);
+  cursor: pointer;
+}
+
+.slow-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .log-row {

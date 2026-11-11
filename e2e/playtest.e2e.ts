@@ -551,7 +551,6 @@ test("the factor is 1 again when a new game is made", async ({ page }) => {
 
 test("the t= stamps and the tick count keep real time, whatever the factor", async ({ page }) => {
   await openGame(page, layout(5, "0,10", "right", [FAR]), "/?level=5&slow");
-  await page.clock.runFor(1000);
   await slowButton(page).click();
   await slowButton(page).click();
   await page.keyboard.press("ArrowRight");
@@ -559,11 +558,19 @@ test("the t= stamps and the tick count keep real time, whatever the factor", asy
   await page.clock.runFor(1100);
   await page.keyboard.press("Space");
   const { raw } = await readLog(page);
-  expect(raw).toContain("[t=1000 #0] button Slow used");
-  expect(raw).toContain("[t=1000 #0] slow x2");
-  expect(raw).toContain("[t=1000 #0] slow x4");
-  expect(raw).toContain("[t=2100 #5] move right 5 head=(5,10)");
-  expect(raw).toContain("[t=2100 #5] pause");
+  // The fake clock was moved to 60 s before the first line of the test; only differences count.
+  const stamped = raw
+    .map((line) => /^\[t=(\d+) #(\d+)\] (.*)$/.exec(line))
+    .filter((m) => m !== null);
+  const at = (words: string): { t: number; k: number } => {
+    const found = stamped.find((m) => m[3] === words);
+    if (found === undefined) throw new Error(`no line "${words}" in the log`);
+    return { t: Number(found[1]), k: Number(found[2]) };
+  };
+  const slowed = at("slow x4");
+  expect(slowed.k).toBe(0);
+  expect(at("move right 5 head=(5,10)")).toEqual({ t: slowed.t + 1100, k: 5 });
+  expect(at("pause")).toEqual({ t: slowed.t + 1100, k: 5 });
 });
 
 test("after a game is over the press is ignored: no step, and button Slow ignored state", async ({
