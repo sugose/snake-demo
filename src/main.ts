@@ -965,6 +965,15 @@ function sizeBoard(container: HTMLElement): void {
 // Keys (docs/SPEC.md 2.5, 2.6), whichever button has the focus.
 document.addEventListener("keydown", (event) => {
   keysDown.add(keyId(event));
+  // Ctrl, Meta and Alt with Enter or Space press no button, in a panel or out of it: the browser's
+  // own click, which Chromium fires on the key-up of Space, is stopped (docs/SPEC.md 2.6).
+  if (
+    hasModifier(event) &&
+    (event.key === "Enter" || event.key === " ") &&
+    document.activeElement instanceof HTMLButtonElement
+  ) {
+    event.preventDefault();
+  }
   if (entering !== null) {
     entryKey(event);
     return;
