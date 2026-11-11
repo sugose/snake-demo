@@ -10,6 +10,7 @@
     "test": "jest --coverage",
     "test:e2e": "npm run build && playwright test",
     "lint": "biome check .",
+    "verify-log": "node scripts/verify-log",
     "format": "biome format --write .",
     "ci": "biome ci --error-on-warnings . && npm run typecheck && jest --coverage --coverageThreshold='{\"global\":{\"lines\":80}}' && npm run test:e2e"
   },
@@ -17,6 +18,7 @@
     "@biomejs/biome": "2.5.15",
     "@playwright/test": "1.63.0",
     "@types/jest": "30.0.0",
+    "@types/node": "26.6.6",
     "jest": "30.5.2",
     "ts-jest": "29.4.14",
     "typescript": "6.0.3",

@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, expectGame, openGame, runTicks, test } from "./helpers";
+import { expect, expectGame, openGame, runTicks, splitPanel, test } from "./helpers";
 
 // The Copy button's feedback (docs/SPEC.md 2.13 (6)). The clipboard is stubbed, so the tests do not
 // depend on the browser's permissions, and the 2000 ms run on the page's fake clock.
@@ -60,6 +60,12 @@ const backgroundOf = (page: Page): Promise<string> =>
   copyButton(page).evaluate((button) => getComputedStyle(button).backgroundColor);
 const selected = (page: Page): Promise<string> =>
   page.evaluate(() => window.getSelection()?.toString() ?? "");
+/**
+ * The panel's text as a selection of all of it reads: the browser leaves the final line feed (the
+ * one that ends the checksum line) out of the selection's string. A log pasted without it is judged
+ * as one with it (docs/SPEC.md 2.13 (7)).
+ */
+const asSelected = (text: string): string => text.replace(/\n$/, "");
 const clearSelection = (page: Page): Promise<void> =>
   page.evaluate(() => window.getSelection()?.removeAllRanges());
 
@@ -220,7 +226,7 @@ for (const kind of ["absent", "throws", "rejects"] as const) {
     const plain = await backgroundOf(page);
     const text = (await page.locator("#log-text").textContent()) ?? "";
     await copyButton(page).click();
-    await expect.poll(() => selected(page)).toBe(text);
+    await expect.poll(() => selected(page)).toBe(asSelected(text));
     await expect(copyButton(page)).toHaveText("Copy");
     expect(await backgroundOf(page)).toBe(plain);
     await expect(live(page)).toHaveText("");
@@ -241,7 +247,7 @@ for (const kind of ["absent", "throws", "rejects"] as const) {
     await expect(copyButton(page)).toHaveText("Copy");
     expect(await backgroundOf(page)).toBe(plain);
     await expect(live(page)).toHaveText("");
-    await expect.poll(() => selected(page)).toBe(text);
+    await expect.poll(() => selected(page)).toBe(asSelected(text));
   });
 }
 
@@ -304,5 +310,5 @@ test("Copy puts the text the panel showed when it opened, not lines made since",
   await copyButton(page).click();
   await expect(copyButton(page)).toHaveText("✓ Copied!");
   expect(await copied(page)).toEqual([shown]);
-  expect(shown.split("\n").at(-1)).toMatch(/pause log$/);
+  expect(splitPanel(shown).lines.at(-1)).toMatch(/pause log$/);
 });

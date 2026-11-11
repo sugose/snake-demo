@@ -10,6 +10,7 @@ import {
   runTicks,
   STARTS,
   STORAGE_KEY,
+  splitPanel,
   startIndex,
   test,
 } from "./helpers";
@@ -64,7 +65,7 @@ async function readLog(page: Page): Promise<{ first: string; events: string[]; r
   await page.getByRole("button", { name: "Log", exact: true }).click();
   const text = (await page.locator("#log-text").textContent()) ?? "";
   await page.keyboard.press("Escape");
-  const [first = "", ...rest] = text.split("\n");
+  const [first = "", ...rest] = splitPanel(text).lines;
   return { first, events: rest.map((line) => line.replace(/^\[t=\d+ #\d+\] /, "")), raw: rest };
 }
 

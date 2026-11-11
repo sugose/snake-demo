@@ -197,3 +197,18 @@ export async function boardColour(page: Page, name: string): Promise<string> {
     return `rgb(${r}, ${g}, ${b})`;
   }, name);
 }
+
+/** A checksum line (docs/SPEC.md 2.13 (7)): `sha256`, one space and 64 lowercase hexadecimal digits. */
+export const CHECKSUM_LINE = /^sha256 [0-9a-f]{64}$/;
+
+/**
+ * The log panel's text split into the log's lines and the checksum line that ends it (docs/SPEC.md
+ * 2.13 (7)): the text ends with a line feed, and its last line is the checksum line. Fails if not.
+ */
+export function splitPanel(text: string): { lines: string[]; checksum: string } {
+  expect(text.endsWith("\n"), "the panel's text ends with a line feed").toBe(true);
+  const lines = text.slice(0, -1).split("\n");
+  const checksum = lines.pop() ?? "";
+  expect(checksum).toMatch(CHECKSUM_LINE);
+  return { lines, checksum };
+}

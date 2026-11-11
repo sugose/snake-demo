@@ -6,6 +6,7 @@ import {
   openGame,
   runTicks,
   STARTS,
+  splitPanel,
   startIndex,
   swipe,
   test,
@@ -69,9 +70,8 @@ async function logLines(page: Page): Promise<string[]> {
   await logLink(page).click();
   const text = (await page.locator("#log-text").textContent()) ?? "";
   await page.keyboard.press("Escape");
-  return text
-    .split("\n")
-    .slice(1)
+  return splitPanel(text)
+    .lines.slice(1)
     .map((line) => line.replace(/^\[t=\d+ #\d+\] /, ""));
 }
 
