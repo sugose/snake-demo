@@ -114,9 +114,7 @@ arcade look of the high score list"):
   writes no best score, the parameter is read at the page load only);
 - a secret slow button, `?slow`: his request of 00:10 and "apyr" at 00:32
   to Clead's recommendation of 00:12 (the factor steps 1×, 2×, 4×, 1×; the
-  time and points rules are unchanged; a small button under the board; the
-  record of the decision adds that a game started with `?slow` or
-  `?level=N` writes no best score);
+  time and points rules are unchanged; a small button under the board);
 - a high score list in the style of an old arcade machine: 00:34, 00:35
   ("intended for browser local high scores only") and 00:38, "apyr on all
   except swap RND for LVL", to Clead's choices of 00:34 (a top 10 in the browser only, the columns RANK,
@@ -252,8 +250,9 @@ browser's shortcuts are not taken as turns; Shift does not matter. When a
 key is held down, its repeats still turn the snake but do not pause, go
 on or start a new game again. Keys act on the game even while one of the
 buttons has the focus, and a key that does something in the game does
-not also press that button or follow that link (Enter on the focused Scores
-link is the New game command and does not open the table). While the log panel (2.13 (6)), the scores
+not also press that button. **[Clead]** A focused Log or Scores link is
+the exception, so that a keyboard user can reach the panels: Enter on it
+opens its panel (2.13 (6), 2.15 (5)) and is not the New game command. While the log panel (2.13 (6)), the scores
 panel or the name entry (2.15) is open, what the keys do is as those
 sections say.
 
@@ -643,7 +642,8 @@ Without them the page is as every other section says.
 3. `slow` is on when it is in the query string with any value or none
    (`?slow`, `?slow=1`). **[Clead]** Any value counts, because `?slow`
    with no value is the use.
-4. A page with a valid `level` or with `slow` is a playtest page. On it,
+4. A page with a valid `level` is a playtest page. **[Clead]** So is a page
+   with `slow`, since a slowed game is not comparable with others. On it,
    no game changes the best score (2.9 (2)) and none enters the high
    score list (2.15 (3)); both keep showing what they hold. The end line
    of the log says `best=no`. **[Clead]** The page shows no sign of a
@@ -790,9 +790,9 @@ Without them the page is as every other section says.
    entry's row marked: the row has `aria-current="true"` and a triangle
    drawn before its rank (2.16 (1)), so that the mark is not only a
    colour; closing the panel leaves the ended game as it was. **[Clead]**
-   The focus goes to Close when the table opens and back to the Scores
-   link, or after an entry to the New game button, when it closes, and
-   stays inside the panel; Enter and Space on the focused Close press it
+   The focus goes to Close when the table opens and back to the New game
+   button when it closes, so that Enter after closing it starts a new game
+   and does not open the table again, and stays inside the panel; Enter and Space on the focused Close press it
    (as in the entry), so the table closes and Enter makes no new game from
    it. **[Clead]** A key already down when the table opens, and the
    repeats of Enter, Space and Escape, do nothing, as in the entry (4).
