@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+// `npm run verify-log [file]`: checks the checksum line of an event log (docs/SPEC.md 2.13 (7)).
+//
+// Reads the log from the one file named on the command line or, with no argument, from the standard
+// input. Writes `match`, `mismatch` or `no checksum` and a line feed to the standard output and exits
+// 0, 1 or 2. For an input that cannot be read, more than one argument, or any other failure, writes a
+// message to the standard error, nothing to the standard output, and exits 3.
+//
+// The judgement is `src/logsum.ts`, read as it is: the TypeScript compiler that is already a
+// development dependency turns that one file into JavaScript in memory (no build step, no second
+// copy of the logic), and the SHA-256 is Node's own, not the page's `src/sha256.ts`.
+"use strict";
+
+const { createHash } = require("node:crypto");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
+
+const EXIT = { match: 0, mismatch: 1, "no checksum": 2 };
+const FAILED = 3;
+
+/** `src/logsum.ts` as a module. */
+function loadLogsum() {
+  const ts = require("typescript");
+  const source = readFileSync(join(__dirname, "..", "src", "logsum.ts"), "utf8");
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  });
+  const module = { exports: {} };
+  new Function("exports", "module", outputText)(module.exports, module);
+  return module.exports;
+}
+
+function main(args) {
+  if (args.length > 1) throw new Error("usage: verify-log [file]  (reads the standard input with no file)");
+  const bytes = readFileSync(args.length === 1 ? args[0] : 0);
+  const hash = (text) => createHash("sha256").update(text, "utf8").digest("hex");
+  const verdict = loadLogsum().judge(bytes, hash);
+  process.stdout.write(`${verdict}\n`);
+  return EXIT[verdict];
+}
+
+try {
+  process.exitCode = main(process.argv.slice(2));
+} catch (error) {
+  process.stderr.write(`verify-log: ${error instanceof Error ? error.message : String(error)}\n`);
+  process.exitCode = FAILED;
+}

@@ -137,11 +137,6 @@ export function startLog(
   return add(opened, at, levelLine(game, values));
 }
 
-/** The log as text, one line each (2.13 (2)). */
-export function logText(log: Log): string {
-  return log.lines.join("\n");
-}
-
 function inputText(input: Input): string {
   if (input.kind === "key") return `key ${input.key} ${input.command}`;
   if (input.kind === "swipe") return `swipe ${input.direction}`;

@@ -19,7 +19,6 @@ import {
   logPanelResume,
   logScores,
   logSlow,
-  logText,
   logTick,
   startLog,
 } from "./log";
@@ -127,7 +126,6 @@ describe("startLog and the level line (docs/SPEC.md 2.13 (5))", () => {
       "FIRST",
       "[t=0 #0] level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,19)",
     ]);
-    expect(logText(log)).toBe(log.lines.join("\n"));
   });
 
   it("a game made by the New game command starts with that input's line", () => {

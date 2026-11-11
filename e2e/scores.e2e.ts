@@ -6,6 +6,7 @@ import {
   openGame,
   runTicks,
   STARTS,
+  splitPanel,
   startIndex,
   swipe,
   test,
@@ -69,9 +70,8 @@ async function logLines(page: Page): Promise<string[]> {
   await logLink(page).click();
   const text = (await page.locator("#log-text").textContent()) ?? "";
   await page.keyboard.press("Escape");
-  return text
-    .split("\n")
-    .slice(1)
+  return splitPanel(text)
+    .lines.slice(1)
     .map((line) => line.replace(/^\[t=\d+ #\d+\] /, ""));
 }
 
@@ -1152,12 +1152,12 @@ test.describe("the list is read again at the confirmation (docs/SPEC.md 2.15 (6)
 
 // The New game command with the scores panel or the name entry open (docs/SPEC.md 2.13 (4), 2.5).
 
-/** The log's text with its stamps, split into lines (opens the log panel and closes it with Escape). */
+/** The log's lines with their stamps, without the checksum line (opens the log panel and closes it with Escape). */
 async function stampedLog(page: Page): Promise<string[]> {
   await logLink(page).click();
   const text = (await page.locator("#log-text").textContent()) ?? "";
   await page.keyboard.press("Escape");
-  return text.split("\n");
+  return splitPanel(text).lines;
 }
 
 test.describe("the New game command's line (docs/SPEC.md 2.13 (4))", () => {

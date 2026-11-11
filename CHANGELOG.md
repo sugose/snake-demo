@@ -6,6 +6,11 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- The event log ends with a checksum line, `sha256 ` and the 64 digits of the SHA-256 of the log text above it, in the
+  Log panel and in what Copy copies; the page makes it each time the panel opens, with a SHA-256 written for the project
+  (no third-party code). `npm run verify-log [file]` reads a log from a file or the standard input and says `match`,
+  `mismatch` or `no checksum` (exit 0, 1 or 2; 3 when the input cannot be read). It makes accidental and casual changes
+  visible; it does not prevent tampering, since the game runs in the browser (#71). Specified in #70.
 - The high score list's name entry and table have an arcade look: letters drawn as pixels from a 5 × 7 font of our own at the
   largest whole-number scale (1, 2 or 3) that fits the board, a dark panel in light and dark mode alike with four
   high-contrast text colours, scanlines and a glow, a rolling band, small sideways slips of the picture and a blinking

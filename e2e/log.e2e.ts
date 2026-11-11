@@ -1,12 +1,12 @@
 import type { Page } from "@playwright/test";
-import { expect, expectGame, openGame, runTicks, swipe, test } from "./helpers";
+import { expect, expectGame, openGame, runTicks, splitPanel, swipe, test } from "./helpers";
 
 // The event log in the browser (docs/SPEC.md 2.13).
 
 /** The log's lines without their stamps, and the tick count of each. */
 async function logLines(page: Page): Promise<{ first: string; events: string[]; ticks: number[] }> {
   const text = (await page.locator("#log-text").textContent()) ?? "";
-  const [first = "", ...rest] = text.split("\n");
+  const [first = "", ...rest] = splitPanel(text).lines;
   const events: string[] = [];
   const ticks: number[] = [];
   for (const line of rest) {
@@ -90,7 +90,7 @@ test("Copy puts the log on the clipboard; Escape and Close close the panel", asy
   await page.getByRole("button", { name: "Copy", exact: true }).click();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(copied).toBe(await page.locator("#log-text").textContent());
-  expect(copied.split("\n").at(-1)).toMatch(/end over wall score=0 best=no$/);
+  expect(splitPanel(copied).lines.at(-1)).toMatch(/end over wall score=0 best=no$/);
 
   // Game keys and buttons do nothing while it is open, and make no line.
   const text = await page.locator("#log-text").textContent();
@@ -132,7 +132,7 @@ test("a new game while the panel is open closes it and starts a new log", async 
   await expectGame(game, "over", "19,10");
   await link.click();
   const { events, ticks } = await logLines(page);
-  const stamps = ((await page.locator("#log-text").textContent()) ?? "").split("\n").slice(1);
+  const stamps = splitPanel((await page.locator("#log-text").textContent()) ?? "").lines.slice(1);
   expect(events).toEqual([
     "key Enter new used",
     "level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
@@ -169,7 +169,7 @@ for (const how of ["Escape", "Close"] as const) {
     await expectGame(game, "paused", "12,10");
     await expect(page.locator("#pause")).toHaveText("Resume");
     // The text of the panel is the log after the pause of its opening.
-    const lines = (await panelText(page)).split("\n");
+    const lines = splitPanel(await panelText(page)).lines;
     expect(lines.at(-2)).toMatch(/^\[t=\d+ #2\] move right 2 head=\(12,10\)$/);
     expect(lines.at(-1)).toMatch(/^\[t=\d+ #2\] pause log$/);
 
@@ -448,7 +448,7 @@ for (const how of ["Enter", "the New game button"] as const) {
     await expect(page.locator("#log-panel")).toBeHidden();
     await expectGame(game, "ready", "10,10");
     await linkOf(page).click();
-    const lines = (await panelText(page)).split("\n");
+    const lines = splitPanel(await panelText(page)).lines;
     expect(lines).toHaveLength(3);
     expect(lines[1]).toBe(
       `[t=0 #0] ${how === "Enter" ? "key Enter new used" : "button New game used"}`,
