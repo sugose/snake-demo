@@ -1257,8 +1257,12 @@ section 3.
      Records link when Close or Escape closes it, and to the New game
      button when the New game command closes it. Tab and Shift+Tab stay
      inside the panel, between the table and Close; with the focus outside
-     the panel, Tab goes to the table and Shift+Tab to Close. The table is
-     a Tab stop so that a long table can be scrolled with the keys.
+     the panel, Tab goes to the table and Shift+Tab to Close. The element
+     that scrolls the table (the scroll area around it, which holds the
+     table) is the Tab stop and takes the focus, so that a long table can
+     be scrolled with the keys; "the table" in the rest of this item and
+     in 2.5, 2.6 and 2.18 (8) means that element where a focus or a key is
+     named.
    - **[Clead]** With the focus on the table, the arrow keys, Space,
      Page Up, Page Down, Home and End are left to the browser, which
      scrolls the table: the page does not stop them (2.6) and they turn
@@ -1389,9 +1393,10 @@ section 3.
    down when it opens, and the repeats of Enter, Space and Escape, do
    nothing; the status line of an ended game keeps its words while it is
    open (2.8). The four links wrap onto another line when they do not fit the
-   width (no sideways scrolling, section 3). The text of the history is a
-   Tab stop, so that a long
-   history can be scrolled with the keys, and the keys on it are as the
+   width (no sideways scrolling, section 3). The element that scrolls the text
+   of the history (the scroll area around it) is the Tab stop and takes the
+   focus, so that a long history can be scrolled with the keys ("the text
+   of the history" in 2.5 and 2.6 means that element), and the keys on it are as the
    records table's (2.18 (7)): the browser scrolls it, nothing turns,
    Enter does nothing, Escape closes the panel. Tab and Shift+Tab stay
    inside the panel, in the order the text, the button "Show full
