@@ -150,7 +150,8 @@ log; it makes accidental and casual changes visible and does not prevent
 tampering, because the game runs in the browser. 2.13 (7), and the changes
 to 2.13 (2), (5), (6) and section 3 that follow from it, are Clead's exact
 wording of that decision. Details Adam has not settled are marked
-**[Clead]**; a mark at the start of an item or a bullet covers all of it.
+**[Clead]**; a mark at the start of an item or a bullet covers all of it,
+and a mark in the middle covers the sentence it opens.
 
 ---
 
@@ -634,40 +635,60 @@ cleared, no queued turns, and no obstacles or dot.
      readers: the panel holds a polite live region that reads "Copied"
      when a copy has succeeded; it is emptied when the button goes back
      and when a copy starts, so that a repeated copy is announced again.
-7. The checksum. **[Clead]** The log text is the lines of the log in
-   order, each followed by one line feed (U+000A), as UTF-8. The text the
-   panel shows and Copy copies (6) is the log text followed by one more
-   line, the checksum line: `sha256 `, a space, and the 64 lowercase
-   hexadecimal digits of the SHA-256 (FIPS 180-4) of the log text, then a
-   line feed. The page makes it each time the panel opens, from the log as
-   it is then; the log kept in memory has none, so a later line is covered
-   by the checksum of the next opening and not by an earlier one. The
-   checksum line has no stamp (2).
+7. The checksum. The text the panel shows and Copy copies (6) ends with
+   the checksum line, the SHA-256 of the log text above it, and
+   `npm run verify-log` checks a log (the decision recorded at the top of
+   this file). The rest of this item is **[Clead]**'s exact wording.
+   - **[Clead]** The log text is the lines of the log in order, each
+     followed by one line feed (U+000A), as UTF-8. The checksum line is the
+     word `sha256`, one space (U+0020) and the 64 digits of the SHA-256
+     (FIPS 180-4) of the log text, each from `0` to `9` or `a` to `f`, then
+     a line feed. The panel's text is the log text and then the checksum
+     line.
+   - **[Clead]** The page makes the checksum line each time the panel
+     opens, from the log as it is then, the pause of its opening included.
+     The log kept in memory has none, so a later line is covered by the
+     checksum of the next opening and not by an earlier one. The checksum
+     line has no stamp (2).
    - **[Clead]** The page computes the SHA-256 with a function written for
      this project (section 3), not the browser's `crypto.subtle`, which is
      asynchronous and needs a secure context; no third-party code is used.
-   - `npm run verify-log` checks a log. **[Clead]** It reads the log from a
-     file named on its command line or, with none, from the standard input;
-     reads CR LF as LF; ignores empty lines at the end; takes the last
-     remaining line as the checksum line and every line before it, each
-     followed by a line feed, as the log text; and uses Node's own SHA-256,
-     so that it is independent of the page's. It prints `match` and exits
-     with 0 when the digits are those of the log text, `mismatch` and 1 when
-     they are not, and `no checksum` and 2 when the input is empty or its
-     last line is not of the form of the checksum line (capital letters in
-     the digits included).
+   - **[Clead]** `npm run verify-log` reads the log from the one file named
+     on its command line or, with no argument, from the standard input. It
+     decodes the bytes as UTF-8 (a leading byte order mark is removed and
+     an invalid byte becomes U+FFFD, so that the text then fails to match),
+     reads CR LF as LF, and ignores the lines at the end that are empty or
+     hold only spaces and tabs. It takes the last remaining line as the
+     checksum line and every line before it, each followed by a line feed,
+     as the log text, and computes the SHA-256 with Node's own function, so
+     that it does not depend on the page's. It writes one word and a line
+     feed to the standard output and exits: `match` and 0 when the digits
+     are those of the log text; `mismatch` and 1 when they are not; `no
+     checksum` and 2 when no line is left or the last one is not exactly of
+     the form of the checksum line (capital letters, extra spaces and any
+     other text make it not of that form). For a file that cannot be read,
+     or more than one argument, it writes a message to the standard error,
+     nothing to the standard output, and exits 3.
    - It makes accidental and casual changes visible. It does not prevent
      tampering: the game runs in the browser, so anyone can change a log
      and compute its checksum again, and a secret key would be readable in
      the page.
-   - **[Clead]** Tests: the SHA-256 against the published test vectors
-     (the empty message, "abc", the 56-byte message of FIPS 180-4, and a
-     message of one million "a"), multi-block and multi-byte UTF-8 inputs
-     and Node's result for the same inputs; the checksum line for a given
-     log; the command's three outcomes with the exit codes, a changed
-     character, a removed or added line, a missing checksum line and CR LF
-     input; and, in the browser, that the panel's last line and the copied
-     text carry the checksum of the text above them.
+   - **[Clead]** Tests. Jest: the SHA-256 against the published test
+     vectors (the empty message, "abc", the 56-byte message of FIPS 180-4,
+     and a message of one million "a"), inputs of 55, 56, 63, 64 and 65
+     bytes and multi-byte UTF-8, each also against Node's result; the log
+     text and the checksum line for a given log, with the expected line
+     worked out outside the code; the judgement of a pasted log: match, a
+     changed character, a removed line, an added line, no checksum line,
+     capital letters in the digits, a last line of another shape, an empty
+     input, trailing empty lines, a byte order mark, CR LF input. The
+     command, run as a process: the same outcomes with the exit codes, from
+     a file and from the standard input, and exit 3 for a missing file and
+     for two arguments. Browser: with a game running, open the panel, and
+     again after more play; each time the panel's last line is the
+     checksum line of the text above it (CR LF read as LF, the expected
+     digits computed in the test), and Copy puts the same text on the
+     clipboard.
 
 ### 2.14 Playtest options
 
@@ -1008,7 +1029,7 @@ section 3.
   reported about the step, the time and the tick count; it keeps its
   own small state (the open stretch of moves) and works out no game
   rule itself. Pure, covered by Jest: every kind of line of 2.13 (5)
-  whole.
+  whole, except the checksum line, which `src/logsum.ts` makes.
 - `src/sha256.ts`: SHA-256 of a string as UTF-8, written for this project
   (2.13 (7)). Pure, covered by Jest against published test vectors and
   Node's own result.
