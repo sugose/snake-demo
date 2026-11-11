@@ -107,6 +107,43 @@ test("Copy puts the panel's text on the clipboard, turns green with ✓ Copied! 
   await expect(live(page)).toHaveText("");
 });
 
+/** The relative luminance of an "rgb(r, g, b)" colour (WCAG 2, 1.4.3). */
+function luminance(colour: string): number {
+  const [r = 0, g = 0, b = 0] = (colour.match(/\d+(?:\.\d+)?/g) ?? []).map(Number).map((value) => {
+    const channel = value / 255;
+    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** The WCAG contrast ratio of two "rgb(r, g, b)" colours. */
+function contrast(a: string, b: string): number {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return ((light ?? 0) + 0.05) / ((dark ?? 0) + 0.05);
+}
+
+test("the Copied! green is the specified pair for the colour mode and has a contrast of at least 4.5:1 (docs/SPEC.md 2.13 (6))", async ({
+  page,
+}) => {
+  await openPanel(page);
+  await copyButton(page).click();
+  await expect(copyButton(page)).toHaveText("✓ Copied!");
+  const dark = await page.evaluate(() => matchMedia("(prefers-color-scheme: dark)").matches);
+  const { background, text } = await copyButton(page).evaluate((button) => {
+    const style = getComputedStyle(button);
+    return { background: style.backgroundColor, text: style.color };
+  });
+  // Light: fill #15803d with text #ffffff (5.0:1). Dark: fill #4ade80 with text #052e16 (8.6:1).
+  expect({ background, text }).toEqual(
+    dark
+      ? { background: "rgb(74, 222, 128)", text: "rgb(5, 46, 22)" }
+      : { background: "rgb(21, 128, 61)", text: "rgb(255, 255, 255)" },
+  );
+  const ratio = contrast(background, text);
+  expect(ratio).toBeGreaterThanOrEqual(4.5);
+  expect(ratio).toBeCloseTo(dark ? 8.6 : 5.0, 1);
+});
+
 test("the live region is polite", async ({ page }) => {
   await openPanel(page);
   await expect(live(page)).toHaveAttribute("aria-live", "polite");

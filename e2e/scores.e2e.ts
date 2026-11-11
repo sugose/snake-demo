@@ -1149,3 +1149,72 @@ test.describe("the list is read again at the confirmation (docs/SPEC.md 2.15 (6)
     await expect(tablePanel(page).locator(MARKED)).toHaveCount(0);
   });
 });
+
+// The New game command with the scores panel or the name entry open (docs/SPEC.md 2.13 (4), 2.5).
+
+/** The log's text with its stamps, split into lines (opens the log panel and closes it with Escape). */
+async function stampedLog(page: Page): Promise<string[]> {
+  await logLink(page).click();
+  const text = (await page.locator("#log-text").textContent()) ?? "";
+  await page.keyboard.press("Escape");
+  return text.split("\n");
+}
+
+test.describe("the New game command's line (docs/SPEC.md 2.13 (4))", () => {
+  test("the New game button with the table open: its line is the first stamped line of the new log, at [t=0 #0], before the level's line", async ({
+    page,
+  }) => {
+    const game = await openGame(page);
+    await page.keyboard.press("ArrowRight");
+    await runTicks(page, 3);
+    await scoresLink(page).click();
+    await expect(game).toHaveAttribute("data-status", "paused");
+    await newGameButton(page).click();
+    await expect(tablePanel(page)).toBeHidden();
+    await expect(game).toHaveAttribute("data-status", "ready");
+    const lines = await stampedLog(page);
+    expect(lines).toHaveLength(3);
+    expect(lines[1]).toBe("[t=0 #0] button New game used");
+    expect(lines[2]).toBe(
+      "[t=0 #0] level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
+    );
+  });
+
+  test("Enter with the table open only closes it: no new game, and no line for the key", async ({
+    page,
+  }) => {
+    const game = await openGame(page);
+    await playToEnd(page);
+    await expect(game).toHaveAttribute("data-status", "over");
+    const before = await stampedLog(page);
+    await scoresLink(page).click();
+    await page.keyboard.press("Enter");
+    await expect(tablePanel(page)).toBeHidden();
+    await expect(game).toHaveAttribute("data-status", "over");
+    expect(await stampedLog(page)).toEqual(before);
+    expect(before.some((line) => line.includes("key Enter"))).toBe(false);
+  });
+
+  test("the name entry open: the New game button does nothing and writes no line; Enter confirms the name and writes no New game line", async ({
+    page,
+  }) => {
+    const game = await openGame(page, scoringGame());
+    await playToEnd(page);
+    await expect(entryPanel(page)).toBeVisible();
+    await newGameButton(page).click();
+    await expect(entryPanel(page)).toBeVisible();
+    await expect(game).toHaveAttribute("data-status", "over");
+    await expect(game).toHaveAttribute("data-score", "1");
+    await page.keyboard.press("Enter");
+    await expect(entryPanel(page)).toBeHidden();
+    await expect(game).toHaveAttribute("data-status", "over");
+    await expect(game).toHaveAttribute("data-score", "1");
+    await page.keyboard.press("Escape");
+    const lines = await stampedLog(page);
+    expect(lines.filter((line) => /\] (key|swipe|button)/.test(line))).toHaveLength(1);
+    expect(lines[1]).toMatch(/^\[t=0 #0\] level 1 /);
+    expect(lines.some((line) => line.includes("new used"))).toBe(false);
+    expect(lines.some((line) => line.includes("button New game"))).toBe(false);
+    expect(lines.at(-1)).toMatch(/^\[t=\d+ #\d+\] scores name=AAA rank=1$/);
+  });
+});

@@ -432,3 +432,29 @@ for (const how of ["Enter", "the New game button"] as const) {
     ]);
   });
 }
+
+// The New game command's line with the log panel open (docs/SPEC.md 2.13 (4), 2.5).
+
+for (const how of ["Enter", "the New game button"] as const) {
+  test(`${how} with the panel open: its line is the first stamped line of the new log, at [t=0 #0], before the level's line`, async ({
+    page,
+  }) => {
+    const game = await runningGame(page);
+    // Time has passed in the old game, so a stamp of 0 shows that the new log starts afresh.
+    await linkOf(page).click();
+    await expectGame(game, "paused", "12,10");
+    if (how === "Enter") await page.keyboard.press("Enter");
+    else await page.locator("#new-game").click();
+    await expect(page.locator("#log-panel")).toBeHidden();
+    await expectGame(game, "ready", "10,10");
+    await linkOf(page).click();
+    const lines = (await panelText(page)).split("\n");
+    expect(lines).toHaveLength(3);
+    expect(lines[1]).toBe(
+      `[t=0 #0] ${how === "Enter" ? "key Enter new used" : "button New game used"}`,
+    );
+    expect(lines[2]).toBe(
+      "[t=0 #0] level 1 normal delay=125 start=(10,10) right obstacles=- dot=(0,0)",
+    );
+  });
+}
