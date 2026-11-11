@@ -144,6 +144,15 @@ export async function expectGame(game: Locator, status: string, head: string): P
   await expect(game).toHaveAttribute("data-head", head);
 }
 
+/**
+ * Takes the focus off whatever has it, so that it is on no button, as it is after a click on the
+ * page's background. After a click on a button, or a panel closing, the focus is on a button, and
+ * Enter and Space press that button instead of being the New game and Pause commands (docs/SPEC.md 2.6).
+ */
+export async function focusNothing(page: Page): Promise<void> {
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+}
+
 /** A swipe on the board from its centre by (dx, dy) CSS pixels, as a touch or mouse pointer. */
 export async function swipe(
   page: Page,

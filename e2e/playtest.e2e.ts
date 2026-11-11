@@ -4,6 +4,7 @@ import {
   cellsAhead,
   expect,
   expectGame,
+  focusNothing,
   freeIndex,
   type Heading,
   openGame,
@@ -506,6 +507,8 @@ test("in paused a press steps the factor; going on uses the factor of that momen
   await expect(game).toHaveAttribute("data-status", "paused");
   await slowButton(page).click();
   expect(await factor(game)).toBe("2");
+  // The click left the focus on the Slow button, where Space would press it (docs/SPEC.md 2.6).
+  await focusNothing(page);
   await page.keyboard.press("Space");
   await expect(game).toHaveAttribute("data-status", "running");
   await page.clock.runFor(2 * LEVEL_5_DELAY - 1);
@@ -560,6 +563,7 @@ test("the t= stamps and the tick count keep real time, whatever the factor", asy
   await page.keyboard.press("ArrowRight");
   // x4: a tick every 220 ms of the clock, five of them in 1100 ms.
   await page.clock.runFor(1100);
+  await focusNothing(page);
   await page.keyboard.press("Space");
   const { raw } = await readLog(page);
   // The fake clock was moved to 60 s before the first line of the test; only differences count.
@@ -619,4 +623,74 @@ test("while the log panel is open the Slow button does nothing and makes no line
   // Closed again, the press works.
   await slowButton(page).click();
   expect(await factor(game)).toBe("2");
+});
+
+// ---- Keys on the focused Slow button (2.14 (5), 2.6, PBI-2.24) ----
+
+for (const key of ["Enter", "Space"] as const) {
+  test(`${key} on the focused Slow button steps the factor and writes the button's line, not a key line`, async ({
+    page,
+  }) => {
+    const game = await openGame(page, layout(5, "0,10", "right", [FAR]), "/?level=5&slow");
+    await page.keyboard.press("ArrowRight");
+    await runTicks(page, 1, LEVEL_5_DELAY);
+    await slowButton(page).focus();
+    for (const next of ["2", "4", "1"]) {
+      await page.keyboard.press(key);
+      expect(await factor(game)).toBe(next);
+    }
+    // Not the Pause command (Space) and not a new game (Enter).
+    await expectGame(game, "running", "1,10");
+    const { events } = await readLog(page);
+    expect(events.filter((line) => /^(key|button|slow) /.test(line))).toEqual([
+      "key ArrowRight right used",
+      "button Slow used",
+      "slow x2",
+      "button Slow used",
+      "slow x4",
+      "button Slow used",
+      "slow x1",
+    ]);
+  });
+
+  test(`${key} on the focused Slow button in an ended game is ignored: button Slow ignored state`, async ({
+    page,
+  }) => {
+    const game = await openGame(page, layout(5, "10,8", "up", [FAR]), "/?level=5&slow");
+    await page.keyboard.press("ArrowUp");
+    await runTicks(page, 9, LEVEL_5_DELAY);
+    for (let crash = 2; crash <= 4; crash++) {
+      await page.keyboard.press("ArrowLeft");
+      await runTicks(page, 1, LEVEL_5_DELAY);
+      await page.keyboard.press("ArrowUp");
+      await runTicks(page, 1, LEVEL_5_DELAY);
+    }
+    await expect(game).toHaveAttribute("data-status", "over");
+    await slowButton(page).focus();
+    await page.keyboard.press(key);
+    // Not a new game.
+    await expect(game).toHaveAttribute("data-status", "over");
+    expect(await factor(game)).toBe("1");
+    const { events } = await readLog(page);
+    expect(events.at(-1)).toBe("button Slow ignored state");
+    expect(events.at(-2)).toBe("end over wall score=0 best=no");
+  });
+}
+
+test("a level change that hides the Slow button leaves the focus on no button, so Space pauses", async ({
+  page,
+}) => {
+  const game = await openGame(page, [...straight(5), ...waiting(6)], "/?level=5&slow");
+  await slowButton(page).click();
+  await expect(slowButton(page)).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await runTicks(page, 5, 2 * LEVEL_5_DELAY);
+  await expect(game).toHaveAttribute("data-level", "6");
+  await expect(page.locator("#slow")).toBeHidden();
+  expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  await page.keyboard.press("ArrowRight");
+  await runTicks(page, 1, LEVEL_6_DELAY);
+  await expect(game).toHaveAttribute("data-status", "running");
+  await page.keyboard.press("Space");
+  await expect(game).toHaveAttribute("data-status", "paused");
 });
