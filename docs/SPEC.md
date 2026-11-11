@@ -114,10 +114,12 @@ arcade look of the high score list"):
   writes no best score, the parameter is read at the page load only);
 - a secret slow button, `?slow`: his request of 00:10 and "apyr" at 00:32
   to Clead's recommendation of 00:12 (the factor steps 1×, 2×, 4×, 1×; the
-  time and points rules are unchanged; a small button under the board);
+  time and points rules are unchanged; a small button under the board; a
+  game started with `?slow` or `?level=N` writes no best score and enters
+  no list);
 - a high score list in the style of an old arcade machine: 00:34, 00:35
   ("intended for browser local high scores only") and 00:38, "apyr on all
-  except swap RND for LVL" (a top 10 in the browser only, the columns RANK,
+  except swap RND for LVL", to Clead's choices of 00:34 (a top 10 in the browser only, the columns RANK,
   SCORE, LVL (the level reached) and NAME, a name of 3 letters A to Z,
   ties ranked older first, a name entry after a qualifying game, a link
   next to Log that opens the table, the best score kept as the top row's
@@ -134,7 +136,11 @@ Sections 2.14 to 2.16, and the changes to 2.1, 2.5, 2.6, 2.8, 2.9, 2.10,
 wording of that decision. Details Adam has not settled are marked
 **[Clead]**. In 2.14 to 2.16 a mark at the start of a numbered item or of a
 bullet covers all of it, and a mark in the middle covers the sentence it
-opens; what has no mark is in Adam's words above.
+opens; what has no mark is in Adam's words above. The encodings that
+carry them are Clead's technical detail, as in the first Approved
+paragraph, and Adam has not seen them: the text format and bounds of the
+stored list (2.15 (1)), the names of the keys and the parameters, and the
+sizes, colours and periods of 2.14 (5) and 2.16.
 
 ---
 
@@ -220,7 +226,7 @@ number minus one; the game uses a random one, and tests pass a fixed one.
 | Turn (key or swipe) | 2.1 (3) | 2.4 | ignored | ignored |
 | Start button | starts in the heading it has | ignored | ignored | ignored |
 | Pause (Space, P, Pause button) | ignored | `paused` | `running` | ignored |
-| New game (Enter, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, but not while the name entry of 2.15 (4) is open |
+| New game (Enter, New game button) | new game, at the start level (2.1 (2)) | new game | new game | new game, except that it does nothing while the name entry of 2.15 (4) is open, and while the scores panel of 2.15 (5) is open only the New game button gives it (Enter closes the panel) |
 | Slow button (2.14 (5)) | steps the factor | steps the factor | steps the factor | ignored |
 
 The queued turns are cleared by a new game. When the page is hidden (the
@@ -311,7 +317,8 @@ Enter confirms the name then and the New game button does nothing.
    happens inside the best-score module's error handling.
 5. The best score stays as it is. The high score list of 2.15 is a
    separate list under its own key (2.15 (1)); the best score gives it
-   one entry when it is above every stored one (2.15 (2)).
+   one entry, shown and never stored, when it is above every other entry
+   (2.15 (2)).
 
 ### 2.10 Levels
 
@@ -623,7 +630,7 @@ Without them the page is as every other section says.
    the score is 0, and the status line names level N (2.10 (3)). Clearing
    a level goes on to the next as usual. **[Clead]** The start level
    holds for every new game of the page, so that a special level can be
-   played again and again. A missing or invalid value is ignored: the game
+   played again and again. **[Clead]** A missing or invalid value is ignored: the game
    starts at level 1 and the page is not a playtest page for this option.
 3. `slow` is on when it is in the query string with any value or none
    (`?slow`, `?slow=1`). **[Clead]** Any value counts, because `?slow`
@@ -682,40 +689,41 @@ Without them the page is as every other section says.
    `snake-demo.scores` as text: the entries in that order, each written
    `SCORE:LEVEL:NAME` with the digits 0 to 9 and no leading zero, joined
    by `,`, for example `43:7:ABC,40:6:XYZ`. **[Clead]** The entry made
-   from the best score (2) has the level 0 and the name `---`, no other
-   entry has either, and at most one entry of the stored text has them;
-   the page shows them as `--` and `---`. A
-   missing value, or a value that is not exactly of that form (an entry
-   that is not valid, more than 10 entries, or scores that rise along the
-   list), reads as an empty list, the whole value and not an entry at a
-   time.
-2. **[Clead]** When the best score of 2.9 is above the score of every
-   stored entry (above 0 when none is stored), the list as read has one
-   more entry, ahead of the stored ones, with that score, the level 0
-   and the name `---`. It is not stored when the list is read. The list as
-   shown, and as (3) uses it, is the top 10 of the stored entries and that
-   one: with 10 stored the lowest of them is not shown.
+   from the best score (2) is never stored; it has the level 0 and the
+   name `---`, which the page shows as `--` and `---`. A missing value, or
+   a value that is not exactly of that form (an entry that is not valid,
+   which includes the level 0 and the name `---`; more than 10 entries; or
+   scores that rise along the list), reads as an empty list, the whole
+   value and not an entry at a time.
+2. **[Clead]** The list as shown at a moment is made so. Take the
+   stored entries and, for a game that is ending or being entered, the
+   entry that game would make (3). If the best score of 2.9, as it is at
+   that moment, is above the score of every one of them (above 0 when
+   there are none), add one more entry ahead of them, with that score, the
+   level 0 and the name `---`. The list as shown is the first 10 of
+   these. The best score is updated when a game ends (2.9 (2)), so it is
+   at least the game's score, and a game's score is never shown twice,
+   once as the best score and once as its entry.
 3. A game qualifies when it ends (`over`, `blown` or `won`) on a page
-   that is not a playtest page (2.14 (4)) with a score of at least 1,
-   and the list as shown, read as (6) says, has fewer than 10 entries or
-   the score is above that of the 10th. **[Clead]** The least score that
-   qualifies is 1. Making an entry (4) puts the new entry after every
-   entry of that list with a score at least as high, so it is older-first
-   against the entry of (2) as against a stored one; the list is then cut
-   to 10 entries (with the entry of (2) and the new one, two stored
-   entries can drop out of a full list), the entry of (2) is stored if it
-   was in the list, replacing a stored entry with the level 0, and the
-   result is stored. The rank of the entry is its place in that list.
-   Example: the best score is 43, nothing is stored, and a game ends with
-   43: the list is the entry of (2), the new entry is ranked 2, and the
-   stored list is `43:0:---,43:7:ABC` (the game having reached level 7).
-   Example: nothing is stored, the best score is 0, a game ends with 43:
-   the rank is 1, and the best score becomes 43; the stored list is
-   `43:7:ABC`, and the next time the list is read the best score is not
-   above it, so no entry of (2) is made. Example: `120:0:---` is stored,
-   a game skips its name at the new best score 150, and a game then makes
-   an entry with 20: the list is `150:0:---,20:5:ABC`, the stored entry of
-   120 having been replaced.
+   that is not a playtest page (2.14 (4)) with a score of at least 1, and
+   its entry is among the 10 of the list as shown for it (2).
+   **[Clead]** The least score that qualifies is 1. Making the entry (4)
+   puts it after every stored entry with a score at least as high, and
+   the stored list becomes the first 10 of the stored entries and the new
+   one; the entry of (2) is not among them. The rank of the entry is its
+   place in the list as shown with it (2), which is also the row the table
+   marks. Examples. The best score before the game was 43, nothing is
+   stored, and a game ends with 43, having reached level 7: the best score
+   is not above 43, the list is `43:7:ABC`, the rank is 1, and that is
+   stored. Nothing is stored, the best score before the game was 150 (the
+   name of that game was skipped), and a game ends with 40 at level 6: the
+   list as shown is `150:0:---`, then `40:6:ABC`, the rank is 2, and
+   `40:6:ABC` is stored. Ten entries with the scores 100, 90, 80, 70, 60,
+   50, 40, 30, 20 and 10 are stored and the best score is 150: a game
+   ends with 15, whose entry would be 11th with the entry of (2) shown, so
+   it does not qualify; a game ends with 25, the list as shown is the
+   entry of (2), then 100 to 30, then 25, so the rank is 10, and the
+   stored list is 100 to 30, 25 and 20, the entry 10 having dropped out.
 4. When a game qualifies, a panel over the board offers a name entry,
    with 3 slots, each a letter from A to Z starting at A, and a way to
    confirm the name.
@@ -723,27 +731,30 @@ Without them the page is as every other section says.
      with the game's score, LVL with the level it reached, RANK with the
      rank written as in (5), then the 3 slots, then an OK button and a
      Skip button.
-   - **[Clead]** One slot is selected, the first at the start, and the
-     focus follows the selection. ArrowUp changes the selected letter to
+   - **[Clead]** One slot is selected, the first at the start. ArrowUp changes the selected letter to
      the next in the alphabet (after Z comes A) and ArrowDown to the one
      before (before A comes Z); ArrowLeft and ArrowRight move the selection
      (not past the first or the last slot). Each slot is a button whose
      accessible name is its number and its letter, "Letter 1, A", and the
      selected slot has `aria-current="true"`; pressing a slot selects it.
-     Each slot also has an Up and a Down button, named "Letter 1 up",
-     "Letter 1 down" and so on, which select their slot and then do what
-     ArrowUp or ArrowDown does, so that a phone can do all of it.
+     The focus follows the selection when an arrow key or a press on a
+     slot changes it. Each slot also has an Up and a Down button, named
+     "Letter 1 up", "Letter 1 down" and so on, which select their slot and
+     then do what ArrowUp or ArrowDown does, so that a phone can do all of
+     it; the focus stays on the button that was pressed, so that a second
+     Enter or Space on it changes the letter again and does not confirm
+     the name.
    - **[Clead]** Keys: with the focus on a slot, Enter confirms and Space
      does nothing; with the focus on OK, Skip, an Up or a Down button,
      Enter and Space press that button (the decision of 2026-11-10 on keys
      on a focused button, `DECISIONS.md`, PO-171); Escape skips from
      anywhere in the entry. A repeat of Enter, Space or Escape does
      nothing, a repeat of an arrow key acts as a new press, and a key that
-     was already down when the entry opened does nothing, its repeats
-     included, until it is released.
-   - Confirming stores the entry as (3) says, writes the line
-     `scores name=ABC rank=3` (2.13 (5)) and turns the panel into the table
-     of (5), with the new entry marked. **[Clead]** Skipping stores
+     was already down when the entry or the table of (5) opens does
+     nothing, its repeats included, until it is released.
+   - Confirming stores the entry as (3) says and writes the line
+     `scores name=ABC rank=3` (2.13 (5)). **[Clead]** The panel then turns
+     into the table of (5), with the new entry marked. **[Clead]** Skipping stores
      nothing, writes `scores skipped` and closes the panel; the entry can
      be skipped so that nobody is held up by it.
    - **[Clead]** While the entry is open, game keys, swipes, the Start,
@@ -760,8 +771,8 @@ Without them the page is as every other section says.
    pauses it, closing it with Close or Escape goes on if opening paused
    the game (the lines `pause scores` and `resume scores`); while it is
    open, game keys, swipes, the Start, Pause and Resume buttons and both
-   links do nothing, and the New game command closes it and makes a new
-   game. The panel has the title TOP 10 SCORES, the headings RANK, SCORE,
+   links do nothing, and the New game button closes it and makes a new
+   game; Enter does not, since the focus is on Close and Enter presses it. The panel has the title TOP 10 SCORES, the headings RANK, SCORE,
    LVL and NAME, and a row for each entry of the list as shown, read when
    the panel opens: its rank written 1ST, 2ND, 3RD, 4TH and so on to
    10TH, its score, its level (`--` for the entry of (2)) and its name.
@@ -775,17 +786,19 @@ Without them the page is as every other section says.
    link, or after an entry to the New game button, when it closes, and
    stays inside the panel; Enter and Space on the focused Close press it
    (as in the entry), so the table closes and Enter makes no new game from
-   it. The focus of the log panel is as it is.
+   it. A key already down when the table opens, and the repeats of Enter,
+   Space and Escape, do nothing, as in the entry (4). The status line of an
+   ended game keeps its words while the table is open (2.8), and Enter
+   then closes the table, so that a second Enter makes the new game. The
+   focus of the log panel is as it is.
 6. **[Clead]** When the list is read: when a game ends (for the
    qualification), when the entry opens, when it is confirmed (before the
    write, so that the entries another tab stored in the meantime are
-   kept) and when the Scores panel opens. For one game the page keeps the
-   best score as it was before that game's score was applied (2.9 (2)),
-   and the reads for the qualification, the opening and the confirmation
-   all make the entry of (2) from that score; the Scores panel's read uses
-   the current best score. The rank of the line and the table is the one
-   found at the confirmation. If the entry no longer ranks in the top 10
-   then (another tab filled the list), nothing is stored, the line is
+   kept) and when the Scores panel opens. Each read makes the list as
+   shown (2) from the stored text and the best score as they are at that
+   moment. The rank of the line and the table is the one found at the
+   confirmation. If the entry is no longer among the 10 then (another tab
+   filled the list), nothing is stored, the line is
    `scores name=ABC full` and the panel turns into the table without a
    marked row. A read that fails reads as an empty list (1). After a
    failed write the page keeps its list in memory and uses that list for
@@ -853,7 +866,9 @@ section 3.
    and their contrast, the animation names and periods in the styles the
    browser computes, none of them under reduced motion, and, in Jest, the
    bitmap font (every glyph 5 × 7, every character of the panels present
-   and different from the others) and the drawing of a text into pixels.
+   and different from the others) and the drawing of a text into pixels. Because "Letter 1, A", "Letter 1 up" and "Letter 1 down" all contain
+   "Letter 1", a test finds a button by its accessible name with an exact
+   match.
 
 ---
 
@@ -903,9 +918,11 @@ section 3.
   name given twice and other names.
 - `src/scores.ts`: the high score list (2.15) as pure functions: reading
   and writing its text through a function passed in that returns the store
-  and may throw, the entry made from the best score, whether a game
-  qualifies, its rank and the list after an entry. Covered by Jest with
-  fake stores, also ones that throw, and every malformed text of (1).
+  and may throw, the list as shown with the entry made from the best score,
+  whether a game qualifies, its rank and the list after an entry. Covered
+  by Jest with fake stores, also ones that throw, every malformed text of
+  (1) (a stored level 0 among them), the three examples of (3), a best
+  score equal to the game's score, and the `full` outcome of (6).
 - `src/pixel.ts`: the 5 × 7 bitmap font and the drawing of a text into
   pixels (2.16 (1)). Pure, covered by Jest.
 - `src/status.ts`: the status line of an ended game (2.8) and of a
