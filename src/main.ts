@@ -349,6 +349,7 @@ function openLog(): void {
     apply(pauseIfRunning(state));
   }
   logTextBox.textContent = logText(log);
+  keysBlocked = new Set(keysDown);
   logPanel.hidden = false;
   logClose.focus();
 }
@@ -867,6 +868,13 @@ document.addEventListener("keydown", (event) => {
   });
   if (command === null) return;
   if (logOpen() && command.type !== "newGame") return;
+  // While the log panel is open a repeat, or a key that was already down when it opened, does
+  // nothing and makes no line (docs/SPEC.md 2.13 (4)); a held Enter that opened it from the focused
+  // Log link would otherwise write a line for every repeat.
+  if (logOpen() && (event.repeat || keysBlocked.has(keyId(event)))) {
+    event.preventDefault();
+    return;
+  }
   // A focused Log or Scores link opens its panel on Enter, and Enter is not a new game there; the
   // browser presses the link (docs/SPEC.md 2.6).
   if (command.type === "newGame" && (event.target === logLink || event.target === scoresLink)) {

@@ -858,6 +858,58 @@ test.describe("the Scores link and the table (docs/SPEC.md 2.15 (5))", () => {
     await expect(game).toHaveAttribute("data-score", "0");
   });
 
+  test("a held Enter on a focused Log or Scores link opens its panel once: its repeats write no log line and make no new game", async ({
+    page,
+  }) => {
+    const game = await openGame(page);
+    await playToEnd(page);
+    await expect(game).toHaveAttribute("data-status", "over");
+
+    await logLink(page).focus();
+    await page.keyboard.down("Enter");
+    await expect(page.locator("#log-panel")).toBeVisible();
+    await page.keyboard.down("Enter");
+    await page.keyboard.down("Enter");
+    await page.keyboard.down("Enter");
+    await page.keyboard.up("Enter");
+    await expect(page.locator("#log-panel")).toBeVisible();
+    await expect(game).toHaveAttribute("data-status", "over");
+    await page.keyboard.press("Escape");
+
+    await scoresLink(page).focus();
+    await page.keyboard.down("Enter");
+    await expect(tablePanel(page)).toBeVisible();
+    await page.keyboard.down("Enter");
+    await page.keyboard.down("Enter");
+    await page.keyboard.up("Enter");
+    await expect(tablePanel(page)).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await expect(game).toHaveAttribute("data-status", "over");
+    const lines = await logLines(page);
+    expect(lines.filter((line) => line.startsWith("key Enter"))).toEqual([]);
+    expect(lines.filter((line) => /^(key|swipe|button)/.test(line))).toEqual([
+      "key ArrowRight right used",
+    ]);
+  });
+
+  test("a held Space while the log panel is open writes no log line: it presses the focused Close, once", async ({
+    page,
+  }) => {
+    const game = await openGame(page);
+    await playToEnd(page);
+    await logLink(page).click();
+    await expect(page.locator("#log-panel")).toBeVisible();
+    await page.keyboard.down("Space");
+    await page.keyboard.down("Space");
+    await page.keyboard.down("Space");
+    await page.keyboard.up("Space");
+    await expect(page.locator("#log-panel")).toBeHidden();
+    await expect(game).toHaveAttribute("data-status", "over");
+    const lines = await logLines(page);
+    expect(lines.filter((line) => line.startsWith("key Space"))).toEqual([]);
+  });
+
   test("the Slow button does nothing while it is open and writes no line", async ({ page }) => {
     const game = await openGame(page, undefined, "/?level=5&slow");
     const slow = page.getByRole("button", { name: "Slow down", exact: true });
