@@ -232,7 +232,7 @@ the name entry of 2.15 (4) is open the command does nothing. While the
 scores panel of 2.15 (5) is open, which it can be in `ready`, `paused` and
 the ended states (it pauses a `running` game), only the New game button
 gives a new game, and Enter closes the panel. While the log panel
-(2.13 (6)) is open, Enter or the button closes it and gives a new game.
+(2.13 (6)) is open, Enter or the button closes it and gives a new game. A focused Log or Scores link is the exception of 2.6: Enter on it opens its panel and is not the New game command.
 
 The queued turns are cleared by a new game. When the page is hidden (the
 browser tab is left), a `running` game is paused. The log panel of 2.13 (6)
@@ -529,7 +529,10 @@ cleared, no queued turns, and no obstacles or dot.
    turn (2.7); every press of the Start, Pause or Resume, New game and Slow
    (2.14 (5)) buttons. Keys with no command, keys held with Ctrl, Meta or Alt, swipes
    that map to nothing, and any input while the panel of (6), the scores panel
-   or the name entry of 2.15 is open make no line; opening and closing
+   or the name entry of 2.15 is open make no line, except the New game
+   command while the log panel is open (Enter or the button) or the scores
+   panel is open (the button only, 2.5), which closes the panel and makes
+   a new game; opening and closing
    the panels make a line only as (6) and 2.15 (5) say. The New game command's line is the first stamped line
    of the new game's log, at `[t=0 #0]`, before its level's line; the
    page load makes no input line. An input line says whether the input was used or
@@ -594,7 +597,7 @@ cleared, no queued turns, and no obstacles or dot.
      Pause command does (2.5), so that a snake that cannot be steered
      does not crash under the panel. Closing the panel with Close or
      Escape goes on, as Pause does from `paused`, but only if opening it
-     paused the game, so the snake moves at once. In `ready`, `paused`
+     paused the game, so the game goes on as Resume does. In `ready`, `paused`
      and the ended states the panel changes nothing, on opening or on
      closing, and the New game command makes a new game without going
      on. The pause and the going on are written `pause log` and
@@ -603,8 +606,9 @@ cleared, no queued turns, and no obstacles or dot.
      in the log, and in the panel the next time it is opened. A page
      shown again does not go on a game the panel paused (2.5).
    - When Copy has copied the log, the button turns green and its text
-     reads "✓ Copied!". **[Clead]** The green keeps the text readable in
-     light and dark mode. The button goes back to its plain look and the
+     reads "✓ Copied!". **[Clead]** The green is a fill of `#15803d` with text of
+     `#ffffff` in light mode (a contrast ratio of 5.0:1) and a fill of `#4ade80`
+     with text of `#052e16` in dark mode (8.6:1); each is at least 4.5:1. The button goes back to its plain look and the
      text "Copy" after 2000 ms (a named value, section 3), and at once
      when the panel closes or opens again. Pressing Copy again while it
      shows copies again and starts the 2000 ms over. The browser refuses
@@ -643,7 +647,7 @@ Without them the page is as every other section says.
    (`?slow`, `?slow=1`). **[Clead]** Any value counts, because `?slow`
    with no value is the use.
 4. A page with a valid `level` is a playtest page. **[Clead]** So is a page
-   with `slow`, since a slowed game is not comparable with others. On it,
+   with `slow`, since a slowed game is not comparable with others. On a playtest page,
    no game changes the best score (2.9 (2)) and none enters the high
    score list (2.15 (3)); both keep showing what they hold. The end line
    of the log says `best=no`. **[Clead]** The page shows no sign of a
@@ -853,7 +857,7 @@ section 3.
    pixels.
 4. **[Clead]** The picture is a little out of sync. Two movements, in CSS
    only (no script timer): a band of the background 40 pixels high, the
-   background mixed with 6 % white, rolls down the panel once in 8000 ms
+   background mixed with 6 % white at its middle and fading to the background at its top and bottom edges, rolls down the panel once in 8000 ms
    and starts again at the top; and the whole picture shifts sideways by
    2 pixels for 120 ms at 900 ms, 3300 ms and 5600 ms of a cycle of
    7000 ms, as if the sync had slipped. They move `transform` and the
@@ -870,7 +874,11 @@ section 3.
 6. The values (the scales, the size of the band, the periods, the shift,
    the cursor's period, the scanlines, the glow and the 6 %) are named
    values (section 3), which `main.ts` hands to the CSS as custom
-   properties. What the look looks like is Adam's to judge by playing; the
+   properties. **[Clead]** The one exception is the times and length of the
+   sideways shifts, which are percentages of a keyframe's cycle and so
+   cannot be custom properties: `main.ts` writes them as a `@keyframes`
+   rule from the named values.
+   What the look looks like is Adam's to judge by playing; the
    tests of the panel check what can be measured: the texts, the colours
    and their contrast, the animation names and periods in the styles the
    browser computes, none of them under reduced motion, and, in Jest, the
@@ -933,7 +941,12 @@ section 3.
   (1) (a stored level 0 among them), the three examples of (3), a best
   score equal to the game's score, and the `full` outcome of (6).
 - `src/pixel.ts`: the 5 × 7 bitmap font and the drawing of a text into
-  pixels (2.16 (1)). Pure, covered by Jest.
+  pixels (2.16 (1)), the gap between the table's columns (12 pixels of the
+  font, `COLUMN_GAP`) and the lead before a row's marker (6 pixels of the
+  font, `MARKER_LEAD`), each times the pixel scale in CSS pixels,
+  which `main.ts` hands to the CSS as `--arcade-gap` and `--arcade-lead`, and
+  the text of the `@keyframes` rule of the shifts (2.16 (6)). Pure, covered by
+  Jest.
 - `src/status.ts`: the status line of an ended game (2.8) and of a
   snake waiting after a shielded crash (2.12 (10)), as pure functions of
   the game state (no DOM). Pure, covered by Jest: every line of 2.8
