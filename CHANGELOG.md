@@ -13,7 +13,7 @@ All notable changes to Snake demo are documented here.
   with the Slow factor; the tick that clears the level counts). Both start at 0 on each level. The special level's row
   now reads "Turns left", "Seconds left" and "Shield left". In the event log a turn on a normal level is
   `turn up counted 5` and the `cleared` line of both kinds carries `turns=N time=MS` before `score=`. The limits of
-  20 turns and 30 seconds stay on special levels only. Specified in #80.
+  20 turns and 30 seconds stay on special levels only (#84). Specified in #80.
 - A version line under the controls, `v0.1.0 · abc1234` (the `version` of `package.json` and the first 7 characters of the
   commit the page was built from, or `dev` for a local build), in small muted text, centred under the board, on every page and
   not a button or in the tab order. Both are fixed at build time, and the event log's first line now starts `snake-demo
