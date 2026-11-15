@@ -1342,8 +1342,8 @@ section 3.
    newest first. An entry has a version (the text of `package.json`'s
    `version`, which is a SemVer 2.0.0 version), a date written
    `YYYY-MM-DD` that is a real calendar date (`2026-02-30` is not), and one
-   or more lines, each a non-empty text of plain words, shown as text and
-   never as HTML. A text is a SemVer 2.0.0 version if it matches the
+   or more lines, each a non-empty text (not only spaces) of plain words, shown as
+   text and never as HTML. A text is a SemVer 2.0.0 version if it matches the
    regular expression that semver.org gives for it, so build metadata
    (`0.2.0+abc`) is valid and ignored by the precedence, and a leading
    `v` or a space is not valid; numeric identifiers are compared as digit
@@ -1352,7 +1352,13 @@ section 3.
    section 11 defines it (compared by this project's own function, `src/history.ts`; no
    third-party code). The version of `package.json` has an entry and it is
    the first, so a version cannot be set without writing what it brings;
-   a Jest test checks it. The text is read from nothing at run time.
+   a Jest test checks it. The text is read from nothing at run time, with one exception for the
+   browser tests: a page in an automated browser (`navigator.webdriver`
+   true) reads a list from the `window` property `__snakeDemoTestHistory`
+   once, at load, and uses it in place of the bundled one only if it
+   meets every rule of this item (the version of `package.json` first, as
+   a Jest test checks for the bundled list, is not asked of it). In a
+   player's browser nothing is read from there.
 3. **What opens by itself.** **[Clead]** The version last seen is kept in
    the browser's local storage under the key `snake-demo.seen-version`,
    as the version text. When the page loads, with S the stored text and V
@@ -1437,10 +1443,13 @@ section 3.
    opens, V written) and throws on writing (the decision still given);
    S lower than a prerelease V (`0.3.0-rc.1`), a prerelease S below a
    release V, S with build metadata equal to the same version without it,
-   and a leading `v` or a space invalid; a date that is not a real
+   and a leading `v` or a space invalid; a line of only spaces refused; a
+   build version that is not SemVer opens nothing and is still written; a date that is not a real
    calendar date refused; the log lines
    `pause history` and `resume history` in the cases of 2.13 (5). Browser: a
-   line with `<` in it is shown as text, not as HTML; the link opens
+   line with `<` in it, given through the test list of (2), is shown as
+   text, not as HTML; the test list is read with `webdriver` true and
+   ignored with it false; the link opens
    the panel with every entry and the title "Version history"; with
    `snake-demo.seen-version` set to `0.0.1` before the page loads, the
    panel opens by itself with the title "What's new", the entry of the
@@ -1462,7 +1471,8 @@ section 3.
    panel is open; with the history panel open the Log, Scores and Records
    links do nothing, and with the log, scores or records panel open the
    Version history link does nothing; the Version history link does nothing
-   with the name entry open; the links wrapping at a width of 375 px; the
+   with the name entry open; no sideways scrolling at a width of 375 px and
+   the links wrapping at 320 px; the
    plain look; a failing storage.
 
 ## 3. Architecture
