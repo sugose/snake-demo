@@ -1013,13 +1013,15 @@ test.describe("the Records link and the panel (docs/SPEC.md 2.18 (7))", () => {
       await expect(recordsPanel(page)).toBeVisible();
     });
 
-    test("the Log and Scores links do nothing", async ({ page }) => {
+    test("the Log, Scores and Version history links do nothing", async ({ page }) => {
       await openGame(page);
       await recordsLink(page).click();
       await named(page, "Log").click();
       await named(page, "Scores").click();
+      await named(page, "Version history").click();
       await expect(page.getByRole("dialog", { name: "Event log" })).toBeHidden();
       await expect(page.getByRole("dialog", { name: "Top 10 scores" })).toBeHidden();
+      await expect(page.locator("#history-panel")).toBeHidden();
       await expect(recordsPanel(page)).toBeVisible();
     });
 

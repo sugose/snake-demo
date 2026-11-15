@@ -153,8 +153,9 @@ h1 {
 
 .log-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 4px 16px;
   margin: 0;
 }
 
@@ -206,19 +207,22 @@ h1 {
 }
 
 /* The records panel has the plain look of the log panel; only its content differs (SPEC 2.18 (7)). */
-.records-title {
+.records-title,
+.history-title {
   margin: 0;
   font-size: 1rem;
 }
 
 /* The table scrolls inside the panel and is a Tab stop, so that the keys can scroll it. */
-.records-scroll {
+.records-scroll,
+.history-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
 }
 
-.records-scroll:focus-visible {
+.records-scroll:focus-visible,
+.history-scroll:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
@@ -251,9 +255,31 @@ h1 {
   display: none;
 }
 
+/* The version history's text: each entry a heading with its lines as a list under it (SPEC 2.19 (4)). */
+.history-entry h3 {
+  margin: 8px 0 4px;
+  font-size: 0.875rem;
+}
+
+.history-entry:first-child h3 {
+  margin-top: 0;
+}
+
+.history-entry ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
 .log-actions {
   display: flex;
   gap: 8px;
+}
+
+.log-actions button[hidden] {
+  display: none;
 }
 
 .log-actions button {

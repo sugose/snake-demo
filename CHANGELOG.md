@@ -6,6 +6,17 @@ All notable changes to Snake demo are documented here.
 
 ### Added
 
+- A version history. A "Version history" link next to Log, Scores and Records (the four links wrap when they do not fit,
+  with no sideways scrolling) opens a panel over the board with an entry for each version, newest first: a heading
+  `Version 0.1.0 · 2026-11-09` and its lines as a list, written for players, bundled into the page when it is built and
+  shown as text (`src/history.ts`; a Jest test checks that every version is valid SemVer 2.0.0, in descending order, with
+  a real date and non-empty lines, and that the `package.json` version is the first entry). The browser remembers the last
+  version it saw under `snake-demo.seen-version`; when the page loads with a lower stored version the history opens by
+  itself as "What's new" with only the newer entries and a "Show full history" button (nothing opens on a first visit or
+  when the stored text is missing, invalid, equal or higher, or the storage fails). It works as the Records panel does: it
+  pauses a running game and goes on at Close or Escape (`pause history`, `resume history`), the opening by itself pauses
+  nothing and writes no log line, and the Log, Scores and Records links do nothing while it is open (and it does nothing
+  while they or the name entry are) (#88). Specified in #83.
 - Level records. The page keeps up to two records for each level: the fewest turns, with the time that play took, and the
   fastest time, with the turns it took. A level is cleared on a page that is not a playtest page: the records are compared
   (fewer turns, or equal turns and a shorter time, sets the fewest; a shorter time, or an equal time and fewer turns, sets

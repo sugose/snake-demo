@@ -373,7 +373,7 @@ test.describe("the name entry (docs/SPEC.md 2.15 (4))", () => {
     await expect(named(page, "Skip")).toBeFocused();
   });
 
-  test("while it is open, game keys, swipes, Start, Pause, New game, Log and Scores do nothing and make no log line", async ({
+  test("while it is open, game keys, swipes, Start, Pause, New game, Log, Scores, Records and Version history do nothing and make no log line", async ({
     page,
   }) => {
     const game = await openGame(page, scoringGame());
@@ -386,9 +386,13 @@ test.describe("the name entry (docs/SPEC.md 2.15 (4))", () => {
     await newGameButton(page).click();
     await logLink(page).click();
     await scoresLink(page).click();
+    await named(page, "Records").click();
+    await named(page, "Version history").click();
     await expect(entryPanel(page)).toBeVisible();
     await expect(page.locator("#log-panel")).toBeHidden();
     await expect(tablePanel(page)).toBeHidden();
+    await expect(page.locator("#records-panel")).toBeHidden();
+    await expect(page.locator("#history-panel")).toBeHidden();
     await expect(game).toHaveAttribute("data-status", "over");
     await expect(game).toHaveAttribute("data-score", "1");
     await page.keyboard.press("Escape");
@@ -740,7 +744,7 @@ test.describe("the Scores link and the table (docs/SPEC.md 2.15 (5))", () => {
     await expect(game).toHaveAttribute("data-head", "19,10");
   });
 
-  test("while it is open, game keys, swipes and Start, Pause, Resume, Log do nothing and make no line", async ({
+  test("while it is open, game keys, swipes and Start, Pause, Resume, Log and Version history do nothing and make no line", async ({
     page,
   }) => {
     const game = await openGame(page);
@@ -756,8 +760,10 @@ test.describe("the Scores link and the table (docs/SPEC.md 2.15 (5))", () => {
     await named(page, "Start").click();
     await named(page, "Resume").click();
     await logLink(page).click();
+    await named(page, "Version history").click();
     await expect(tablePanel(page)).toBeVisible();
     await expect(page.locator("#log-panel")).toBeHidden();
+    await expect(page.locator("#history-panel")).toBeHidden();
     await expect(game).toHaveAttribute("data-status", "paused");
     await expect(game).toHaveAttribute("data-heading", "right");
     await page.keyboard.press("Escape");

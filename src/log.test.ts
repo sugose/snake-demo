@@ -709,6 +709,25 @@ describe("the records panel's pause and resume (docs/SPEC.md 2.13 (5), 2.18 (7))
   });
 });
 
+describe("the history panel's pause and resume (docs/SPEC.md 2.13 (5), 2.19 (4))", () => {
+  it("pause history ends the open stretch and writes pause history", () => {
+    const running = game();
+    const moved = logTick(EMPTY, at(125, 1), running, tick(running, ZERO));
+    const log = logPanelPause(moved, at(200, 1), "history");
+    expect(added(moved, log)).toEqual([
+      "[t=200 #1] move right 1 head=(11,10)",
+      "[t=200 #1] pause history",
+    ]);
+    expect(log.stretch).toBeNull();
+  });
+
+  it("resume history writes resume history and nothing else", () => {
+    expect(logPanelResume(EMPTY, at(900, 1), "history").lines).toEqual([
+      "[t=900 #1] resume history",
+    ]);
+  });
+});
+
 describe("logScores: the name entry's outcome (docs/SPEC.md 2.13 (5), 2.15 (4), (6))", () => {
   it("a name entered with its rank", () => {
     expect(logScores(EMPTY, at(4000, 12), { kind: "name", name: "ABC", rank: 3 }).lines).toEqual([
