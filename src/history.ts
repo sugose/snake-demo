@@ -31,6 +31,7 @@ export const HISTORY: readonly HistoryEntry[] = [
       "Eat 5 dots to clear a level. Each level is laid out anew with a random start and one more obstacle than the one before, and the early levels get faster.",
       "Every 5th level is a special level: a shield that takes 3 crashes, at most 20 turns and 30 seconds, and obstacles that jump around. You score for the turns and seconds you have left.",
       "A top 10 list of high scores is kept in this browser. A score that makes the list asks for a name of 3 letters, and the Scores link shows the list.",
+      "The name entry and the Scores list look like an arcade machine, with letters made of pixels.",
       "Every level shows its turns and its time while you play.",
       "Clearing a level keeps your records for it, the fewest turns and the fastest time. A line above the board shows the records of the level you are on, and the Records link shows the records of every level that has them.",
       "The Log link shows everything that happened in your game, line by line, and you can copy it.",
