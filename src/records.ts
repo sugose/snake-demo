@@ -50,7 +50,7 @@ export interface RecordsSet {
 
 /**
  * The records after a cleared level, which of them it set, and whether the level had records
- * before the clear (docs/SPEC.md 2.18 (9)): the record message needs both facts.
+ * before the clear (docs/SPEC.md 2.18 (9), (10)): the record message and "First clear!" need both facts.
  */
 export interface Outcome {
   readonly records: LevelRecord[];

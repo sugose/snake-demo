@@ -169,12 +169,13 @@ const options = readQuery(window.location.search, maxStartLevel);
 const PLAY = "Arrow keys, W A S D, a swipe or Start to play";
 
 /**
- * The record message of the level that has just been laid out (docs/SPEC.md 2.18 (9)), or null. It
- * is set by the tick that clears a level and goes when the state leaves `ready` or a new game is made.
+ * The record message or "First clear!" of the level that has just been laid out (docs/SPEC.md 2.18 (9),
+ * (10)), or null. It is set by the tick that clears a level and goes when the state leaves `ready` or a
+ * new game is made.
  */
 let recordText: string | null = null;
 
-/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3), 2.12 (10), 2.18 (9)). */
+/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3), 2.12 (10), 2.18 (9), (10)). */
 const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {
   ready: ({ level, run }) => {
     const usual =
@@ -444,7 +445,7 @@ function apply(next: GameState): void {
     showRecordsLine(next.level);
   }
   state = next;
-  // The record message stays until the state leaves `ready` (docs/SPEC.md 2.18 (9)).
+  // The record message stays until the state leaves `ready` (docs/SPEC.md 2.18 (9), (10)).
   if (state.status !== "ready") recordText = null;
   if (enteredSpecial) showBanner();
   else if (state.status !== "ready" || state.run === null) hideBanner();
@@ -485,8 +486,9 @@ function onTick(): void {
   const after = tick(before, choose);
   const outcome = setRecords(before, after);
   log = logTick(log, stamp(), before, after, outcome?.set);
-  // The record message goes in front of the ready line of the level laid out by this clear; a clear
-  // that ends the game as won leaves none, its status line being that of docs/SPEC.md 2.8 (2.18 (9)).
+  // The record message or "First clear!" goes in front of the ready line of the level laid out by this
+  // clear; a clear that ends the game as won leaves none, its status line being that of docs/SPEC.md 2.8
+  // (2.18 (9), (10)).
   recordText =
     outcome !== undefined && after.status === "ready"
       ? recordMessage(outcome.set, outcome.hadRecords)
