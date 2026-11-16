@@ -1440,9 +1440,12 @@ section 3.
       `ready` leaves it in place; no log line is added; with a store that
       fails on reading only every clear of the level shows it; with a store
       that fails on reading and on writing the first clear shows it and the
-      second clear of the level can show a record message. A clear that
-      sets none cannot be reached in a browser test, which would need more
-      than 99999 turns, so it is covered by Jest.
+      second clear of the level can show a record message; with a store
+      that fails on writing only and no stored records, the first clear
+      shows it and the second clear of the level shows no "First clear!".
+      A clear that sets none cannot be reached in a browser test, which
+      would need more than 99999 turns or 99999999 ms, so it is covered by
+      Jest.
 
 ### 2.19 Version history
 
