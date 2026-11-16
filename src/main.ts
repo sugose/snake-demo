@@ -63,8 +63,8 @@ import {
   createRecordBook,
   fastestText,
   fewestText,
+  type Outcome,
   type RecordRules,
-  type RecordsSet,
   recordFor,
   recordsAfterClear,
   recordsLineParts,
@@ -80,7 +80,7 @@ import {
   stepLetter,
 } from "./scores";
 import { sha256 } from "./sha256";
-import { endText, waitingText } from "./status";
+import { endText, recordMessage, waitingText } from "./status";
 import { readBest, writeBest } from "./storage";
 import { versionText } from "./version";
 
@@ -168,12 +168,21 @@ const options = readQuery(window.location.search, maxStartLevel);
 
 const PLAY = "Arrow keys, W A S D, a swipe or Start to play";
 
-/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3), 2.12 (10)). */
+/**
+ * The record message of the level that has just been laid out (docs/SPEC.md 2.18 (9)), or null. It
+ * is set by the tick that clears a level and goes when the state leaves `ready` or a new game is made.
+ */
+let recordText: string | null = null;
+
+/** The one-line status for each state (docs/SPEC.md 2.5, 2.8, 2.10 (3), 2.12 (10), 2.18 (9)). */
 const STATUS_TEXT: Readonly<Record<Status, (state: GameState) => string>> = {
-  ready: ({ level, run }) =>
-    run === null
-      ? `Level ${level}. ${PLAY}`
-      : `Level ${level}, special: ${maxTurns} turns, ${specialSeconds} seconds, shield of ${shieldLayers}. ${PLAY}`,
+  ready: ({ level, run }) => {
+    const usual =
+      run === null
+        ? `Level ${level}. ${PLAY}`
+        : `Level ${level}, special: ${maxTurns} turns, ${specialSeconds} seconds, shield of ${shieldLayers}. ${PLAY}`;
+    return recordText === null ? usual : `${recordText} ${usual}`;
+  },
   running: (state) => (state.run?.waiting ? waitingText(state) : "Space or P to pause"),
   paused: () => "Paused. Space, P or Resume to go on",
   over: (state) => endText(state, entering !== null),
@@ -394,6 +403,7 @@ function newGameWithLog(input: Input): GameState {
   hideRecords();
   hideHistory();
   showRecordsLine(game.level);
+  recordText = null;
   entering = null;
   entryPanel.hidden = true;
   // The New game command that closes the log, scores, records or history panel puts the focus on the
@@ -434,6 +444,8 @@ function apply(next: GameState): void {
     showRecordsLine(next.level);
   }
   state = next;
+  // The record message stays until the state leaves `ready` (docs/SPEC.md 2.18 (9)).
+  if (state.status !== "ready") recordText = null;
   if (enteredSpecial) showBanner();
   else if (state.status !== "ready" || state.run === null) hideBanner();
   // A playtest page leaves the best score as it was (docs/SPEC.md 2.9 (2), 2.14 (4)).
@@ -471,23 +483,31 @@ function onTick(): void {
   ticks++;
   const before = state;
   const after = tick(before, choose);
-  log = logTick(log, stamp(), before, after, setRecords(before, after));
+  const outcome = setRecords(before, after);
+  log = logTick(log, stamp(), before, after, outcome?.set);
+  // The record message goes in front of the ready line of the level laid out by this clear; a clear
+  // that ends the game as won leaves none, its status line being that of docs/SPEC.md 2.8 (2.18 (9)).
+  recordText =
+    outcome !== undefined && after.status === "ready"
+      ? recordMessage(outcome.set, outcome.hadRecords)
+      : null;
   apply(after);
 }
 
 /**
- * The records a tick's cleared level sets (docs/SPEC.md 2.18 (4), (5)). Not on a playtest page. The
- * records are read now, before the comparison, so that those another tab stored are kept, and the
- * whole text is written when one is set.
+ * The records a tick's cleared level sets, and whether the level had records before the clear
+ * (docs/SPEC.md 2.18 (4), (5), (9)). Not on a playtest page. The records are read now, before the
+ * comparison, so that those another tab stored are kept, and the whole text is written when one is
+ * set.
  */
-function setRecords(before: GameState, after: GameState): RecordsSet | undefined {
+function setRecords(before: GameState, after: GameState): Outcome | undefined {
   const cleared = after.cleared;
   if (options.playtest || cleared === null || cleared === before.cleared) return undefined;
   const outcome = recordsAfterClear(recordBook.read(), cleared, recordRules);
   if (outcome.set.fewest !== null || outcome.set.fastest !== null) {
     recordBook.write(outcome.records);
   }
-  return outcome.set;
+  return outcome;
 }
 
 /** An input that makes a line in the log, and what it does (docs/SPEC.md 2.13 (4)). */

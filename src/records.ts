@@ -48,10 +48,15 @@ export interface RecordsSet {
   readonly fastest: Mark | null;
 }
 
-/** The records after a cleared level, and which of them it set. */
+/**
+ * The records after a cleared level, which of them it set, and whether the level had records
+ * before the clear (docs/SPEC.md 2.18 (9)): the record message needs both facts.
+ */
 export interface Outcome {
   readonly records: LevelRecord[];
   readonly set: RecordsSet;
+  /** True when the records given to `recordsAfterClear` held records for the cleared level. */
+  readonly hadRecords: boolean;
 }
 
 const NUMBER = "(0|[1-9][0-9]*)";
@@ -155,7 +160,8 @@ export function recordFor(list: readonly LevelRecord[], level: number): LevelRec
  * shorter than its time. The fastest-time record becomes (S, T) when the level has none, or when S
  * is shorter than its time, or S is equal to its time and T is fewer than its turns. A level whose
  * turns or time, or whose number, is outside the bounds of (5) sets no record, and the records
- * stay. The list given is not changed.
+ * stay. The list given is not changed. The outcome also says whether the level had records before the
+ * clear, in the list given (docs/SPEC.md 2.18 (9)).
  */
 export function recordsAfterClear(
   records: readonly LevelRecord[],
@@ -164,9 +170,10 @@ export function recordsAfterClear(
 ): Outcome {
   const none: RecordsSet = { fewest: null, fastest: null };
   const had = recordFor(records, clear.level);
+  const hadRecords = had !== undefined;
   const here: Mark = { turns: clear.turns, timeMs: clear.timeMs };
   if (!inRange(clear.level, 1, rules.maxLevel) || !markFits(here, rules)) {
-    return { records: [...records], set: none };
+    return { records: [...records], set: none, hadRecords };
   }
   const setsFewest =
     had === undefined ||
@@ -176,7 +183,7 @@ export function recordsAfterClear(
     had === undefined ||
     here.timeMs < had.fastest.timeMs ||
     (here.timeMs === had.fastest.timeMs && here.turns < had.fastest.turns);
-  if (!setsFewest && !setsFastest) return { records: [...records], set: none };
+  if (!setsFewest && !setsFastest) return { records: [...records], set: none, hadRecords };
   const next: LevelRecord = {
     level: clear.level,
     fewest: setsFewest || had === undefined ? here : had.fewest,
@@ -189,6 +196,7 @@ export function recordsAfterClear(
   return {
     records: list,
     set: { fewest: setsFewest ? here : null, fastest: setsFastest ? here : null },
+    hadRecords,
   };
 }
 
