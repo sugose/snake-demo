@@ -1,7 +1,8 @@
 /**
  * The status lines of an ended game (docs/SPEC.md 2.8) and of a snake waiting after a shielded
  * crash (2.12 (10)), as pure functions of the game state (docs/SPEC.md 3), and the record message
- * of 2.18 (9), a pure function of which records a clear set and whether the level had records.
+ * of 2.18 (9) and "First clear!" of 2.18 (10), a pure function of which records a clear set and whether
+ * the level had records.
  */
 import {
   type Direction,
@@ -59,14 +60,15 @@ export function waitingText(state: GameState): string {
 }
 
 /**
- * The record message of docs/SPEC.md 2.18 (9), to be put before the ready line of the next level
- * with a space between: "New record: fewest turns." when the clear set only the fewest-turns record,
- * "New record: fastest." when it set only the fastest-time record, "New records: fewest turns and
- * fastest." when it set both. `null`, for no message, when it set none or when the level had no
- * records before the clear (a first clear).
+ * The text that opens the ready line of the next level after a clear (docs/SPEC.md 2.18 (9), (10)), to
+ * be put before it with a space between. For a level that had records before the clear:
+ * "New record: fewest turns." when the clear set only the fewest-turns record, "New record: fastest."
+ * when it set only the fastest-time record, "New records: fewest turns and fastest." when it set both.
+ * For a level that had none, "First clear!" when the clear set a record (the first clear of a level
+ * sets both). `null`, for no message, when the clear set none.
  */
 export function recordMessage(set: RecordsSet, hadRecords: boolean): string | null {
-  if (!hadRecords) return null;
+  if (!hadRecords) return set.fewest !== null || set.fastest !== null ? "First clear!" : null;
   if (set.fewest !== null && set.fastest !== null) return "New records: fewest turns and fastest.";
   if (set.fewest !== null) return "New record: fewest turns.";
   if (set.fastest !== null) return "New record: fastest.";

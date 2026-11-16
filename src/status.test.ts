@@ -141,31 +141,32 @@ describe("waitingText (docs/SPEC.md 2.12 (10))", () => {
   });
 });
 
-describe("recordMessage: the words before the ready line when a clear set a record (2.18 (9))", () => {
+describe("recordMessage: the words before the ready line when a clear set a record or was the first (2.18 (9), (10))", () => {
   const some: Mark = { turns: 8, timeMs: 12000 };
 
-  it("says New record: fewest turns. when the clear set only the fewest-turns record", () => {
+  it("says New record: fewest turns. when the clear set only the fewest-turns record of a level that had records", () => {
     expect(recordMessage({ fewest: some, fastest: null }, true)).toBe("New record: fewest turns.");
   });
 
-  it("says New record: fastest. when the clear set only the fastest-time record", () => {
+  it("says New record: fastest. when the clear set only the fastest-time record of a level that had records", () => {
     expect(recordMessage({ fewest: null, fastest: some }, true)).toBe("New record: fastest.");
   });
 
-  it("says New records: fewest turns and fastest. when the clear set both", () => {
+  it("says New records: fewest turns and fastest. when the clear set both records of a level that had records", () => {
     expect(recordMessage({ fewest: some, fastest: some }, true)).toBe(
       "New records: fewest turns and fastest.",
     );
   });
 
-  it("says nothing when the clear set none", () => {
+  it("says nothing when the clear set none of the records of a level that had records", () => {
     expect(recordMessage({ fewest: null, fastest: null }, true)).toBeNull();
   });
 
-  it("says nothing for a first clear, whichever records it set", () => {
-    expect(recordMessage({ fewest: some, fastest: some }, false)).toBeNull();
-    expect(recordMessage({ fewest: some, fastest: null }, false)).toBeNull();
-    expect(recordMessage({ fewest: null, fastest: some }, false)).toBeNull();
+  it("says First clear! for a clear with no records before it that set both records", () => {
+    expect(recordMessage({ fewest: some, fastest: some }, false)).toBe("First clear!");
+  });
+
+  it("says nothing for a clear with no records before it that set none (a level out of bounds)", () => {
     expect(recordMessage({ fewest: null, fastest: null }, false)).toBeNull();
   });
 });
