@@ -4,6 +4,8 @@ All notable changes to Snake demo are documented here.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-16
+
 ### Added
 
 - A message when a level clear sets a record. When a level is cleared on a page that is not a playtest page, the level had
@@ -125,6 +127,7 @@ All notable changes to Snake demo are documented here.
   panel keeps Tab and Shift+Tab between Copy and Close, and the New game command that closes the log or scores panel puts the
   focus on the New game button. After a click on a button or a panel closing the focus stays on a button, so Space or Enter
   then presses it; P, the arrow keys and W, A, S, D act on the game as before (#76, PBI-2.24). Specified in #72.
+- Version 0.2.0 set; the history has its 0.2.0 entry and the 0.1.0 entry covers the first release only. (#93)
 
 ### Removed
 
