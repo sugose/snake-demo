@@ -1,6 +1,6 @@
 # Snake demo — Next Session Planning
 
-**Last Updated:** 2026-11-09
+**Last Updated:** 2026-11-16
 **Author:** Clead (Tech Owner)
 **Purpose:** Staging area for reasoning, revised assumptions, and plan-adaptation thoughts that aren't yet mature enough to be a PBI, a decision, a strategy update, or a vision-doc change. Complements `docs/BACKLOG.md` — it does not replace it. Discrete, scoped, actionable work belongs in the backlog as a PBI, not here.
 
@@ -10,7 +10,7 @@
 
 ## Current situation summary
 
-Project just bootstrapped from the template. Nothing staged yet.
+Release 0.2.0 is out and tagged; nothing is in progress (`STATUS.md`). Nothing staged.
 
 ---
 
@@ -32,4 +32,7 @@ Project just bootstrapped from the template. Nothing staged yet.
 
 ## Items that do not change
 
-(none yet)
+- A Claude session's GitHub proxy cannot create tags or delete branches; Adam does both. `gh pr create` fails (GraphQL); use `gh api` REST: open `POST repos/sugose/snake-demo/pulls`, merge `PUT repos/sugose/snake-demo/pulls/<n>/merge` with `merge_method=squash`, `sha=<head>` and `commit_title`.
+- CI fails a change to `src/` without a test change. A records or prose PR carries an empty commit with a `Test-exempt: <reason>` trailer. Workflows are not touched (Process P-11).
+- The secret Slow button (SPEC 2.14 (4)) and the playtest options `?level` and `?slow` are never named in player-facing text.
+- Version history for the other apps (vizi PBI-1.40, Wushroom PBI-2.24, acuteping-harbor AH-25) is in their own backlogs, modelled on this app's SPEC 2.19; it is not Snake work.
