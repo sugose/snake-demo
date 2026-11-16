@@ -226,7 +226,7 @@ all of it, and a mark in the middle covers the sentence it opens.
 Approved: Adam, 2026-11-16 14:50 ("On first clear i want the text "First
 clear!" to be shown instaead", of the record message of 2.18 (9)): the
 first clear of a level shows "First clear!" in place of a record message
-(`DECISIONS.md`, PO-171, the row "Snake demo, First clear! on the first
+(`DECISIONS.md`, PO-171, the row "Snake demo, "First clear!" on the first
 clear of a level"). The text is his; 2.18 (10), and the changes to 2.10 (3)
 and 3 that follow from it, are Clead's exact wording, with the details
 marked **[Clead]**.
@@ -1381,7 +1381,7 @@ section 3.
    level out of bounds, equal turns with a shorter time, equal time with
    fewer turns, and a clear that equals one record and beats the other.
    Jest, status: the text of the record message from those two facts,
-   for each of the three cases, none, and a first clear. Browser: a
+   for each of the three cases, and none. Browser: a
    level cleared on a normal page that beats its stored fewest turns
    only, its fastest time only, and both, shows the message in `ready`
    on the next level and not after the first turn, and not after the
@@ -1396,36 +1396,53 @@ section 3.
    same level on the page can show one; a turn that is ignored in `ready`
    leaves the message in place; when the next level is special
    the message comes before "Level 5, special: …".
-10. **First clear!** When a level is cleared on a page that is not a
-   playtest page and the level had no records before the clear, as the
-   page read them, the status line of the game in `ready` on the next
-   level begins with the text "First clear!" instead of a record message,
-   then a space and its usual words, so that it reads for example "First
-   clear! Level 2. Arrow keys, W A S D, a swipe or Start to play".
-   **[Clead]** The rest of this item. A clear that finds no records
-   reads as a first clear, so a read that fails gives "First clear!" too,
-   since the page cannot tell it from a first clear (5); a store that
-   fails on reading only keeps nothing in memory, so every clear of the
-   level on that page gives "First clear!". The text is kept, ends, and is
-   absent exactly as the record message of (9) is: until the state leaves
-   `ready` by a turn or the Start button, not after a New game or a page
-   load, not when the clear ends the game as `won`, not on a playtest page,
-   not on a clear that sets no record (a level out of bounds); it adds no
-   line to the event log, no live region of its own, and does not change
-   the line of (6) or the table of (7). It comes before "Level 5, special:
-   …" when the next level is special. A level that has records, even
-   after a clear that sets none, never gives "First clear!".
-   Tests. Jest, status: the text of the message from which records a
-   clear set and whether the level had records before it, "First clear!"
-   for a clear with no records before it that sets both, and none for a
-   clear that sets none. Browser: the first clear of a level shows "First
-   clear!" in `ready` on the next level and not after the first turn, and
-   not after the Start button either; the second clear of the same level
-   shows no "First clear!"; the text on a special next level comes before
-   "Level 5, special: …"; none on a playtest page, none when the game ends
-   as `won`, none after a New game or a page load; no log line; a store
-   that fails on reading only shows "First clear!" on every clear of the
-   level; with a failing write and no records the first clear shows it.
+10. **First clear!** On the first clear of a level, the status line of the
+    game in `ready` on the next level begins with the text "First clear!"
+    instead of a record message.
+    - **[Clead]** What counts. The clear is on a page that is not a
+      playtest page, the level had no records before the clear, as the
+      page read them (a read that fails reads none, 5), and the clear sets
+      a record by the rules of (4), so a clear that sets none (a level out
+      of bounds) never gives it. The text is followed by a space and the
+      usual words (2.10 (3), 2.12 (10)), so that the status line reads for
+      example "First clear! Level 2. Arrow keys, W A S D, a swipe or Start
+      to play". A level that has records never gives it, even after a
+      clear that sets none.
+    - **[Clead]** A failing store. The page cannot tell a read that fails
+      from a level with no records, so a read that fails gives "First
+      clear!" too. A store that fails on reading only keeps nothing in
+      memory, so every clear of every level on that page gives it. With a
+      store that fails on reading and on writing, or on writing only, the
+      first clear of a level gives it, and a second clear of the level on
+      the page compares with the records kept in memory (5), so it gives
+      the message of (9) or none.
+    - **[Clead]** Its life. The text is kept, ends and is absent exactly as
+      the record message of (9) is: it stays until the state leaves
+      `ready` by a turn or by the Start button, and an ignored turn leaves
+      it in place; a New game command shows none, and nor does a page
+      load; a clear that ends the game as `won` gives none. It comes
+      before "Level 5, special: …" when the next level is special. It adds
+      no line to the event log, no live region of its own (the status line
+      announces it, as in (9)), and does not change the line of (6) or the
+      table of (7).
+    - **[Clead]** Tests. Jest, status: the text of the message from which
+      records a clear set and whether the level had records before it:
+      "First clear!" for a clear with no records before it that sets both,
+      the record messages of (9) for a level that had records, none for a
+      level that had no records and a clear that sets none, and none for a
+      level that had records and a clear that sets none. Browser: on a
+      store that works, the first clear of a level shows "First clear!" in
+      `ready` on the next level, and not after the first turn, nor after
+      the Start button; the second clear of the same level shows no "First
+      clear!"; when the next level is special the text comes before "Level
+      5, special: …"; none on a playtest page, none when the game ends as
+      `won`, none after a New game or a page load; an ignored turn in
+      `ready` leaves it in place; no log line is added; with a store that
+      fails on reading only every clear of the level shows it; with a store
+      that fails on reading and on writing the first clear shows it and the
+      second clear of the level can show a record message. A clear that
+      sets none cannot be reached in a browser test, which would need more
+      than 99999 turns, so it is covered by Jest.
 
 ### 2.19 Version history
 
@@ -1662,7 +1679,7 @@ section 3.
   of 2.18 (10), a
   pure function of which records a clear set and whether the level had
   records before it, not of the game state; covered by Jest as 2.18 (9)
-  says.
+  and (10) say.
 - `src/log.ts`: the event log of 2.13 as pure functions: the first
   line, and the lines of one step of the game, given the state before
   it, the input or tick, the state after it, what `src/game.ts`
