@@ -9,8 +9,7 @@ All notable changes to Snake demo are documented here.
 - A message when a level clear sets a record. When a level is cleared on a page that is not a playtest page, the level had
   records before the clear, and the clear sets a record (a tie broken by the time or the turns, as for the records
   themselves), the status line of the next level in `ready` starts with "New record: fewest turns.", "New record: fastest."
-  or "New records: fewest turns and fastest." and a space, then its usual words (before "Level 5, special: …" too). There is
-  no message for the first clear of a level (also the first clear after a read of the records that failed), for a clear that
+  or "New records: fewest turns and fastest." and a space, then its usual words (before "Level 5, special: …" too). There is no record message for a first clear of a level (it gets "First clear!", below), for a clear that
   sets none, for a clear that ends the game as won, after a New game or when the page loads. It stays until a turn or the
   Start button starts the level, adds no line to the event log and changes neither the line of the records nor their table
   (#95). Specified in #92.
