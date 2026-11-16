@@ -19,7 +19,7 @@ All notable changes to Snake demo are documented here.
   line of the next level in `ready` starts with "First clear!" and a space instead of a record message, then its usual
   words (before "Level 5, special: …" too); the first clear used to show no message. It stays until a turn or the Start
   button starts the level, is absent after a New game, when the page loads and when the game ends as won, adds no line to
-  the event log and changes neither the line of the records nor their table. Specified in #96.
+  the event log and changes neither the line of the records nor their table (#99). Specified in #96.
 
 ### Changed
 
