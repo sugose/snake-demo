@@ -1,5 +1,6 @@
 import { type EndReason, type GameState, newGame, type SpecialRules } from "./game";
-import { endText, waitingText } from "./status";
+import type { Mark } from "./records";
+import { endText, recordMessage, waitingText } from "./status";
 
 // The status line of an ended game (docs/SPEC.md 2.8), whole.
 const SPECIAL: SpecialRules = {
@@ -137,5 +138,34 @@ describe("waitingText (docs/SPEC.md 2.12 (10))", () => {
 
   it("throws a RangeError for a snake that is not waiting", () => {
     expect(() => waitingText(BASE)).toThrow(RangeError);
+  });
+});
+
+describe("recordMessage: the words before the ready line when a clear set a record (2.18 (9))", () => {
+  const some: Mark = { turns: 8, timeMs: 12000 };
+
+  it("says New record: fewest turns. when the clear set only the fewest-turns record", () => {
+    expect(recordMessage({ fewest: some, fastest: null }, true)).toBe("New record: fewest turns.");
+  });
+
+  it("says New record: fastest. when the clear set only the fastest-time record", () => {
+    expect(recordMessage({ fewest: null, fastest: some }, true)).toBe("New record: fastest.");
+  });
+
+  it("says New records: fewest turns and fastest. when the clear set both", () => {
+    expect(recordMessage({ fewest: some, fastest: some }, true)).toBe(
+      "New records: fewest turns and fastest.",
+    );
+  });
+
+  it("says nothing when the clear set none", () => {
+    expect(recordMessage({ fewest: null, fastest: null }, true)).toBeNull();
+  });
+
+  it("says nothing for a first clear, whichever records it set", () => {
+    expect(recordMessage({ fewest: some, fastest: some }, false)).toBeNull();
+    expect(recordMessage({ fewest: some, fastest: null }, false)).toBeNull();
+    expect(recordMessage({ fewest: null, fastest: some }, false)).toBeNull();
+    expect(recordMessage({ fewest: null, fastest: null }, false)).toBeNull();
   });
 });

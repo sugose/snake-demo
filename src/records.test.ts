@@ -229,6 +229,82 @@ describe("recordsAfterClear: the rules of 2.18 (4)", () => {
   });
 });
 
+describe("recordsAfterClear: the report of 2.18 (9), which records a clear set and whether the level had records", () => {
+  // The same level 4 and the same stored records as the rules above.
+  const HELD = record(4, mark(10, 20000), mark(14, 15000));
+  const clear = (turns: number, timeMs: number) => ({ level: 4, turns, timeMs });
+
+  it("a first clear reports both records set and no records before", () => {
+    const outcome = recordsAfterClear([], clear(12, 25300), RULES);
+    expect(outcome.hadRecords).toBe(false);
+    expect(outcome.set).toEqual({ fewest: mark(12, 25300), fastest: mark(12, 25300) });
+  });
+
+  it("a first clear when only other levels have records still reports no records before", () => {
+    const outcome = recordsAfterClear([FIVE], clear(12, 25300), RULES);
+    expect(outcome.hadRecords).toBe(false);
+  });
+
+  it("a clear that sets both reports both set and records before", () => {
+    const outcome = recordsAfterClear([HELD], clear(9, 14000), RULES);
+    expect(outcome.hadRecords).toBe(true);
+    expect(outcome.set).toEqual({ fewest: mark(9, 14000), fastest: mark(9, 14000) });
+  });
+
+  it("a clear that sets only the fewest reports the fewest set and records before", () => {
+    const outcome = recordsAfterClear([HELD], clear(8, 30000), RULES);
+    expect(outcome.hadRecords).toBe(true);
+    expect(outcome.set).toEqual({ fewest: mark(8, 30000), fastest: null });
+  });
+
+  it("a clear that sets only the fastest reports the fastest set and records before", () => {
+    const outcome = recordsAfterClear([HELD], clear(20, 14000), RULES);
+    expect(outcome.hadRecords).toBe(true);
+    expect(outcome.set).toEqual({ fewest: null, fastest: mark(20, 14000) });
+  });
+
+  it("a clear that sets none reports none set and records before", () => {
+    const outcome = recordsAfterClear([HELD], clear(12, 21000), RULES);
+    expect(outcome.hadRecords).toBe(true);
+    expect(outcome.set).toEqual({ fewest: null, fastest: null });
+  });
+
+  it("a level out of bounds reports none set, with records before only when it had them", () => {
+    const high = { level: 4, turns: 100000, timeMs: 1000 };
+    expect(recordsAfterClear([FOUR], high, RULES).hadRecords).toBe(true);
+    expect(recordsAfterClear([], high, RULES).hadRecords).toBe(false);
+    expect(recordsAfterClear([], { level: 81, turns: 1, timeMs: 5 }, RULES)).toMatchObject({
+      hadRecords: false,
+      set: { fewest: null, fastest: null },
+    });
+  });
+
+  it("equal turns with a shorter time reports the fewest set and records before", () => {
+    const outcome = recordsAfterClear([HELD], clear(10, 19000), RULES);
+    expect(outcome.hadRecords).toBe(true);
+    expect(outcome.set).toEqual({ fewest: mark(10, 19000), fastest: null });
+  });
+
+  it("an equal time with fewer turns reports the fastest set and records before", () => {
+    const outcome = recordsAfterClear([HELD], clear(12, 15000), RULES);
+    expect(outcome.hadRecords).toBe(true);
+    expect(outcome.set).toEqual({ fewest: null, fastest: mark(12, 15000) });
+  });
+
+  it("a clear that equals one record and beats the other reports only the one it beats", () => {
+    // Records no real play leaves (the fastest time is longer than the time of the fewest-turns
+    // play) can be stored all the same, and are the only ones a clear can equal one of and beat the other.
+    const equalsFewest = record(4, mark(10, 20000), mark(14, 25000));
+    const first = recordsAfterClear([equalsFewest], clear(10, 20000), RULES);
+    expect(first.hadRecords).toBe(true);
+    expect(first.set).toEqual({ fewest: null, fastest: mark(10, 20000) });
+    const equalsFastest = record(4, mark(10, 20000), mark(8, 15000));
+    const second = recordsAfterClear([equalsFastest], clear(8, 15000), RULES);
+    expect(second.hadRecords).toBe(true);
+    expect(second.set).toEqual({ fewest: mark(8, 15000), fastest: null });
+  });
+});
+
 describe("recordsAfterClear: the bounds of 2.18 (5)", () => {
   it("a level whose turns are above the bound sets no record, and the records stay", () => {
     const outcome = recordsAfterClear([FOUR], { level: 4, turns: 100000, timeMs: 1000 }, RULES);

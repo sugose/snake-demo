@@ -1,6 +1,7 @@
 /**
  * The status lines of an ended game (docs/SPEC.md 2.8) and of a snake waiting after a shielded
- * crash (2.12 (10)), as pure functions of the game state (docs/SPEC.md 3).
+ * crash (2.12 (10)), as pure functions of the game state (docs/SPEC.md 3), and the record message
+ * of 2.18 (9), a pure function of which records a clear set and whether the level had records.
  */
 import {
   type Direction,
@@ -9,6 +10,7 @@ import {
   type GameState,
   specialInfo,
 } from "./game";
+import type { RecordsSet } from "./records";
 
 /** The reason an ended game gives, by why it ended (docs/SPEC.md 2.8). */
 const END_REASON: Readonly<Record<EndReason, string>> = {
@@ -54,4 +56,19 @@ export function waitingText(state: GameState): string {
   const left = info.shieldLeft === 0 ? "none" : String(info.shieldLeft);
   const lost = `Shield lost, ${left} left. Turn ${joinDirections(freeDirections(state))} to go on.`;
   return info.shieldLeft === 0 ? `${lost} The next crash ends the game.` : lost;
+}
+
+/**
+ * The record message of docs/SPEC.md 2.18 (9), to be put before the ready line of the next level
+ * with a space between: "New record: fewest turns." when the clear set only the fewest-turns record,
+ * "New record: fastest." when it set only the fastest-time record, "New records: fewest turns and
+ * fastest." when it set both. `null`, for no message, when it set none or when the level had no
+ * records before the clear (a first clear).
+ */
+export function recordMessage(set: RecordsSet, hadRecords: boolean): string | null {
+  if (!hadRecords) return null;
+  if (set.fewest !== null && set.fastest !== null) return "New records: fewest turns and fastest.";
+  if (set.fewest !== null) return "New record: fewest turns.";
+  if (set.fastest !== null) return "New record: fastest.";
+  return null;
 }
