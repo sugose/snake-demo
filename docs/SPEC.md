@@ -213,6 +213,16 @@ middle covers the sentence it opens. The storage key name and the rules
 for what counts as newer (SemVer 2.0.0 precedence) are Clead's technical
 detail.
 
+Approved: Adam, 2026-11-16 01:14 ("4. yes", to Clead's offer of a message
+when a record is set) and 01:23 ("A", choosing a short line in the status
+line while the next level starts): the page says so when a cleared level
+sets a record, in the status line of the next level (`DECISIONS.md`,
+PO-171, the row "Snake demo, a message when a record is set"). 2.18 (9),
+and the changes to 2.10 (3) and 3 that follow from it, are Clead's exact
+wording of that decision. Details Adam has not settled
+are marked **[Clead]**; a mark at the start of an item or a bullet covers
+all of it, and a mark in the middle covers the sentence it opens.
+
 ---
 
 ## 1. System overview
@@ -459,7 +469,8 @@ Enter confirms the name then and the New game button does nothing.
    included. The level's turns and time start at 0 (2.18 (1), (2)). The
    state is `ready` until a turn or the Start button
    starts the level (2.1 (3)); while `ready`, the page's status line says
-   which level is about to start.
+   which level is about to start, and what the clear that led to it set
+   (2.18 (9)).
 4. Level N has N − 1 obstacles: none on level 1, one on level 2, and so
    on. An obstacle is a cell the snake must not enter.
 
@@ -1325,7 +1336,36 @@ section 3.
    Enter does nothing, Escape closes), Escape, the New game button, the
    Records link with the name entry open, the status line, and that its
    look is the plain one and not the arcade look; a failing storage; the
-   log lines.
+   log lines. And the tests of (9).
+9. **The record message.** **[Clead]** When a level is cleared on a page
+   that is not a playtest page and the clear sets a record that replaces
+   a record the level already had (4), the status line of the game in
+   `ready` on the next level begins with the words that say which, and
+   then has its usual words (2.10 (3), 2.12 (10)): "New record: fewest
+   turns." when only the fewest-turns record was replaced, "New record:
+   fastest." when only the fastest-time record was, and "New records:
+   fewest turns and fastest." when both were, each followed by a space
+   and the usual words, so that the status line reads for example "New
+   record: fastest. Level 6. Arrow keys, W A S D, a swipe or Start to
+   play". The first clear of a level, which sets both records where there
+   were none, gives no message, and nor does a clear that sets none. The
+   message is part of the status line of that `ready` state only: it goes
+   when the state leaves `ready` (a turn or the Start button starts the
+   level), and a New game command or a page load does not show it. A clear
+   that ends the game as `won` (2.11) gives no message, its status line is
+   that of 2.8, and a write to the storage that fails does not change the
+   message, since the records are kept in memory (5). The message adds no
+   line to the event log (the `record` lines of 2.13 (5) tell it), is not
+   a live region, and does not change the line of (6) or the table of (7).
+   Tests. Jest: the status text for each of the three cases and for none,
+   and on a special level, as a pure function of the level and what the
+   clear replaced. Browser: a level cleared on a normal page that beats
+   its stored fewest turns only, its fastest time only, and both, shows
+   the message in `ready` on the next level and not after the first
+   move; the first clear of a level shows none; a clear that sets none
+   shows none; a playtest page shows none; a New game shows none; the
+   message is there with a failing storage; the next level on a special
+   level shows it before "Level 5, special: …".
 
 ### 2.19 Version history
 
@@ -1551,8 +1591,9 @@ section 3.
   which `main.ts` hands to the CSS as `--arcade-gap` and `--arcade-lead`, and
   the text of the `@keyframes` rule of the shifts (2.16 (6)). Pure, covered by
   Jest.
-- `src/status.ts`: the status line of an ended game (2.8) and of a
-  snake waiting after a shielded crash (2.12 (10)), as pure functions of
+- `src/status.ts`: the status line of an ended game (2.8), of a
+  snake waiting after a shielded crash (2.12 (10)) and the record message
+  put in front of the status line of a level in `ready` (2.18 (9)), as pure functions of
   the game state (no DOM). Pure, covered by Jest: every line of 2.8
   whole, on a normal and on a special level, and the waiting line for
   one, two and three free directions and for no layer left. It takes
@@ -1585,7 +1626,7 @@ section 3.
   records and the Records link with its table (2.18 (6), (7)), the
   Version history link with its panel and its opening by itself (2.19),
   shows the "Special Level" text (2.12 (11)), shows the status line
-  (the ended game's from `src/status.ts`), keeps the event log and
+  (the ended game's and the record message from `src/status.ts`), keeps the event log and
   shows its panel and the Copy feedback (2.13), runs the tick timer with the delay of the current level
   times the factor of the Slow button (2.14), shows the name entry, the Scores link and the table
   (2.15, 2.16), and
