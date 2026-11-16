@@ -1354,10 +1354,13 @@ section 3.
    the turns are equal; a clear that equals one record and beats the
    other sets only the one it beats, and gives the message of that one.
    The first clear of a level, which has no record to replace, gives no
-   message, and nor does a clear that sets none or one after a read that
-   failed (it counts as a first clear; a second clear of the level on the
-   page then compares with the records kept in memory and can give the
-   message). The page keeps the message from the clear until the state
+   message, and nor does a clear that sets none, or the first clear after
+   a read that failed (it reads none and counts as a first clear). A
+   store that fails on reading only keeps no records in memory, so each
+   clear of the level reads none again and gives none; a store that fails
+   on reading and on writing keeps the records in memory after the first
+   write (5), so a second clear of the level on the page compares with
+   them and can give the message. The page keeps the message from the clear until the state
    leaves `ready`, by a turn or by the Start button; a New game command
    shows none, and nor does a page load. A clear that ends the game as
    `won` (2.11) gives no message, its status line being that of 2.8. A
@@ -1384,8 +1387,11 @@ section 3.
    a clear that ends the game as `won` shows none; a New game shows
    none; a page load shows none; no log line is added by the message;
    with stored records and a write that fails the message is shown; with
-   a read that fails the first clear shows none and a second clear of the
-   same level on the page can show one; when the next level is special
+   a store that fails on reading only every clear of the level shows
+   none; with a store that fails on reading and on writing the first
+   clear shows none and a second clear of the same level on the page can
+   show one; a turn that is ignored in `ready` leaves the message in
+   place; when the next level is special
    the message comes before "Level 5, special: …".
 
 ### 2.19 Version history
