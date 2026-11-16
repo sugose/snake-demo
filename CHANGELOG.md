@@ -6,7 +6,7 @@ All notable changes to Snake demo are documented here.
 
 ### Changed
 
-- Version 0.2.0 set; the history has its 0.2.0 entry and the 0.1.0 entry covers the first release only.
+- Version 0.2.0 set; the history has its 0.2.0 entry and the 0.1.0 entry covers the first release only. (#93)
 
 ## [0.2.0] - 2026-11-16
 
