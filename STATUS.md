@@ -13,7 +13,7 @@ Running: levels, special levels, records and the version history are published a
 The message when a level clear sets a record ([PBI-2.34](docs/BACKLOG.md), [#95](https://github.com/sugose/snake-demo/pull/95)) and "First clear!" on the first clear of a level ([PBI-2.35](docs/BACKLOG.md), [#99](https://github.com/sugose/snake-demo/pull/99)) are live. Nothing is in progress.
 
 ## Next step
-Adam: the special levels ([PBI-2.7](docs/BACKLOG.md)); he approved level 5 on 2026-11-16. The tag `v0.2.0` goes on `5d7a224`.
+Adam: the tag `v0.2.0` goes on `5d7a224`. The special levels ([PBI-2.7](docs/BACKLOG.md)) are approved (2026-11-16, "all special levels are fine"). No other item is open for Adam.
 
 ## Blockers
 The tag `v0.2.0` is not made: the Claude session's GitHub proxy refuses to create it ("Write access to this GitHub API path is not permitted"). Adam, or a session with tag rights, creates it on `5d7a224`.
