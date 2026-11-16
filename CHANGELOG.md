@@ -15,6 +15,12 @@ All notable changes to Snake demo are documented here.
   Start button starts the level, adds no line to the event log and changes neither the line of the records nor their table
   (#95). Specified in #92.
 
+### Changed
+
+- The 0.2.0 entry of the version history names the arcade look of the name entry and the Scores list: one added line, "The
+  name entry and the Scores list look like an arcade machine, with letters made of pixels." after the high score line
+  (history text only, no change to behaviour; #PR).
+
 ## [0.2.0] - 2026-11-16
 
 ### Added
