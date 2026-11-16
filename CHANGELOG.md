@@ -12,8 +12,8 @@ All notable changes to Snake demo are documented here.
   or "New records: fewest turns and fastest." and a space, then its usual words (before "Level 5, special: …" too). There is
   no message for the first clear of a level (also the first clear after a read of the records that failed), for a clear that
   sets none, for a clear that ends the game as won, after a New game or when the page loads. It stays until a turn or the
-  Start button starts the level, adds no line to the event log and changes neither the line of the records nor their table.
-  Specified in #92.
+  Start button starts the level, adds no line to the event log and changes neither the line of the records nor their table
+  (#95). Specified in #92.
 
 ## [0.2.0] - 2026-11-16
 
