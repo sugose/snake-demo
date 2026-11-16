@@ -4,8 +4,6 @@ All notable changes to Snake demo are documented here.
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-11-16
-
 ### Added
 
 - A message when a level clear sets a record. When a level is cleared on a page that is not a playtest page, the level had
@@ -16,6 +14,11 @@ All notable changes to Snake demo are documented here.
   sets none, for a clear that ends the game as won, after a New game or when the page loads. It stays until a turn or the
   Start button starts the level, adds no line to the event log and changes neither the line of the records nor their table.
   Specified in #92.
+
+## [0.2.0] - 2026-11-16
+
+### Added
+
 - A version history. A "Version history" link next to Log, Scores and Records (the four links wrap when they do not fit,
   with no sideways scrolling) opens a panel over the board with an entry for each version, newest first: a heading
   `Version 0.1.0 · 2026-11-09` and its lines as a list, written for players, bundled into the page when it is built and
