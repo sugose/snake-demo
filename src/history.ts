@@ -22,21 +22,30 @@ export interface HistoryEntry {
  * The version history, newest first (docs/SPEC.md 2.19 (2)). The version of `package.json` has an
  * entry and it is the first, so a version cannot be set without writing what it brings; a Jest test
  * checks it. The text is read from nothing at run time: it is bundled into the page when it is built.
- *
- * Draft for review: the player-facing wording of the 0.1.0 entry.
  */
 export const HISTORY: readonly HistoryEntry[] = [
+  {
+    version: "0.2.0",
+    date: "2026-11-16",
+    lines: [
+      "Eat 5 dots to clear a level. Each level is laid out anew with a random start and one more obstacle than the one before, and the early levels get faster.",
+      "Every 5th level is a special level: a shield that takes 3 crashes, at most 20 turns and 30 seconds, and obstacles that jump around. You score for the turns and seconds you have left.",
+      "A top 10 list of high scores is kept in this browser too. A score that makes the list asks for a name of 3 letters, and the Scores link shows the list.",
+      "Every level shows its turns and its time while you play.",
+      "Clearing a level keeps your records for it, the fewest turns and the fastest time. A line above the board shows the records of the level you are on, and the Records link shows the records of every level that has them.",
+      "The Log link shows everything that happened in your game, line by line, and you can copy it.",
+      "A line under the board shows the version of the game.",
+      "The Version history link shows what is new in each version of the game.",
+    ],
+  },
   {
     version: "0.1.0",
     date: "2026-11-09",
     lines: [
       "Steer the snake with the arrow keys, W A S D or a swipe on the board. Space or P pauses.",
-      "Eat 5 dots to clear a level. Each level is laid out anew with a random start and one more obstacle than the one before, and the early levels get faster.",
-      "Every 5th level is a special level: a shield that takes 3 crashes, at most 20 turns and 30 seconds, and obstacles that jump around. You score for the turns and seconds you have left.",
-      "Your best score is kept in this browser, and so is a top 10 list of high scores, where a score that makes the list asks for a name of 3 letters (the Scores link).",
-      "Every level shows its turns and its time while you play, and keeps your records for it, the fewest turns and the fastest time (the Records link).",
-      "The Log link shows everything that happened in your game, line by line, and you can copy it.",
-      "The Version history link shows what is new in each version of the game.",
+      "Eat dots to grow the snake and score a point for each one.",
+      "The game ends when the snake runs into a wall or into itself, and you win by filling the whole board.",
+      "Your best score is kept in this browser.",
     ],
   },
 ];
