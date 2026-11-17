@@ -22,6 +22,7 @@ All notable changes to Snake demo are documented here.
 
 ### Changed
 
+- The specification (`docs/SPEC.md`) is an index, and its text is in 27 section files in `docs/spec/`, unchanged (#104).
 - The 0.2.0 entry of the version history names the arcade look of the name entry and the Scores list: one added line, "The
   name entry and the Scores list look like an arcade machine, with letters made of pixels." after the high score line
   (history text only, no change to behaviour; #97).
