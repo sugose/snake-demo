@@ -26,6 +26,7 @@ All notable changes to Snake demo are documented here.
 - The 0.2.0 entry of the version history names the arcade look of the name entry and the Scores list: one added line, "The
   name entry and the Scores list look like an arcade machine, with letters made of pixels." after the high score line
   (history text only, no change to behaviour; #97).
+- README: one sentence says the project was developed with the assistance of AI (#106).
 
 ## [0.2.0] - 2026-11-16
 
